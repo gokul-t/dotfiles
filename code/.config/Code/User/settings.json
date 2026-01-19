@@ -1,0 +1,90 @@
+{
+  /* ============================
+     VSCodeVim Core Settings
+     ============================ */
+  "vim.enableNeovim": false,
+  "vim.useSystemClipboard": true,
+  "vim.leader": " ",
+
+  /* Cursor line toggle (InsertEnter / InsertLeave equivalent) */
+  "vim.cursorStylePerMode": {
+    "normal": "block",
+    "insert": "line",
+    "visual": "block"
+  },
+
+
+  "vim.insertModeKeyBindings": [
+    {
+      "before": ["J", "J"],
+      "after": ["<Esc>"]
+    }
+  ],
+
+  "vim.visualModeKeyBindings": [
+    {
+      "before": [">"],
+      "after": [">", "g", "v"]
+    },
+    {
+      "before": ["<"],
+      "after": ["<", "g", "v"]
+    }
+  ],
+
+  "vim.sneak": true,
+  "vim.easymotion": true,
+  "vim.incsearch": true,
+  "vim.useCtrlKeys": true,
+
+
+
+  /* ============================
+     Editor UI & Look
+     ============================ */
+  "editor.lineNumbers": "relative",
+  "editor.renderLineHighlight": "all",
+  "editor.cursorSurroundingLines": 3,
+  "editor.splitInDirection": "right",
+  "editor.copyWithSyntaxHighlighting": true,
+
+  /* ============================
+     Searching
+     ============================ */
+  "vim.ignorecase": true,
+  "vim.smartcase": true,
+  "vim.hlsearch": true,
+  "editor.find.autoFindInSelection": "never",
+
+  /* ============================
+     Indentation & Tabs
+     ============================ */
+  "editor.tabSize": 4,
+  "editor.shiftWidth": 4,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.autoIndent": "advanced",
+
+
+  "editor.autoSurround": "languageDefined",
+  "editor.autoClosingBrackets": "always",
+  "editor.autoClosingQuotes": "always",
+
+  /* ============================
+     Encoding
+     ============================ */
+  "files.encoding": "utf8",
+
+  /* ============================
+     Status & Command Info
+     ============================ */
+  "vim.showcmd": true,
+
+  "editor.bracketPairColorization.enabled": true,
+
+  /* ============================
+     Bells (disable)
+     ============================ */
+    "workbench.preferredDarkColorTheme": "Default High Contrast",
+    "window.autoDetectColorScheme": true
+}
