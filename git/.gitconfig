@@ -1,0 +1,7 @@
+[user]
+	name = Gokul T
+	email = gokultmail@gmail.com
+[color]
+	ui = auto
+[init]
+	defaultBranch = main
