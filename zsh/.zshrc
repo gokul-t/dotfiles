@@ -76,7 +76,7 @@ plugins=(git zsh-autosuggestions zsh-syntax-highlighting you-should-use docker d
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
-
+source $HOME/.zuserconfig.zsh
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
