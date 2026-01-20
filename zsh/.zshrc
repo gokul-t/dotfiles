@@ -127,6 +127,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 if [[ $OSTYPE == "darwin"* ]]; then
 elif [[ $OSTYPE == "linux-gnu" ]]; then 
+  # Added by Toolbox App
   export PATH="$PATH:$HOME/.local/share/JetBrains/Toolbox/scripts"
 else 
 fi
