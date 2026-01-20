@@ -127,3 +127,89 @@ export PATH="$PATH:$HOME/.local/share/JetBrains/Toolbox/scripts"
 
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/bin/terraform terraform
+
+
+############################
+# Pyenv
+############################
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+
+if command -v pyenv 1>/dev/null 2>&1; then
+ eval "$(pyenv init --path)"
+ eval "$(pyenv init -)"
+fi
+
+# Auto-activate venv when changing directories
+function auto_venv_activate() {
+ local venv_path="./.venv/bin/activate"
+ if [[ -f "$venv_path" ]]; then
+  if [[ "$VIRTUAL_ENV" != "$PWD/.venv" ]]; then
+   source "$venv_path" > /dev/null 2>&1
+   echo "Activated: $(basename $VIRTUAL_ENV)"
+  fi
+ elif [[ -n "$VIRTUAL_ENV" ]]; then
+  # Deactivate if leaving a venv directory
+  parentdir="$(dirname "$VIRTUAL_ENV")"
+  if [[ "$PWD"/ != "$parentdir"/* ]]; then
+   deactivate > /dev/null 2>&1
+   echo "Deactivated: $(basename $parentdir)"
+  fi
+ fi
+}
+
+autoload -Uz add-zsh-hook
+add-zsh-hook chpwd auto_venv_activate
+auto_venv_activate # Run once for the initial directory
+############################
+# Docker
+############################
+
+# Enable Docker CLI completions if available
+if command -v docker &>/dev/null; then
+ autoload -Uz compinit && compinit
+fi
+
+
+############################
+# Vim
+############################
+
+alias vi="vim"
+alias vim="vim"
+
+
+############################
+# Quality of Life Aliases
+############################
+
+alias ll="ls -lah"
+alias la="ls -A"
+alias l="ls -CF"
+alias ..="cd .."
+alias ...="cd ../.."
+
+
+############################
+# History
+############################
+
+HISTSIZE=10000
+SAVEHIST=10000
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_REDUCE_BLANKS
+
+############################
+# Prompt Customization (Optional)
+############################
+
+# Show command execution time if > 5s
+export REPORTTIME=5
+
+############################
+# Git
+############################
+
+export GPG_TTY=$(tty)
