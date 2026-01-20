@@ -2,9 +2,9 @@
 	name = Gokul T
 	email = gokultmail@gmail.com
 [commit]
-  gpgsign = true
+	gpgsign = true
 [tag]
-  gpgsign = true
+    gpgsign = true
 [color]
 	ui = auto
 [init]
