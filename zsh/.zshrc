@@ -72,7 +72,7 @@ ZSH_THEME="agnoster"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 # plugins=(git)
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting fast-syntax-highlighting zsh-autocomplete)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting you-should-use docker docker-compose kubectl mvn python pyenv z)
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
@@ -115,15 +115,26 @@ bindkey -M vicmd 'V' edit-command-line
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-alias docker="podman"
-
+if command -v podman >/dev/null; then
+  alias docker="podman"
+fi
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 export PATH=$HOME/.local/bin:$PATH
 export PATH="$HOME/.cargo/bin:$PATH"
-export PATH="$PATH:$HOME/.local/share/JetBrains/Toolbox/scripts"
+
+if [[ $OSTYPE == "darwin"* ]]; then
+elif [[ $OSTYPE == "linux-gnu" ]]; then 
+  export PATH="$PATH:$HOME/.local/share/JetBrains/Toolbox/scripts"
+else 
+fi
+
+
+############################
+# Terraform
+############################
 
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/bin/terraform terraform
@@ -162,6 +173,7 @@ function auto_venv_activate() {
 autoload -Uz add-zsh-hook
 add-zsh-hook chpwd auto_venv_activate
 auto_venv_activate # Run once for the initial directory
+
 ############################
 # Docker
 ############################
@@ -171,14 +183,12 @@ if command -v docker &>/dev/null; then
  autoload -Uz compinit && compinit
 fi
 
-
 ############################
 # Vim
 ############################
 
 alias vi="vim"
 alias vim="vim"
-
 
 ############################
 # Quality of Life Aliases
@@ -189,7 +199,6 @@ alias la="ls -A"
 alias l="ls -CF"
 alias ..="cd .."
 alias ...="cd ../.."
-
 
 ############################
 # History

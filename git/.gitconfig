@@ -1,6 +1,10 @@
 [user]
 	name = Gokul T
 	email = gokultmail@gmail.com
+[commit]
+  gpgsign = true
+[tag]
+  gpgsign = true
 [color]
 	ui = auto
 [init]
