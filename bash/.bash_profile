@@ -8,10 +8,11 @@ fi
 # User specific environment and startup programs
 
 if [[ $OSTYPE == "darwin"* ]]; then
-elif [[ $OSTYPE == "linux-gnu" ]]; then 
+  export PATH="$PATH:$HOME/Library/Application Support/JetBrains/Toolbox/scripts"
+elif [[ $OSTYPE == "linux-gnu" ]]; then
   # Added by Toolbox App
   export PATH="$PATH:$HOME/.local/share/JetBrains/Toolbox/scripts"
-else 
+else
 fi
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
