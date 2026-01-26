@@ -1,18 +1,18 @@
+
 # dotfiles
-My dotfiles repository.
+
+My .dotfiles repository.
 
 ## Linux
 
-- https://github.com/gokul-t/Toshy
-
+- [Toshy: "https://github.com/gokul-t/Toshy"]
 
 ## Mac
-
 
 ## Common
 
 - Tmux
 
-https://github.com/tmux-plugins/tpm
+[tpm: "https://github.com/tmux-plugins/tpm"]
 
-https://github.com/christoomey/vim-tmux-navigator
+[vim-tmux-navigator: "https://github.com/christoomey/vim-tmux-navigator"]
