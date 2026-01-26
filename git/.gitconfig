@@ -1,11 +1,10 @@
-[user]
-	name = Gokul T
-	email = gokultmail@gmail.com
 [commit]
-	gpgsign = true
+  gpgsign = true
 [tag]
-    gpgsign = true
+  gpgsign = true
 [color]
-	ui = auto
+  ui = auto
 [init]
-	defaultBranch = main
+  defaultBranch = main
+[include]
+  path = .identity.conf

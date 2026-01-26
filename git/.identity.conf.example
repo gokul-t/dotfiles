@@ -1,0 +1,4 @@
+[user]
+    name = user name
+    email = user@company.com
+    signingkey = 0xABCDEF123456
