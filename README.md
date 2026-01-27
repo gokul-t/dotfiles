@@ -15,4 +15,4 @@ My .dotfiles repository.
 
 [tpm: "https://github.com/tmux-plugins/tpm"]
 
-[vim-tmux-navigator: "https://github.com/christoomey/vim-tmux-navigator"]
+- prefix + I to install plugins
