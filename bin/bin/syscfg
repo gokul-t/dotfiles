@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+SESSION="syscfg"
+DIR="$HOME/.dotfiles"
+
+# If session exists, attach
+tmux has-session -t $SESSION 2>/dev/null && {
+  tmux attach -t $SESSION
+  exit 0
+}
+
+# Create new session
+tmux new-session -d -s $SESSION -c $DIR
+
+# Window 1: Neovim (dotfiles)
+tmux send-keys -t $SESSION:1 "nvim" C-m
+
+# Window 2: shell (for git, testing configs)
+tmux new-window -t $SESSION -n shell -c $DIR
+
+# Attach
+tmux attach -t $SESSION
