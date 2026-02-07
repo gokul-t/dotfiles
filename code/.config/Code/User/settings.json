@@ -86,5 +86,6 @@
      Bells (disable)
      ============================ */
     "workbench.preferredDarkColorTheme": "Default High Contrast",
-    "window.autoDetectColorScheme": true
+    "window.autoDetectColorScheme": true,
+    "github.copilot.nextEditSuggestions.enabled": true
 }
