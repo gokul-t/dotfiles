@@ -4,19 +4,28 @@ SESSION="syscfg"
 DIR="$HOME/.dotfiles"
 
 # If session exists, attach
-tmux has-session -t $SESSION 2>/dev/null && {
-  tmux attach -t $SESSION
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  tmux attach -t "$SESSION"
   exit 0
-}
+fi
 
-# Create new session
-tmux new-session -d -s $SESSION -c $DIR
+# Create session with Neovim as first window
+tmux new-session -d -s "$SESSION" -n dotfiles -c "$DIR"
 
-# Window 1: Neovim (dotfiles)
-tmux send-keys -t $SESSION:1 "nvim" C-m
+# Start Neovim
+tmux send-keys -t "$SESSION:dotfiles" "nvim" C-m
 
-# Window 2: shell (for git, testing configs)
-tmux new-window -t $SESSION -n shell -c $DIR
+# Give Neovim a moment to start
+sleep 0.3
+
+# Trigger <leader>e (Space + e)
+tmux send-keys -t "$SESSION:dotfiles" " e"
+
+# Optional shell window (not focused)
+tmux new-window -t "$SESSION" -n shell -c "$DIR"
+
+# Ensure focus stays on Neovim
+tmux select-window -t "$SESSION:dotfiles"
 
 # Attach
-tmux attach -t $SESSION
+tmux attach -t "$SESSION"
