@@ -1,5 +1,7 @@
 # Dotfiles
 
+My .dotfiles repository - configuration files for development environment.
+
 <!--toc:start-->
 - [Dotfiles](#dotfiles)
   - [Overview](#overview)
@@ -25,8 +27,6 @@
     - [Zsh plugins not working](#zsh-plugins-not-working)
   - [Notes](#notes)
 <!--toc:end-->
-
-My .dotfiles repository - configuration files for development environment.
 
 ## Overview
 
