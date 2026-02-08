@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SESSION_NAME="learn-terraform"
+PROJECT_DIR="/home/gokult/Developer/repos/gokul-t/learn-terraform-get-started-aws"
+
+if ! command -v tmux >/dev/null 2>&1; then
+  echo "tmux not found on PATH." >&2
+  exit 1
+fi
+
+if ! command -v nvim >/dev/null 2>&1; then
+  echo "nvim not found on PATH." >&2
+  exit 1
+fi
+
+if tmux has-session -t "${SESSION_NAME}" 2>/dev/null; then
+  tmux attach -t "${SESSION_NAME}"
+else
+  # Create session (detached) with window named nvim-learn-terraform
+  tmux new-session -d -s "${SESSION_NAME}" -n nvim-learn-terraform -c "${PROJECT_DIR}"
+
+  # Start Neovim in the first window
+  tmux send-keys -t "${SESSION_NAME}:nvim-learn-terraform" "nvim" C-m
+
+  # Create shell window (detached, never focused)
+  tmux new-window -d -t "${SESSION_NAME}" -n shell -c "${PROJECT_DIR}"
+
+  # Give Neovim time to start
+  sleep 0.4
+
+  # Trigger <leader>e (Space + e) in Neovim window
+  tmux send-keys -t "${SESSION_NAME}:nvim-learn-terraform" " e"
+fi
+
+tmux attach -t "${SESSION_NAME}:nvim-learn-terraform"
