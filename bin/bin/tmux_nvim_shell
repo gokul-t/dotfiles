@@ -3,17 +3,18 @@
 SESSION=$1
 DIR_PATH=$2
 DIR=$(basename "$DIR_PATH")
-# If session exists, attach directly to $DIR window
+
+# If session exists, attach directly to neovim window
 if tmux has-session -t "$SESSION" 2>/dev/null; then
-  tmux attach -t "$SESSION:$DIR"
+  tmux attach -t "$SESSION:neovim"
   exit 0
 fi
 
 # Create session (detached)
-tmux new-session -d -s "$SESSION" -n $DIR -c "$DIR_PATH"
+tmux new-session -d -s "$SESSION" -n neovim -c "$DIR_PATH"
 
 # Start Neovim
-tmux send-keys -t "$SESSION:$DIR" "nvim" C-m
+tmux send-keys -t "$SESSION:neovim" "nvim" C-m
 
 # Create shell window (detached, never focused)
 tmux new-window -d -t "$SESSION" -n shell -c "$DIR_PATH"
@@ -22,7 +23,7 @@ tmux new-window -d -t "$SESSION" -n shell -c "$DIR_PATH"
 sleep 0.4
 
 # Trigger <leader>e (Space + e)
-tmux send-keys -t "$SESSION:$DIR" " e"
+tmux send-keys -t "$SESSION:neovim" " e"
 
-# :rotating_light: ATTACH DIRECTLY TO $DIR WINDOW
-tmux attach -t "$SESSION:$DIR"
+# :rotating_light: ATTACH DIRECTLY TO neovim WINDOW
+tmux attach -t "$SESSION:neovim"
