@@ -66,20 +66,15 @@ ZSH_THEME="robbyrussell"
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-# plugins=(git)
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting you-should-use docker docker-compose kubectl mvn python pyenv z)
-source $ZSH/oh-my-zsh.sh
+setopt null_glob
+for config_file in ~/.config/zsh/conf.d/*.zsh; do
+  source "$config_file"
+done
+unsetopt null_glob
 
-# User configuration
-source $HOME/.zuserconfig.zsh
+source $ZSH/oh-my-zsh.sh
 # export MANPATH="/usr/local/man:$MANPATH"
 # user scripts and customizations
-export PATH="$HOME/bin:$PATH"
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 
@@ -155,32 +150,6 @@ add-zsh-hook chpwd auto_venv_activate
 auto_venv_activate # Run once for the initial directory
 
 ############################
-# Docker
-############################
-
-# Enable Docker CLI completions if available
-if command -v docker &>/dev/null; then
- autoload -Uz compinit && compinit
-fi
-
-############################
-# Vim
-############################
-
-alias vi="vim"
-alias vim="vim"
-
-############################
-# Quality of Life Aliases
-############################
-
-alias ll="ls -lah"
-alias la="ls -A"
-alias l="ls -CF"
-alias ..="cd .."
-alias ...="cd ../.."
-
-############################
 # History
 ############################
 
@@ -196,9 +165,3 @@ setopt HIST_REDUCE_BLANKS
 
 # Show command execution time if > 5s
 export REPORTTIME=5
-
-############################
-# Git
-############################
-
-export GPG_TTY=$(tty)
