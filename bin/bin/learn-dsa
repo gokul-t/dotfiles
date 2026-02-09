@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+tmux_nvim_shell $(basename "$0") ~/Developer/repos/gokul-t/dsa
