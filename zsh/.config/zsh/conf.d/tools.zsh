@@ -19,5 +19,5 @@ if command -v java >/dev/null 2>&1; then
   export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home 2>/dev/null)}"
 fi
 
-########################################
-# Java & Maven (SDKMAN managed)
+# Set up fzf key bindings and fuzzy completion
+source <(fzf --zsh)
