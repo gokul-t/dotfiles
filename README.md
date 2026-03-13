@@ -244,7 +244,7 @@ Use the `syscfg` script to open a tmux session with Neovim in the dotfiles direc
 
 ### Tmux
 
-- Theme: Tokyo Night Moon
+- Theme: Minimal Theme
 - Plugins: vim-tmux-navigator, tmux-yank, tmux-resurrect, tmux-continuum
 - Auto-restore sessions on restart
 
@@ -287,7 +287,7 @@ Use the `syscfg` script to open a tmux session with Neovim in the dotfiles direc
 
 ## Notes
 
-- User-specific files (like `.zuserconfig.zsh` and `git/.identity.conf`) are git-ignored
+- User-specific files (like `git/.identity.conf`) are git-ignored
 - Use Stow to manage symlinks - avoid manually copying files
 - After major updates, restart your terminal/applications to apply changes
 - Refer to individual tool documentation for advanced customization

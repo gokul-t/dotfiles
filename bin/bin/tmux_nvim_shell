@@ -2,7 +2,7 @@
 
 SESSION=$1
 DIR_PATH=$2
-DIR=$(basename "$DIR_PATH")
+# DIR=$(basename "$DIR_PATH")
 
 # If session exists, attach directly to neovim window
 if tmux has-session -t "$SESSION" 2>/dev/null; then

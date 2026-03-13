@@ -15,3 +15,4 @@ alias la="ls -A"
 alias l="ls -CF"
 alias ..="cd .."
 alias ...="cd ../.."
+alias inv='nvim $(fzf -m --tmux --preview="bat --color=always {}")'
