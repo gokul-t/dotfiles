@@ -100,7 +100,8 @@ This repository contains configuration files for various applications and tools 
    stow bin        # Creates symlinks for custom scripts
    stow code       # Creates symlinks for VS Code config
    stow ideavim    # Creates symlinks for IdeaVim config
-   stow mise
+   stow mise       # Creates symlinks for mise config
+   stow npm        # Creates symlinks for npm config
    ```
 
    Or stow all at once:
