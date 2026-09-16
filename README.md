@@ -46,7 +46,17 @@ This repository contains configuration files for various applications and tools 
 
 ### Mac-Specific
 
-- To be documented
+- **Homebrew** - Package manager
+
+  ```sh
+  /bin/bash -c "$curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ```
+
+- **GNU Stow** - Symlink farm manager for managing dotfiles
+
+  ```sh
+  brew install stow
+  ```
 
 ### Common Tools (All Platforms)
 
@@ -90,6 +100,7 @@ This repository contains configuration files for various applications and tools 
    stow bin        # Creates symlinks for custom scripts
    stow code       # Creates symlinks for VS Code config
    stow ideavim    # Creates symlinks for IdeaVim config
+   stow mise
    ```
 
    Or stow all at once:
@@ -111,7 +122,15 @@ This repository contains configuration files for various applications and tools 
    fc-cache -fv
    ```
 
-4. **Set Up Tmux Plugin Manager**
+4. **Install Packages via Brewfile**
+  
+  Installs CLI tools, casks, and VS Code extensions listed in `Brewfile`:
+
+  ```sh
+  brew bundle --file ~/.dotfiles/Brewfile
+  ```
+
+1. **Set Up Tmux Plugin Manager**
 
    ```sh
    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
@@ -124,7 +143,7 @@ This repository contains configuration files for various applications and tools 
    # Press prefix + I (default prefix is Ctrl+b) to install plugins
    ```
 
-5. **Set Up Neovim**
+2. **Set Up Neovim**
 
    Open Neovim and LazyVim will automatically install all plugins:
 
@@ -134,7 +153,7 @@ This repository contains configuration files for various applications and tools 
 
    LazyVim will bootstrap `lazy.nvim` and install all configured plugins automatically.
 
-6. **Set Up IdeaVim (for JetBrains IDEs)**
+3. **Set Up IdeaVim (for JetBrains IDEs)**
 
    ```sh
    git clone https://github.com/cufarvid/lazy-idea.git ~/.lazy-idea
@@ -142,7 +161,7 @@ This repository contains configuration files for various applications and tools 
 
    The `.ideavimrc` file will source this configuration automatically.
 
-7. **Configure Git Identity**
+4. **Configure Git Identity**
 
    Copy the example identity file and edit with your details:
 
@@ -151,7 +170,7 @@ This repository contains configuration files for various applications and tools 
    # Edit the file with your name, email, and GPG key
    ```
 
-8. **Set Up Shell Environment**
+5. **Set Up Shell Environment**
 
    For **Zsh** users:
    - Install Oh My Zsh:
@@ -174,33 +193,40 @@ This repository contains configuration files for various applications and tools 
      touch ~/.zuserconfig.zsh
      ```
 
-9. **Install Development Tools**
+6. **Install Development Tools**
 
-   - **SDKMAN** (Java, Maven, Gradle):
+    - **SDKMAN** (Java, Maven, Gradle):
 
-     ```sh
-     curl -s "https://get.sdkman.io" | bash
-     ```
+        ```sh
+        curl -s "https://get.sdkman.io" | bash
+        ```
 
-   - **NVM** (Node Version Manager):
+    - **NVM** (Node Version Manager):
 
-     ```sh
-     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-     ```
+        ```sh
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+        ```
 
-   - **pyenv** (Python version manager):
+    - **pyenv** (Python version manager):
 
-     ```sh
-     curl https://pyenv.run | bash
-     ```
+        ```sh
+        curl https://pyenv.run | bash
+        ```
 
-   - **Homebrew** (Linux):
+    - **Homebrew** (Linux):
 
-     ```sh
-     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-     ```
+        ```sh
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        ```
 
-10. **Linux-Specific: Install Toshy**
+    - **mise** (already stowed in step 2, config at `~/.config/mise/config.toml`):
+
+        ```sh
+        curl https://mise.run | sh
+        mise trust ~/.config/mise/config.toml
+        ```
+
+7. **Linux-Specific: Install Toshy**
 
     For keyboard remapping on Linux (Mac-like shortcuts):
 
