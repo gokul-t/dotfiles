@@ -64,6 +64,7 @@ This repository contains configuration files for various applications and tools 
 - **pyenv** - Python version manager
 - **Homebrew** (Linux/Mac) - Package manager
 - **Rust/Cargo** - For Rust development
+- **mise** - Manages runtime versions, environment variables, and project tasks from a single configuration file.
 
 ## Installation Steps
 
