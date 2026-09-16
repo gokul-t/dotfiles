@@ -165,3 +165,4 @@ setopt HIST_REDUCE_BLANKS
 
 # Show command execution time if > 5s
 export REPORTTIME=5
+eval "$("$HOME/.local/bin/mise" activate zsh)"
