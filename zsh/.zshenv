@@ -24,3 +24,8 @@ fi
 # Dedupe PATH entries (preserve order)
 typeset -U path
 
+setopt null_glob
+for env_file in ~/.config/zsh/env.d/*.zsh; do
+  source "$env_file"
+done
+unsetopt null_glob
