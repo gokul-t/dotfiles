@@ -106,6 +106,7 @@ This repository contains configuration files for various applications and tools 
    stow ideavim    # Creates symlinks for IdeaVim config
    stow mise       # Creates symlinks for mise config
    stow npm        # Creates symlinks for npm config
+   stow yazi       # Creates symlinks for yazi config
    ```
 
    Or stow all at once:
