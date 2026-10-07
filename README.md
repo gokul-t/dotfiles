@@ -66,6 +66,10 @@ This repository contains configuration files for various applications and tools 
 - **Alacritty** - Terminal emulator
 - **Tmux Plugin Manager (TPM)**: [https://github.com/tmux-plugins/tpm](https://github.com/tmux-plugins/tpm)
 - **IdeaVim / Lazy-Idea** - Vim emulation for JetBrains IDEs
+- zoxide - A smarter cd command, inspired by z and autojump.
+- fzf - A general-purpose command-line fuzzy finder.
+- rg (ripgrep) - A line-oriented search tool that recursively searches your current directory for a regex pattern.
+- yazi - tui file manager written in Rust.
 
 ### Development Tools
 
