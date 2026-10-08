@@ -107,6 +107,7 @@ This repository contains configuration files for various applications and tools 
    stow mise       # Creates symlinks for mise config
    stow npm        # Creates symlinks for npm config
    stow yazi       # Creates symlinks for yazi config
+   stow ghostty    # Creates symlinks for ghostty config
    ```
 
    Or stow all at once:
