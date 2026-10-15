@@ -8,8 +8,13 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time Oh My Zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="robbyrussell"
-#ZSH_THEME="agnoster"
+# ZSH_THEME="robbyrussell"
+ZSH_THEME="agnoster"
+# ZSH_THEME=""
+
+# Force 256color and True Color support across Tmux/Vim
+export TERM="xterm-256color"
+export COLORTERM="truecolor"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -165,6 +170,7 @@ setopt HIST_REDUCE_BLANKS
 
 # Show command execution time if > 5s
 export REPORTTIME=5
+
 eval "$("$HOME/.local/bin/mise" activate zsh)"
 
 function y() {

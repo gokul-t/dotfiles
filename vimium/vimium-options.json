@@ -1,0 +1,27 @@
+{
+  "exclusionRules": [
+    {
+      "passKeys": "",
+      "pattern": "https?://vim-adventures.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://www.typing.com/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://cloudquest.skillbuilder.aws/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://kbflow-dev.pages.dev/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://mail.google.com/*"
+    }
+  ],
+  "keyMappings": "# Insert your preferred key mappings here.\nmap <c-]> passNextKey\n\n# Move between tabs using H and L (LazyVim style)\nmap H previousTab\nmap L nextTab\n\n# Move through browser history using J and K\nmap J goBack\nmap K goForward",
+  "newTabDestination": "browserNewTabPage",
+  "settingsVersion": "2.4.2"
+}

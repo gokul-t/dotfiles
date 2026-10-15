@@ -1,0 +1,9 @@
+# Core Theme
+theme = Catppuccin Macchiato
+
+# Font (Requires a Nerd Font for Oh My Zsh/Tmux icons)
+# font-family = "JetBrainsMono Nerd Font"
+# font-size = 12 
+
+font-family = "MesloLGS NF"
+font-size = 14

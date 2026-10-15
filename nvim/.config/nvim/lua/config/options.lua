@@ -7,3 +7,6 @@ vim.o.swapfile = false
 vim.g.lazyvim_python_lsp = "pyright"
 -- Set to "ruff_lsp" to use the old LSP implementation version.
 vim.g.lazyvim_python_ruff = "ruff"
+
+-- Enable 24-bit RGB color processing inside TUIs
+vim.opt.termguicolors = true
