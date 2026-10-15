@@ -108,6 +108,8 @@ This repository contains configuration files for various applications and tools 
    stow npm        # Creates symlinks for npm config
    stow yazi       # Creates symlinks for yazi config
    stow ghostty    # Creates symlinks for ghostty config
+   stow lazygit    # Creates symlinks for lazygit config
+   stow starship   # Creates symlinks for starship config
    ```
 
    Or stow all at once:
