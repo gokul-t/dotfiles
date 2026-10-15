@@ -24,6 +24,7 @@ bindings = [
   { key = "D", mods = "Alt", chars = "\u001bd" },
   { key = "W", mods = "Alt", chars = "\u001bw" },
   { key = "X", mods = "Alt", chars = "\u001bx" },
+  { key = "Return", mods = "Shift", chars = "\u001B\r" },
 ]
 
 # -----------------------------------------------------------------------------
