@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+tmux_nvim_shell $(basename "$0") ~/Developer/repos/gokul-t/learn-terraform-get-started-aws
