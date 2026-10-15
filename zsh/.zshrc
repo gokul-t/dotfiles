@@ -173,6 +173,8 @@ export REPORTTIME=5
 
 eval "$("$HOME/.local/bin/mise" activate zsh)"
 
+# eval "$(starship init zsh)"
+
 function y() {
 	local tmp cwd; tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
 	command yazi "$@" --cwd-file="$tmp"
