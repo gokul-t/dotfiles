@@ -7,3 +7,8 @@ theme = Catppuccin Macchiato
 
 font-family = "MesloLGS NF"
 font-size = 14
+
+# instantly launch tmux session on startup
+
+command = tmux new-session -A -s default
+
