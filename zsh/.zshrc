@@ -1,5 +1,5 @@
 # If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
+# The PATH is managed in ~/.zshenv
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
@@ -13,7 +13,6 @@ ZSH_THEME="agnoster"
 # ZSH_THEME=""
 
 # Force 256color and True Color support across Tmux/Vim
-export TERM="xterm-256color"
 export COLORTERM="truecolor"
 
 # Set list of themes to pick from when loading at random

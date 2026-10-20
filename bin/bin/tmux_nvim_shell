@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-SESSION=$1
-DIR_PATH=$2
+SESSION="$1"
+DIR_PATH="$2"
 # DIR=$(basename "$DIR_PATH")
 
 if tmux has-session -t "$SESSION" 2>/dev/null; then
@@ -11,7 +11,7 @@ if tmux has-session -t "$SESSION" 2>/dev/null; then
   else
 # If session exists, attach directly to neovim window
     tmux attach -t "$SESSION:neovim"
-  fi  
+  fi
   exit 0
 fi
 
