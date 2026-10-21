@@ -1,0 +1,37 @@
+# Fedora Packages
+# Install these using: sudo dnf install $(cat dnf-packages.txt)
+
+# Development
+neovim
+zsh
+cargo
+rustc
+terraform
+helm
+code
+podman-compose
+luarocks
+stow
+git
+
+# CLI Tools
+fzf
+fd-find
+bat
+gh
+lazygit
+yazi
+starship
+htop
+android-tools
+
+# Terminal/UI
+ghostty
+gnome-tweaks
+
+# Utilities
+vlc
+syncthing
+google-chrome-stable
+sxhkd
+xdotool

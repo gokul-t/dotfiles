@@ -38,11 +38,15 @@ This repository contains configuration files for various applications and tools 
 
 - **Toshy** - Keyboard remapping for Linux (Mac-like shortcuts): [https://github.com/gokul-t/Toshy](https://github.com/gokul-t/Toshy)
 - **GNU Stow** - Symlink farm manager for managing dotfiles
+- **DNF Packages** - List of Fedora dependencies in `dnf-packages.txt`
 
   ```sh
-  sudo apt install stow  # For Debian/Ubuntu
   sudo dnf install stow  # For Fedora
+  sudo apt install stow  # For Debian/Ubuntu
   ```
+
+  # To install all listed Fedora packages:
+  sudo dnf install $(cat ~/.dotfiles/dnf-packages.txt)
 
 ### Mac-Specific
 
@@ -63,13 +67,15 @@ This repository contains configuration files for various applications and tools 
 - **Git** - Version control
 - **Neovim** - Text editor
 - **Tmux** - Terminal multiplexer
-- **Alacritty** - Terminal emulator
+- **Alacritty / Ghostty** - Terminal emulators
 - **Tmux Plugin Manager (TPM)**: [https://github.com/tmux-plugins/tpm](https://github.com/tmux-plugins/tpm)
 - **IdeaVim / Lazy-Idea** - Vim emulation for JetBrains IDEs
 - zoxide - A smarter cd command, inspired by z and autojump.
 - fzf - A general-purpose command-line fuzzy finder.
 - rg (ripgrep) - A line-oriented search tool that recursively searches your current directory for a regex pattern.
 - yazi - tui file manager written in Rust.
+- lazygit - Simple git tui.
+- starship - The customizable prompt for any shell.
 
 ### Development Tools
 
