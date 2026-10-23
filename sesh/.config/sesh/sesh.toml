@@ -1,0 +1,49 @@
+#:schema https://github.com/joshmedeski/sesh/raw/main/sesh.schema.json
+
+[[session]]
+name = "Dotfiles 🏠"
+path = "~/.dotfiles"
+icon = "🏠"
+startup_command = "nvim"
+preview_command = "bat --color=always ~/.dotfiles/README.md"
+windows = [ "git", "copilot"]
+
+[[session]]
+name = "Notes 📓"
+path = "~/Documents/notes"
+startup_command = "nvim"
+icon = "📓"
+windows = [ "yazi"]
+
+[[session]]
+name = "Downloads 📥"
+path = "~/Downloads"
+icon = "📥"
+startup_command = "ls"
+windows = [ "yazi"]
+
+[[wildcard]]
+pattern = "~/Developer/repos/*/*"
+icon = ""
+startup_command = "nvim"
+windows = [ "git", "copilot"]
+
+[[window]]
+name = "nvim"
+startup_script = "nvim"
+
+[[window]]
+name = "git"
+startup_script = "git status"
+
+[[window]]
+name = "copilot"
+startup_script = "copilot"
+
+[[window]]
+name = "lazygit"
+startup_script = "lazygit"
+
+[[window]]
+name = "yazi"
+startup_script = "y"

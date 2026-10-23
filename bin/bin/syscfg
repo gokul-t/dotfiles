@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-tmux_nvim_shell $(basename "$0") ~/.dotfiles
