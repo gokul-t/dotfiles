@@ -33,5 +33,3 @@ gnome-tweaks
 vlc
 syncthing
 google-chrome-stable
-sxhkd
-xdotool

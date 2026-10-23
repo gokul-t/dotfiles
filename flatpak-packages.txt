@@ -1,0 +1,7 @@
+# Flatpak applications
+# Format: remote application-id
+flathub com.getpostman.Postman
+flathub md.obsidian.Obsidian
+flathub org.mozilla.thunderbird
+flathub com.mattjakeman.ExtensionManager
+fedora org.gnome.Extensions

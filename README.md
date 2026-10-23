@@ -39,14 +39,22 @@ This repository contains configuration files for various applications and tools 
 - **Toshy** - Keyboard remapping for Linux (Mac-like shortcuts): [https://github.com/gokul-t/Toshy](https://github.com/gokul-t/Toshy)
 - **GNU Stow** - Symlink farm manager for managing dotfiles
 - **DNF Packages** - List of Fedora dependencies in `dnf-packages.txt`
+- **Flatpak Apps** - List of Flatpak applications in `flatpak-packages.txt`
 
   ```sh
   sudo dnf install stow  # For Fedora
   sudo apt install stow  # For Debian/Ubuntu
   ```
 
-  # To install all listed Fedora packages:
-  sudo dnf install $(cat ~/.dotfiles/dnf-packages.txt)
+  Install the listed Fedora packages and Flatpak apps:
+
+  ```sh
+  sudo dnf install $(grep -v '^#' ~/.dotfiles/dnf-packages.txt | xargs)
+  while read -r remote app; do
+    case "$remote" in ""|\#*) continue ;; esac
+    flatpak install --assumeyes "$remote" "$app"
+  done < ~/.dotfiles/flatpak-packages.txt
+  ```
 
 ### Mac-Specific
 
