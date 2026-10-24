@@ -10,7 +10,6 @@ export ZSH="$HOME/.oh-my-zsh"
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 # ZSH_THEME="robbyrussell"
 ZSH_THEME="agnoster"
-# ZSH_THEME=""
 
 # Force 256color and True Color support across Tmux/Vim
 export COLORTERM="truecolor"
@@ -76,7 +75,9 @@ for config_file in ~/.config/zsh/conf.d/*.zsh; do
 done
 unsetopt null_glob
 
-source $ZSH/oh-my-zsh.sh
+if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
+  source "$ZSH/oh-my-zsh.sh"
+fi
 # export MANPATH="/usr/local/man:$MANPATH"
 # user scripts and customizations
 # You may need to manually set your language environment
@@ -119,8 +120,10 @@ fi
 # Terraform
 ############################
 
-autoload -U +X bashcompinit && bashcompinit
-complete -o nospace -C /usr/bin/terraform terraform
+if command -v terraform >/dev/null 2>&1; then
+  autoload -U +X bashcompinit && bashcompinit
+  complete -o nospace -C "$(command -v terraform)" terraform
+fi
 
 
 # Auto-activate venv when changing directories
@@ -162,9 +165,14 @@ setopt HIST_REDUCE_BLANKS
 # Show command execution time if > 5s
 export REPORTTIME=5
 
-eval "$("$HOME/.local/bin/mise" activate zsh)"
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
 
-# eval "$(starship init zsh)"
+if command -v starship >/dev/null 2>&1; then
+  ZSH_THEME=""
+  eval "$(starship init zsh)"
+fi
 
 function y() {
 	local tmp cwd; tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
