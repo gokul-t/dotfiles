@@ -1,0 +1,35 @@
+---
+- name: Find dotfile packages
+  ansible.builtin.find:
+    paths: "{{ dotfiles_repo_path }}"
+    file_type: directory
+    recurse: false
+  register: dotfiles_stow_directories
+
+- name: Create Stow target directory
+  ansible.builtin.file:
+    path: "{{ dotfiles_stow_target }}"
+    state: directory
+    mode: "0755"
+
+- name: Link all dotfile packages with GNU Stow
+  ansible.builtin.command:
+    argv:
+      - stow
+      - --dir
+      - "{{ dotfiles_repo_path }}"
+      - --target
+      - "{{ dotfiles_stow_target }}"
+      - --stow
+      - --verbose=1
+      - "{{ item }}"
+  loop: >-
+    {{
+      dotfiles_stow_directories.files
+      | map(attribute='path')
+      | map('basename')
+      | reject('equalto', 'ansible')
+      | list
+    }}
+  register: dotfiles_stow_result
+  changed_when: "'LINK:' in (dotfiles_stow_result.stdout | default(''))"

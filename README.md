@@ -11,8 +11,8 @@ My .dotfiles repository - configuration files for development environment.
     - [Common Tools (All Platforms)](#common-tools-all-platforms)
     - [Development Tools](#development-tools)
   - [Installation Steps](#installation-steps)
+  - [Automated Setup with Ansible](#automated-setup-with-ansible)
   - [Usage](#usage)
-    - [Quick Start Script](#quick-start-script)
     - [Tmux Key Bindings](#tmux-key-bindings)
     - [Zsh Features](#zsh-features)
   - [Key Configured Tools](#key-configured-tools)
@@ -61,7 +61,7 @@ This repository contains configuration files for various applications and tools 
 - **Homebrew** - Package manager
 
   ```sh
-  /bin/bash -c "$curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   ```
 
 - **GNU Stow** - Symlink farm manager for managing dotfiles
@@ -100,7 +100,7 @@ This repository contains configuration files for various applications and tools 
 1. **Clone the Repository**
 
    ```sh
-   git clone https://github.com/yourusername/dotfiles.git ~/.dotfiles
+   git clone https://github.com/gokul-t/dotfiles.git ~/.dotfiles
    cd ~/.dotfiles
    ```
 
@@ -263,6 +263,71 @@ This repository contains configuration files for various applications and tools 
     ```sh
     # Follow instructions at: https://github.com/gokul-t/Toshy
     ```
+
+## Automated Setup with Ansible
+
+The local Ansible playbook installs the packages and Flatpak apps from this
+repository, links every top-level Stow package (excluding the `ansible`
+automation directory), and sets up shell plugins and development tools. Add or
+remove Fedora packages in `dnf-packages.txt`; no Ansible variable list needs
+updating. Fedora package repositories for VS Code, Chrome, Terraform, and sesh
+are configured by the playbook. Flatpak apps are installed system-wide.
+
+Bootstrap Ansible and clone this repository first:
+
+```sh
+# Fedora
+sudo dnf install ansible-core git
+
+# macOS: install Homebrew first if it is not already installed
+brew install ansible git
+
+git clone https://github.com/gokul-t/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+```
+
+Run the playbook on Fedora with privilege escalation:
+
+```sh
+ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass
+```
+
+To test Fedora provisioning in a minimal container, disable Flatpak and skip
+packages that are not available in the image's enabled Fedora repositories.
+For example, the Fedora 44 container does not provide `lazygit`, `yazi`,
+`starship`, or `ghostty` from its enabled repositories:
+
+```sh
+ansible-playbook -i ansible/inventory.ini ansible/site.yml \
+  -e '{"dotfiles_install_flatpak_apps":false,"dotfiles_fedora_skip_packages":["lazygit","yazi","starship","ghostty"],"dotfiles_stow_target":"/tmp/dotfiles-test-home"}'
+```
+
+The container runs as root, so `--ask-become-pass` is unnecessary. Skipping
+these packages is only for the container test; they remain in
+`dnf-packages.txt` for normal setup when their package sources are configured.
+The separate `/tmp` Stow target avoids conflicts with files already present in
+the container's `/root` home. On a real system, Stow intentionally stops when
+existing files conflict; review and back up those files before resolving the
+conflict rather than using `--adopt` blindly. SDKMAN is skipped automatically
+when Ansible runs as root because its installer does not support root; it runs
+for normal-user installations. You can also set
+`-e dotfiles_install_sdkman=false` to skip it explicitly.
+
+On macOS, run without privilege escalation:
+
+```sh
+ansible-playbook -i ansible/inventory.ini ansible/site.yml
+```
+
+GitHub Actions checks Ansible/YAML syntax on every push and pull request. A
+full Fedora 44 container provisioning test runs weekly and can also be started
+manually from the repository's **Actions → Ansible → Run workflow** page. It
+provisions twice and checks that the second run reports no changes.
+
+Stow conflicts fail rather than overwriting existing files; resolve those
+conflicts before rerunning. The playbook leaves Git identity and default-shell
+selection to you. Configure Git identity using the manual steps above; on
+Linux, install Toshy separately using its project instructions.
 
 ## Usage
 

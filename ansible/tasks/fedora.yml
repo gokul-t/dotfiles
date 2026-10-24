@@ -1,0 +1,212 @@
+---
+- name: Install DNF repository support
+  become: true
+  ansible.builtin.dnf:
+    name: dnf-plugins-core
+    state: present
+
+- name: Configure the Microsoft Visual Studio Code repository
+  become: true
+  ansible.builtin.yum_repository:
+    name: vscode
+    description: Visual Studio Code
+    baseurl: https://packages.microsoft.com/yumrepos/vscode
+    gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+    gpgcheck: true
+    enabled: true
+
+- name: Configure the Google Chrome repository
+  become: true
+  ansible.builtin.yum_repository:
+    name: google-chrome
+    description: Google Chrome
+    baseurl: https://dl.google.com/linux/chrome/rpm/stable/$basearch
+    gpgkey: https://dl.google.com/linux/linux_signing_key.pub
+    gpgcheck: true
+    enabled: true
+  when: ansible_facts['architecture'] == "x86_64"
+
+- name: Configure the HashiCorp repository
+  become: true
+  ansible.builtin.yum_repository:
+    name: hashicorp
+    description: HashiCorp Stable - $basearch
+    baseurl: https://rpm.releases.hashicorp.com/fedora/$releasever/$basearch/stable
+    gpgkey: https://rpm.releases.hashicorp.com/gpg
+    gpgcheck: true
+    enabled: true
+
+- name: Check whether the sesh Copr repository is enabled
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:buckaroogeek:Tmux_sesh.repo
+  register: dotfiles_sesh_copr_repo
+
+- name: Enable the sesh Copr repository
+  become: true
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - copr
+      - enable
+      - --assumeyes
+      - buckaroogeek/Tmux_sesh
+  when: not dotfiles_sesh_copr_repo.stat.exists
+
+- name: Read Fedora package manifest
+  ansible.builtin.set_fact:
+    dotfiles_dnf_packages_all: >-
+      {{
+        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/dnf-packages.txt')
+        .splitlines()
+        | map('trim')
+        | reject('match', '^#')
+        | reject('equalto', '')
+        | list
+      }}
+
+- name: Select Fedora packages for optional Flatpak installation
+  ansible.builtin.set_fact:
+    dotfiles_dnf_packages: >-
+      {{
+        dotfiles_dnf_packages_all
+        | reject('equalto', 'flatpak')
+        | list
+        if not dotfiles_install_flatpak_apps | bool
+        else dotfiles_dnf_packages_all
+      }}
+
+- name: Exclude explicitly skipped Fedora packages
+  ansible.builtin.set_fact:
+    dotfiles_dnf_packages: >-
+      {{
+        dotfiles_dnf_packages
+        | reject('in', dotfiles_fedora_skip_packages | default([]))
+        | list
+      }}
+
+- name: Select Fedora packages for this architecture
+  ansible.builtin.set_fact:
+    dotfiles_dnf_packages: >-
+      {{
+        dotfiles_dnf_packages
+        | reject('equalto', 'google-chrome-stable')
+        | list
+        if ansible_facts['architecture'] != 'x86_64'
+        else dotfiles_dnf_packages
+      }}
+
+- name: Install Fedora packages
+  become: true
+  ansible.builtin.dnf:
+    name: "{{ dotfiles_dnf_packages }}"
+    state: present
+    update_cache: true
+
+- name: Read Flatpak application manifest
+  ansible.builtin.set_fact:
+    dotfiles_flatpak_apps: >-
+      {{
+        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/flatpak-packages.txt')
+        .splitlines()
+        | map('trim')
+        | reject('match', '^#')
+        | reject('equalto', '')
+        | list
+      }}
+  when: dotfiles_install_flatpak_apps | bool
+
+- name: List configured system Flatpak remotes
+  become: true
+  ansible.builtin.command:
+    argv:
+      - flatpak
+      - remote-list
+      - --system
+      - --columns=name
+  register: dotfiles_flatpak_remotes
+  changed_when: false
+  when: dotfiles_install_flatpak_apps | bool
+
+- name: Add required system Flatpak remotes
+  become: true
+  ansible.builtin.command:
+    argv:
+      - flatpak
+      - remote-add
+      - --system
+      - --if-not-exists
+      - "{{ item.name }}"
+      - "{{ item.url }}"
+  loop:
+    - name: flathub
+      url: https://flathub.org/repo/flathub.flatpakrepo
+    - name: fedora
+      url: https://dl.fedoraproject.org/pub/flatpak/repo/fedora.flatpakrepo
+  when:
+    - dotfiles_install_flatpak_apps | bool
+    - item.name not in dotfiles_flatpak_remotes.stdout_lines
+
+- name: List installed system Flatpak applications
+  become: true
+  ansible.builtin.command:
+    argv:
+      - flatpak
+      - list
+      - --system
+      - --app
+      - --columns=application
+  register: dotfiles_installed_flatpak_apps
+  changed_when: false
+  when: dotfiles_install_flatpak_apps | bool
+
+- name: Install missing Flatpak applications
+  become: true
+  ansible.builtin.command:
+    argv:
+      - flatpak
+      - install
+      - --system
+      - --assumeyes
+      - "{{ item.split()[0] }}"
+      - "{{ item.split()[1] }}"
+  loop: "{{ dotfiles_flatpak_apps }}"
+  when:
+    - dotfiles_install_flatpak_apps | bool
+    - item.split()[1] not in dotfiles_installed_flatpak_apps.stdout_lines
+
+- name: Create user font directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts"
+    state: directory
+    mode: "0755"
+
+- name: Check for the Meslo Nerd Font
+  ansible.builtin.find:
+    paths: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts"
+    patterns: "MesloLGS NF Regular.ttf"
+    recurse: true
+  register: dotfiles_meslo_font
+
+- name: Download Meslo Nerd Font archive
+  ansible.builtin.get_url:
+    url: https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip
+    dest: /tmp/dotfiles-meslo-nerd-fonts.zip
+    mode: "0644"
+  when: dotfiles_meslo_font.matched == 0
+
+- name: Install Meslo Nerd Font
+  ansible.builtin.unarchive:
+    src: /tmp/dotfiles-meslo-nerd-fonts.zip
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts"
+    remote_src: true
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/MesloLGS NF Regular.ttf"
+  when: dotfiles_meslo_font.matched == 0
+  register: dotfiles_meslo_font_install
+
+- name: Refresh user font cache
+  ansible.builtin.command:
+    argv:
+      - fc-cache
+      - -f
+      - "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts"
+  when: dotfiles_meslo_font_install.changed | default(false)

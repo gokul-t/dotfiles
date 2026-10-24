@@ -1,0 +1,69 @@
+name: Ansible
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    name: Syntax and YAML validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Ansible and YAML parser
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ansible-core python3-yaml
+
+      - name: Parse Ansible YAML files
+        run: |
+          /usr/bin/python3 - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          for path in sorted(Path("ansible").rglob("*.yml")):
+              with path.open() as stream:
+                  yaml.safe_load(stream)
+              print(f"Valid YAML: {path}")
+          PY
+
+      - name: Check playbook syntax
+        run: ansible-playbook -i ansible/inventory.ini ansible/site.yml --syntax-check
+
+  fedora-container:
+    name: Fedora 44 provisioning
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Provision Fedora container and verify idempotence
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace:ro" \
+            -w /workspace \
+            registry.fedoraproject.org/fedora:44 \
+            bash -euo pipefail -s <<'CONTAINER'
+          dnf install -y ansible-core git stow curl unzip fontconfig
+
+          options='{"dotfiles_install_flatpak_apps":false,"dotfiles_fedora_skip_packages":["lazygit","yazi","starship","ghostty"],"dotfiles_stow_target":"/tmp/dotfiles-test-home"}'
+
+          ansible-playbook -i ansible/inventory.ini ansible/site.yml \
+            -e "$options" | tee /tmp/ansible-first-run.log
+
+          ansible-playbook -i ansible/inventory.ini ansible/site.yml \
+            -e "$options" | tee /tmp/ansible-second-run.log
+
+          grep -Eq 'localhost[[:space:]]*:[[:space:]]+ok=[0-9]+[[:space:]]+changed=0([[:space:]]|$)' \
+            /tmp/ansible-second-run.log
+          CONTAINER

@@ -33,3 +33,24 @@ gnome-tweaks
 vlc
 syncthing
 google-chrome-stable
+
+# Ansible bootstrap and pyenv build dependencies
+bzip2-devel
+dnf-plugins-core
+flatpak
+fontconfig
+gcc
+libffi-devel
+make
+ncurses-devel
+openssl-devel
+patch
+readline-devel
+sqlite-devel
+tk-devel
+tmux
+unzip
+xz-devel
+zlib-devel
+zoxide
+tmux-sesh

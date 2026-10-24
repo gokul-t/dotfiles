@@ -1,0 +1,89 @@
+---
+- name: Install Oh My Zsh
+  ansible.builtin.git:
+    repo: https://github.com/ohmyzsh/ohmyzsh.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
+    depth: 1
+
+- name: Create Oh My Zsh plugin directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins"
+    state: directory
+    mode: "0755"
+
+- name: Install configured Zsh plugins
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
+    depth: 1
+  loop:
+    - name: zsh-autosuggestions
+      repo: https://github.com/zsh-users/zsh-autosuggestions.git
+    - name: zsh-syntax-highlighting
+      repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+    - name: you-should-use
+      repo: https://github.com/MichaelAquilina/zsh-you-should-use.git
+
+- name: Install Tmux Plugin Manager
+  ansible.builtin.git:
+    repo: https://github.com/tmux-plugins/tpm.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.tmux/plugins/tpm"
+    depth: 1
+
+- name: Install Lazy-Idea
+  ansible.builtin.git:
+    repo: https://github.com/cufarvid/lazy-idea.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.lazy-idea"
+    depth: 1
+
+- name: Install NVM
+  ansible.builtin.git:
+    repo: https://github.com/nvm-sh/nvm.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.nvm"
+    version: master
+    depth: 1
+
+- name: Install pyenv
+  ansible.builtin.git:
+    repo: https://github.com/pyenv/pyenv.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.pyenv"
+    version: master
+    depth: 1
+
+- name: Install SDKMAN
+  ansible.builtin.shell: set -o pipefail && curl -fsSL https://get.sdkman.io | bash
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.sdkman/bin/sdkman-init.sh"
+    executable: /bin/bash
+  when:
+    - dotfiles_install_sdkman | bool
+    - ansible_facts['user_id'] != 'root'
+
+- name: Explain why SDKMAN installation was skipped
+  ansible.builtin.debug:
+    msg: >-
+      SDKMAN installation is skipped when Ansible runs as root. Run the playbook
+      as your regular user, or set dotfiles_install_sdkman=false to skip it.
+  when:
+    - dotfiles_install_sdkman | bool
+    - ansible_facts['user_id'] == 'root'
+
+- name: Install mise
+  ansible.builtin.shell: set -o pipefail && curl -fsSL https://mise.run | sh
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
+    executable: /bin/bash
+
+- name: Check whether the mise configuration is linked
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/mise/config.toml"
+  register: dotfiles_mise_config
+
+- name: Trust the linked mise configuration
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
+      - trust
+      - "{{ ansible_facts['env']['HOME'] }}/.config/mise/config.toml"
+  when: dotfiles_mise_config.stat.exists
+  changed_when: false

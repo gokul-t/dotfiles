@@ -1,0 +1,22 @@
+---
+- name: Check whether the Brewfile is satisfied
+  ansible.builtin.command:
+    argv:
+      - brew
+      - bundle
+      - check
+      - --file
+      - "{{ dotfiles_repo_path }}/Brewfile"
+  register: dotfiles_brew_bundle_check
+  changed_when: false
+  failed_when: false
+
+- name: Install packages and applications from the Brewfile
+  ansible.builtin.command:
+    argv:
+      - brew
+      - bundle
+      - install
+      - --file
+      - "{{ dotfiles_repo_path }}/Brewfile"
+  when: dotfiles_brew_bundle_check.rc != 0
