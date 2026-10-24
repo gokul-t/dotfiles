@@ -78,6 +78,7 @@ This repository contains configuration files for various applications and tools 
 - **Alacritty / Ghostty** - Terminal emulators
 - **Tmux Plugin Manager (TPM)**: [https://github.com/tmux-plugins/tpm](https://github.com/tmux-plugins/tpm)
 - **IdeaVim / Lazy-Idea** - Vim emulation for JetBrains IDEs
+- **sesh** - Terminal session manager integrated with Tmux
 - zoxide - A smarter cd command, inspired by z and autojump.
 - fzf - A general-purpose command-line fuzzy finder.
 - rg (ripgrep) - A line-oriented search tool that recursively searches your current directory for a regex pattern.
@@ -124,6 +125,8 @@ This repository contains configuration files for various applications and tools 
    stow ghostty    # Creates symlinks for ghostty config
    stow lazygit    # Creates symlinks for lazygit config
    stow starship   # Creates symlinks for starship config
+   stow claude     # Creates symlinks for Claude config
+   stow sesh       # Creates symlinks for sesh config
    ```
 
    Or stow all at once:
@@ -132,26 +135,30 @@ This repository contains configuration files for various applications and tools 
    stow */
    ```
 
-3. **Install Fonts**
+3. **Linux-Specific: Install Fonts**
 
    Download and install **MesloLGS Nerd Font**:
 
    ```sh
    # Download from: https://github.com/ryanoasis/nerd-fonts/releases
-   
+
    # For Linux:
    mkdir -p ~/.local/share/fonts
    cp MesloLGS*.ttf ~/.local/share/fonts/
    fc-cache -fv
+   # or
+   curl -s https://raw.githubusercontent.com/ryanoasis/nerd-fonts/master/install.sh -o install.sh
+   chmod u+x install.sh
+   ./install.sh Meslo
    ```
 
 4. **Install Packages via Brewfile**
-  
+
   Installs CLI tools, casks, and VS Code extensions listed in `Brewfile`:
 
-  ```sh
-  brew bundle --file ~/.dotfiles/Brewfile
-  ```
+    ```sh
+    brew bundle --file ~/.dotfiles/Brewfile
+    ```
 
 1. **Set Up Tmux Plugin Manager**
 
@@ -259,14 +266,6 @@ This repository contains configuration files for various applications and tools 
 
 ## Usage
 
-### Quick Start Script
-
-Use the `syscfg` script to open a tmux session with Neovim in the dotfiles directory:
-
-```sh
-~/bin/syscfg
-```
-
 ### Tmux Key Bindings
 
 - `prefix + I` - Install tmux plugins
@@ -274,6 +273,28 @@ Use the `syscfg` script to open a tmux session with Neovim in the dotfiles direc
 - `prefix + h` - Split window horizontally
 - `prefix + v` - Split window vertically
 - `Ctrl+h/j/k/l` - Navigate between tmux panes and vim splits (via vim-tmux-navigator)
+
+### Sesh Session Manager
+
+Sesh manages Tmux sessions and windows. Its configuration is stored at
+`~/.config/sesh/sesh.toml` and is included in this repository's `sesh` Stow
+package. The config defines Dotfiles, Notes, and Downloads sessions, plus
+wildcard sessions for repositories under `~/Developer/repos/*/*`. Sessions
+can start configured windows such as Neovim, Git, Copilot, Lazygit, and Yazi.
+
+Install sesh and its picker dependencies (`fzf`, `zoxide`, and `fd`). On macOS,
+these are included in the `Brewfile`; on other systems, install them with your
+package manager. Then run `stow sesh` to link its configuration.
+
+With the default Tmux prefix (`Ctrl+b`), use:
+
+- `prefix + T` - Open the session picker. Use `Ctrl+a` for all sessions,
+  `Ctrl+t` for Tmux sessions, `Ctrl+g` for configured sessions, `Ctrl+x` for
+  zoxide directories, or `Ctrl+f` to find directories. `Ctrl+d` kills the
+  selected Tmux session.
+- `prefix + W` - Pick a window in the current session.
+- `prefix + L` - Switch to the last session.
+- `prefix + 9` - Connect to the root session for the current directory.
 
 ### Zsh Features
 
