@@ -55,3 +55,14 @@
       - "{{ ansible_facts['env']['HOME'] }}/.config/mise/config.toml"
   when: dotfiles_mise_config.stat.exists
   changed_when: false
+
+- name: Find the installed Zsh executable
+  ansible.builtin.shell: command -v zsh
+  register: dotfiles_zsh_path
+  changed_when: false
+
+- name: Set Zsh as the current user's login shell
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_facts['user_id'] }}"
+    shell: "{{ dotfiles_zsh_path.stdout }}"

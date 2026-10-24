@@ -2,6 +2,7 @@
 # GUI applications and Flatpak apps are intentionally not included.
 
 # Development and shell
+ansible-core
 neovim
 zsh
 podman-compose

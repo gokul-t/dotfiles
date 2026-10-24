@@ -33,6 +33,7 @@ syncthing
 google-chrome-stable
 
 # Ansible bootstrap and Python build dependencies
+ansible-core
 bzip2-devel
 dnf-plugins-core
 flatpak

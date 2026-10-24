@@ -251,11 +251,12 @@ This repository contains configuration files for various applications and tools 
 
 The local Ansible playbook installs platform packages, links every top-level
 Stow package (excluding the `ansible` automation directory), and sets up shell
-plugins and development tools. Add or remove Fedora packages in
-`dnf-packages.txt` or Ubuntu packages in `ubuntu-packages.txt`; no Ansible
-variable list needs updating. Fedora package repositories for VS Code, Chrome,
-Terraform, and sesh are configured by the playbook. Flatpak apps are installed
-system-wide on Fedora.
+plugins and development tools. It also sets the account running the playbook
+to use Zsh as its login shell if it is not already configured. Add or remove
+Fedora packages in `dnf-packages.txt` or Ubuntu packages in
+`ubuntu-packages.txt`; no Ansible variable list needs updating. Fedora package
+repositories for VS Code, Chrome, Terraform, and sesh are configured by the
+playbook. Flatpak apps are installed system-wide on Fedora.
 
 Bootstrap Ansible and clone this repository first:
 
@@ -346,7 +347,18 @@ can start configured windows such as Neovim, Git, Copilot, Lazygit, and Yazi.
 
 Install sesh and its picker dependencies (`fzf`, `zoxide`, and `fd`). On macOS,
 these are included in the `Brewfile`; on other systems, install them with your
-package manager. Then run `stow sesh` to link its configuration.
+package manager. Then run `stow sesh` to link its configuration. The Fedora
+Ansible workflow installs the Zsh completion system-wide at
+`/usr/local/share/zsh/site-functions/_sesh`. Homebrew generates and installs
+the completion automatically on macOS.
+
+For a manual Linux installation, generate and install the completion with:
+
+```sh
+sesh completion zsh > _sesh
+sudo mkdir -p /usr/local/share/zsh/site-functions
+sudo cp _sesh /usr/local/share/zsh/site-functions/
+```
 
 With the default Tmux prefix (`Ctrl+b`), use:
 
