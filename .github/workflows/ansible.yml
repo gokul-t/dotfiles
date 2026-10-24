@@ -67,3 +67,36 @@ jobs:
           grep -Eq 'localhost[[:space:]]*:[[:space:]]+ok=[0-9]+[[:space:]]+changed=0([[:space:]]|$)' \
             /tmp/ansible-second-run.log
           CONTAINER
+
+  ubuntu-container:
+    name: Ubuntu 24.04 provisioning
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Provision Ubuntu container and verify idempotence
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace:ro" \
+            -w /workspace \
+            ubuntu:24.04 \
+            bash -euo pipefail -s <<'CONTAINER'
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install --no-install-recommends -y -qq \
+            ansible-core git stow curl unzip fontconfig sudo
+
+          options='{"dotfiles_stow_target":"/tmp/dotfiles-test-home"}'
+
+          ansible-playbook -i ansible/inventory.ini ansible/site.yml \
+            -e "$options" | tee /tmp/ansible-first-run.log
+
+          ansible-playbook -i ansible/inventory.ini ansible/site.yml \
+            -e "$options" | tee /tmp/ansible-second-run.log
+
+          grep -Eq 'localhost[[:space:]]*:[[:space:]]+ok=[0-9]+[[:space:]]+changed=0([[:space:]]|$)' \
+            /tmp/ansible-second-run.log
+          CONTAINER

@@ -249,18 +249,23 @@ This repository contains configuration files for various applications and tools 
 
 ## Automated Setup with Ansible
 
-The local Ansible playbook installs the packages and Flatpak apps from this
-repository, links every top-level Stow package (excluding the `ansible`
-automation directory), and sets up shell plugins and development tools. Add or
-remove Fedora packages in `dnf-packages.txt`; no Ansible variable list needs
-updating. Fedora package repositories for VS Code, Chrome, Terraform, and sesh
-are configured by the playbook. Flatpak apps are installed system-wide.
+The local Ansible playbook installs platform packages, links every top-level
+Stow package (excluding the `ansible` automation directory), and sets up shell
+plugins and development tools. Add or remove Fedora packages in
+`dnf-packages.txt` or Ubuntu packages in `ubuntu-packages.txt`; no Ansible
+variable list needs updating. Fedora package repositories for VS Code, Chrome,
+Terraform, and sesh are configured by the playbook. Flatpak apps are installed
+system-wide on Fedora.
 
 Bootstrap Ansible and clone this repository first:
 
 ```sh
 # Fedora
 sudo dnf install ansible-core git
+
+# Ubuntu / Ubuntu on WSL
+sudo apt update
+sudo apt install ansible-core git
 
 # macOS: install Homebrew first if it is not already installed
 brew install ansible git
@@ -299,10 +304,22 @@ On macOS, run without privilege escalation:
 ansible-playbook -i ansible/inventory.ini ansible/site.yml
 ```
 
-GitHub Actions checks Ansible/YAML syntax on every push and pull request. A
-full Fedora 44 container provisioning test runs weekly and can also be started
-manually from the repository's **Actions → Ansible → Run workflow** page. It
-provisions twice and checks that the second run reports no changes.
+On Ubuntu (including Ubuntu on WSL), run from the Ubuntu shell:
+
+```sh
+ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass
+```
+
+The Ubuntu package manifest installs command-line tools and build dependencies;
+it deliberately omits Flatpak, GUI applications, and Fedora-specific packages
+that are unsuitable or unavailable in a typical WSL environment. Use Windows
+VS Code with its WSL extension for editing from WSL.
+
+GitHub Actions checks Ansible/YAML syntax on every push and pull request. Full
+Fedora 44 and Ubuntu 24.04 container provisioning tests run weekly and can also
+be started manually from the repository's **Actions → Ansible → Run workflow**
+page. Each test provisions twice and checks that the second run reports no
+changes.
 
 Stow conflicts fail rather than overwriting existing files; resolve those
 conflicts before rerunning. The playbook leaves Git identity and default-shell

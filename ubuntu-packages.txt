@@ -1,0 +1,40 @@
+# Ubuntu packages for the WSL-friendly command-line setup.
+# GUI applications and Flatpak apps are intentionally not included.
+
+# Development and shell
+neovim
+zsh
+podman-compose
+luarocks
+stow
+git
+tmux
+
+# CLI tools
+fzf
+fd-find
+bat
+gh
+htop
+android-tools-adb
+zoxide
+ripgrep
+
+# Build dependencies for mise-managed tools
+fontconfig
+gcc
+libffi-dev
+make
+libncurses-dev
+libreadline-dev
+libsqlite3-dev
+libssl-dev
+patch
+tk-dev
+unzip
+xz-utils
+zlib1g-dev
+curl
+ca-certificates
+bzip2
+liblzma-dev

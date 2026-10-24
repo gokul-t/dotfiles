@@ -8,8 +8,8 @@
     - name: Check supported operating system
       ansible.builtin.assert:
         that:
-          - ansible_facts['distribution'] == "Fedora" or ansible_facts['system'] == "Darwin"
-        fail_msg: "This playbook supports Fedora Linux and macOS."
+          - ansible_facts['distribution'] in ["Fedora", "Ubuntu"] or ansible_facts['system'] == "Darwin"
+        fail_msg: "This playbook supports Fedora, Ubuntu, and macOS."
 
     - name: Install Fedora packages and Flatpak apps
       ansible.builtin.import_tasks: tasks/fedora.yml
@@ -18,6 +18,10 @@
     - name: Install macOS packages
       ansible.builtin.import_tasks: tasks/macos.yml
       when: ansible_facts['system'] == "Darwin"
+
+    - name: Install Ubuntu packages
+      ansible.builtin.import_tasks: tasks/ubuntu.yml
+      when: ansible_facts['distribution'] == "Ubuntu"
 
     - name: Link dotfile configurations
       ansible.builtin.import_tasks: tasks/stow.yml
