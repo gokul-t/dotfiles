@@ -3,4 +3,3 @@ dotfiles_repo_path: "{{ playbook_dir | dirname }}"
 dotfiles_stow_target: "{{ ansible_facts['env']['HOME'] }}"
 dotfiles_install_flatpak_apps: true
 dotfiles_fedora_skip_packages: []
-dotfiles_install_sdkman: true

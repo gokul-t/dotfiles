@@ -123,14 +123,6 @@ autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/bin/terraform terraform
 
 
-############################
-# Pyenv
-############################
-
-if command -v pyenv 1>/dev/null 2>&1; then
- eval "$(pyenv init -)"
-fi
-
 # Auto-activate venv when changing directories
 function auto_venv_activate() {
  local venv_path="./.venv/bin/activate"

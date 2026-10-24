@@ -88,12 +88,9 @@ This repository contains configuration files for various applications and tools 
 
 ### Development Tools
 
-- **SDKMAN** - SDK Manager for Java, Maven, Gradle, etc.
-- **NVM** - Node Version Manager
-- **pyenv** - Python version manager
+- **mise** - Manages Java, Maven, Node.js, Python, and other development tool versions from project configuration.
 - **Homebrew** (Linux/Mac) - Package manager
-- **Rust/Cargo** - For Rust development
-- **mise** - Manages runtime versions, environment variables, and project tasks from a single configuration file.
+- **Rust/Cargo** - Managed by mise for Rust development
 
 ## Installation Steps
 
@@ -225,36 +222,22 @@ This repository contains configuration files for various applications and tools 
 
 6. **Install Development Tools**
 
-    - **SDKMAN** (Java, Maven, Gradle):
-
-        ```sh
-        curl -s "https://get.sdkman.io" | bash
-        ```
-
-    - **NVM** (Node Version Manager):
-
-        ```sh
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-        ```
-
-    - **pyenv** (Python version manager):
-
-        ```sh
-        curl https://pyenv.run | bash
-        ```
-
     - **Homebrew** (Linux):
 
         ```sh
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         ```
 
-    - **mise** (already stowed in step 2, config at `~/.config/mise/config.toml`):
+    - **mise** (config at `~/.config/mise/config.toml`; Ansible installs it automatically):
 
         ```sh
         curl https://mise.run | sh
         mise trust ~/.config/mise/config.toml
+        mise install
         ```
+
+      Project-specific runtimes are declared in each repository's `mise.toml`.
+      Run `mise install` after cloning a project to install its pinned tools.
 
 7. **Linux-Specific: Install Toshy**
 
@@ -308,10 +291,7 @@ these packages is only for the container test; they remain in
 The separate `/tmp` Stow target avoids conflicts with files already present in
 the container's `/root` home. On a real system, Stow intentionally stops when
 existing files conflict; review and back up those files before resolving the
-conflict rather than using `--adopt` blindly. SDKMAN is skipped automatically
-when Ansible runs as root because its installer does not support root; it runs
-for normal-user installations. You can also set
-`-e dotfiles_install_sdkman=false` to skip it explicitly.
+conflict rather than using `--adopt` blindly.
 
 On macOS, run without privilege escalation:
 
@@ -394,7 +374,7 @@ With the default Tmux prefix (`Ctrl+b`), use:
 
 - **Zsh** with Oh My Zsh framework
 - Theme: robbyrussell
-- Plugins: git, zsh-autosuggestions, zsh-syntax-highlighting, you-should-use, docker, kubectl, maven, python, pyenv, z
+- Plugins: git, zsh-autosuggestions, zsh-syntax-highlighting, you-should-use, docker, kubectl, maven, python, z
 
 ## Troubleshooting
 

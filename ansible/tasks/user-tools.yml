@@ -36,38 +36,6 @@
     dest: "{{ ansible_facts['env']['HOME'] }}/.lazy-idea"
     depth: 1
 
-- name: Install NVM
-  ansible.builtin.git:
-    repo: https://github.com/nvm-sh/nvm.git
-    dest: "{{ ansible_facts['env']['HOME'] }}/.nvm"
-    version: master
-    depth: 1
-
-- name: Install pyenv
-  ansible.builtin.git:
-    repo: https://github.com/pyenv/pyenv.git
-    dest: "{{ ansible_facts['env']['HOME'] }}/.pyenv"
-    version: master
-    depth: 1
-
-- name: Install SDKMAN
-  ansible.builtin.shell: set -o pipefail && curl -fsSL https://get.sdkman.io | bash
-  args:
-    creates: "{{ ansible_facts['env']['HOME'] }}/.sdkman/bin/sdkman-init.sh"
-    executable: /bin/bash
-  when:
-    - dotfiles_install_sdkman | bool
-    - ansible_facts['user_id'] != 'root'
-
-- name: Explain why SDKMAN installation was skipped
-  ansible.builtin.debug:
-    msg: >-
-      SDKMAN installation is skipped when Ansible runs as root. Run the playbook
-      as your regular user, or set dotfiles_install_sdkman=false to skip it.
-  when:
-    - dotfiles_install_sdkman | bool
-    - ansible_facts['user_id'] == 'root'
-
 - name: Install mise
   ansible.builtin.shell: set -o pipefail && curl -fsSL https://mise.run | sh
   args:

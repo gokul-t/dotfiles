@@ -4,8 +4,6 @@
 # Development
 neovim
 zsh
-cargo
-rustc
 terraform
 helm
 code
@@ -34,7 +32,7 @@ vlc
 syncthing
 google-chrome-stable
 
-# Ansible bootstrap and pyenv build dependencies
+# Ansible bootstrap and Python build dependencies
 bzip2-devel
 dnf-plugins-core
 flatpak
