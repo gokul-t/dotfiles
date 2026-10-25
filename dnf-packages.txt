@@ -17,6 +17,7 @@ fzf
 fd-find
 bat
 gh
+lazygit
 yazi
 starship
 htop

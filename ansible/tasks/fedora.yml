@@ -95,6 +95,25 @@
         else dotfiles_dnf_packages
       }}
 
+- name: Check whether the LazyGit Copr repository is enabled
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:dejan:lazygit.repo
+  register: dotfiles_lazygit_copr_repo
+  when: "'lazygit' in dotfiles_dnf_packages"
+
+- name: Enable the LazyGit Copr repository
+  become: true
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - copr
+      - enable
+      - --assumeyes
+      - dejan/lazygit
+  when:
+    - "'lazygit' in dotfiles_dnf_packages"
+    - not dotfiles_lazygit_copr_repo.stat.exists
+
 - name: Check whether the Yazi Copr repository is enabled
   ansible.builtin.stat:
     path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:lihaohong:yazi.repo

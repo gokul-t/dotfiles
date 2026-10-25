@@ -82,6 +82,7 @@
   environment:
     GOBIN: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
     MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+  when: ansible_facts['distribution'] == "Ubuntu"
 
 - name: Find the installed Zsh executable
   ansible.builtin.shell: command -v zsh
