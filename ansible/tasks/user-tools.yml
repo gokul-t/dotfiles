@@ -58,12 +58,11 @@
   environment:
     MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
 
-- name: Install the configured Go version with mise
+- name: Install the configured tools with mise
   ansible.builtin.command:
     argv:
       - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
       - install
-      - go
   changed_when: false
   environment:
     MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
