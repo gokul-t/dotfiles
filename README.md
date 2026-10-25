@@ -124,6 +124,7 @@ This repository contains configuration files for various applications and tools 
    stow starship   # Creates symlinks for starship config
    stow claude     # Creates symlinks for Claude config
    stow sesh       # Creates symlinks for sesh config
+   stow vim        # Creates symlinks for vim config  
    ```
 
    Or stow all at once:
