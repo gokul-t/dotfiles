@@ -1,7 +1,7 @@
 ---
 - name: Read Ubuntu package manifest
   ansible.builtin.set_fact:
-    dotfiles_ubuntu_packages: >-
+    dotfiles_ubuntu_packages_all: >-
       {{
         lookup('ansible.builtin.file', dotfiles_repo_path ~ '/ubuntu-packages.txt')
         .splitlines()
@@ -12,6 +12,56 @@
         | list
       }}
 
+- name: Select Ubuntu packages for this architecture
+  ansible.builtin.set_fact:
+    dotfiles_ubuntu_packages_all: >-
+      {{
+        dotfiles_ubuntu_packages_all
+        | reject('equalto', 'google-chrome-stable')
+        | list
+        if ansible_facts['architecture'] != 'x86_64'
+        else dotfiles_ubuntu_packages_all
+      }}
+
+- name: Select Ubuntu APT packages
+  ansible.builtin.set_fact:
+    dotfiles_ubuntu_packages: >-
+      {{
+        dotfiles_ubuntu_packages_all
+        | reject('in', ['tmux-sesh', 'google-chrome-stable'])
+        | list
+      }}
+
+- name: Create APT keyring directory for Google Chrome
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  when:
+    - "'google-chrome-stable' in dotfiles_ubuntu_packages_all"
+    - ansible_facts['architecture'] == "x86_64"
+
+- name: Download Google Linux package signing key
+  become: true
+  ansible.builtin.get_url:
+    url: https://dl.google.com/linux/linux_signing_key.pub
+    dest: /etc/apt/keyrings/google-chrome.asc
+    mode: "0644"
+  when:
+    - "'google-chrome-stable' in dotfiles_ubuntu_packages_all"
+    - ansible_facts['architecture'] == "x86_64"
+
+- name: Configure the Google Chrome APT repository
+  become: true
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main"
+    filename: google-chrome
+    state: present
+  when:
+    - "'google-chrome-stable' in dotfiles_ubuntu_packages_all"
+    - ansible_facts['architecture'] == "x86_64"
+
 - name: Install Ubuntu packages
   become: true
   ansible.builtin.apt:
@@ -19,3 +69,189 @@
     state: present
     update_cache: true
     cache_valid_time: 3600
+
+- name: Install Google Chrome
+  become: true
+  ansible.builtin.apt:
+    name: google-chrome-stable
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when:
+    - "'google-chrome-stable' in dotfiles_ubuntu_packages_all"
+    - ansible_facts['architecture'] == "x86_64"
+
+- name: Map supported Ubuntu release architectures
+  ansible.builtin.set_fact:
+    dotfiles_ubuntu_release_arch: >-
+      {{
+        {'x86_64': 'x86_64', 'aarch64': 'arm64'}
+        .get(ansible_facts['architecture'], '')
+      }}
+
+- name: Read latest sesh release metadata
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/joshmedeski/sesh/releases/latest
+    return_content: true
+    headers:
+      Accept: application/vnd.github+json
+  register: dotfiles_sesh_release
+  changed_when: false
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Select the matching sesh Linux release asset
+  ansible.builtin.set_fact:
+    dotfiles_sesh_asset: >-
+      {{
+        dotfiles_sesh_release.json.assets
+        | selectattr(
+            'name',
+            'equalto',
+            'sesh_Linux_' ~ dotfiles_ubuntu_release_arch ~ '.tar.gz'
+          )
+        | list
+      }}
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Validate sesh release asset
+  ansible.builtin.assert:
+    that:
+      - dotfiles_ubuntu_release_arch | length > 0
+      - dotfiles_sesh_asset | length == 1
+      - dotfiles_sesh_asset[0].digest is defined
+      - dotfiles_sesh_asset[0].digest is match('^sha256:[0-9a-f]{64}$')
+    fail_msg: "Could not find a checksummed sesh release for this Ubuntu architecture."
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Download sesh release archive
+  become: true
+  ansible.builtin.get_url:
+    url: "{{ dotfiles_sesh_asset[0].browser_download_url }}"
+    dest: "/tmp/{{ dotfiles_sesh_asset[0].name }}"
+    checksum: "{{ dotfiles_sesh_asset[0].digest }}"
+    mode: "0644"
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Create sesh release extraction directory
+  become: true
+  ansible.builtin.file:
+    path: "/tmp/dotfiles-sesh-{{ dotfiles_sesh_release.json.tag_name }}"
+    state: directory
+    mode: "0755"
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Extract sesh release archive
+  become: true
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ dotfiles_sesh_asset[0].name }}"
+    dest: "/tmp/dotfiles-sesh-{{ dotfiles_sesh_release.json.tag_name }}"
+    remote_src: true
+    creates: "/tmp/dotfiles-sesh-{{ dotfiles_sesh_release.json.tag_name }}/sesh"
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Install sesh executable
+  become: true
+  ansible.builtin.copy:
+    src: "/tmp/dotfiles-sesh-{{ dotfiles_sesh_release.json.tag_name }}/sesh"
+    dest: /usr/local/bin/sesh
+    remote_src: true
+    mode: "0755"
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Generate the sesh Zsh completion
+  ansible.builtin.command:
+    argv:
+      - sesh
+      - completion
+      - zsh
+  register: dotfiles_sesh_zsh_completion
+  changed_when: false
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Create the system-wide Zsh completion directory
+  become: true
+  ansible.builtin.file:
+    path: /usr/local/share/zsh/site-functions
+    state: directory
+    mode: "0755"
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Install the system-wide sesh Zsh completion
+  become: true
+  ansible.builtin.copy:
+    content: "{{ dotfiles_sesh_zsh_completion.stdout }}\n"
+    dest: /usr/local/share/zsh/site-functions/_sesh
+    mode: "0644"
+  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
+
+- name: Install snapd when Snap apps are enabled
+  become: true
+  ansible.builtin.apt:
+    name: snapd
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: dotfiles_install_snap_apps | bool
+
+- name: Start the Snap socket
+  become: true
+  ansible.builtin.systemd_service:
+    name: snapd.socket
+    state: started
+    enabled: true
+  when: dotfiles_install_snap_apps | bool
+
+- name: Wait for Snap to finish initialization
+  become: true
+  ansible.builtin.command:
+    argv:
+      - snap
+      - wait
+      - system
+      - seed.loaded
+  changed_when: false
+  when: dotfiles_install_snap_apps | bool
+
+- name: Read Ubuntu Snap package manifest
+  ansible.builtin.set_fact:
+    dotfiles_ubuntu_snaps: >-
+      {{
+        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/ubuntu-snap-packages.txt')
+        .splitlines()
+        | map('trim')
+        | reject('match', '^#')
+        | reject('equalto', '')
+        | list
+      }}
+  when: dotfiles_install_snap_apps | bool
+
+- name: List installed Snaps
+  become: true
+  ansible.builtin.command:
+    argv:
+      - snap
+      - list
+      - --unicode=never
+  register: dotfiles_ubuntu_installed_snaps_output
+  changed_when: false
+  when: dotfiles_install_snap_apps | bool
+
+- name: Parse installed Snap names
+  ansible.builtin.set_fact:
+    dotfiles_ubuntu_installed_snaps: >-
+      {{
+        dotfiles_ubuntu_installed_snaps_output.stdout_lines[1:]
+        | map('split')
+        | map('first')
+        | list
+      }}
+  when: dotfiles_install_snap_apps | bool
+
+- name: Install missing Ubuntu Snaps
+  become: true
+  ansible.builtin.command:
+    argv: "{{ ['snap', 'install'] + item.split() }}"
+  loop: "{{ dotfiles_ubuntu_snaps | default([]) }}"
+  when:
+    - dotfiles_install_snap_apps | bool
+    - item.split()[0] not in dotfiles_ubuntu_installed_snaps

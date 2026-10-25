@@ -1,5 +1,6 @@
-# Ubuntu packages for the WSL-friendly command-line setup.
-# GUI applications and Flatpak apps are intentionally not included.
+# Ubuntu packages for the workstation setup.
+# Apps unavailable in Ubuntu's APT repositories are listed in
+# ubuntu-snap-packages.txt.
 
 # Development and shell
 ansible-core
@@ -10,6 +11,8 @@ luarocks
 stow
 git
 tmux
+tmux-sesh
+google-chrome-stable
 
 # CLI tools
 fzf
@@ -17,9 +20,14 @@ fd-find
 bat
 gh
 htop
-android-tools-adb
+adb
 zoxide
 ripgrep
+gnome-shell-extension-manager
+gnome-shell-extensions
+gnome-tweaks
+vlc
+syncthing
 
 # Build dependencies for mise-managed tools
 fontconfig

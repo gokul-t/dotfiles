@@ -95,6 +95,25 @@
         else dotfiles_dnf_packages
       }}
 
+- name: Check whether the Yazi Copr repository is enabled
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:lihaohong:yazi.repo
+  register: dotfiles_yazi_copr_repo
+  when: "'yazi' in dotfiles_dnf_packages"
+
+- name: Enable the Yazi Copr repository
+  become: true
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - copr
+      - enable
+      - --assumeyes
+      - lihaohong/yazi
+  when:
+    - "'yazi' in dotfiles_dnf_packages"
+    - not dotfiles_yazi_copr_repo.stat.exists
+
 - name: Install Fedora packages
   become: true
   ansible.builtin.dnf:

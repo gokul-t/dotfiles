@@ -44,7 +44,7 @@
 
 - name: Check whether the mise configuration is linked
   ansible.builtin.stat:
-    path: "{{ ansible_facts['env']['HOME'] }}/.config/mise/config.toml"
+    path: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
   register: dotfiles_mise_config
 
 - name: Trust the linked mise configuration
@@ -52,9 +52,36 @@
     argv:
       - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
       - trust
-      - "{{ ansible_facts['env']['HOME'] }}/.config/mise/config.toml"
+      - "{{ dotfiles_stow_target }}/.config/mise/config.toml"
   when: dotfiles_mise_config.stat.exists
   changed_when: false
+  environment:
+    MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+
+- name: Install the configured Go version with mise
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
+      - install
+      - go
+  changed_when: false
+  environment:
+    MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+
+- name: Install LazyGit with Go
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
+      - exec
+      - --
+      - go
+      - install
+      - github.com/jesseduffield/lazygit@latest
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/lazygit"
+  environment:
+    GOBIN: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+    MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
 
 - name: Find the installed Zsh executable
   ansible.builtin.shell: command -v zsh

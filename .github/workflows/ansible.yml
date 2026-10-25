@@ -47,26 +47,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Build Fedora provisioning image
+        run: docker build --file ansible/containers/fedora.Dockerfile --tag dotfiles-fedora-test .
+
       - name: Provision Fedora container and verify idempotence
-        run: |
-          docker run --rm \
-            -v "$GITHUB_WORKSPACE:/workspace:ro" \
-            -w /workspace \
-            registry.fedoraproject.org/fedora:44 \
-            bash -euo pipefail -s <<'CONTAINER'
-          dnf install -y ansible-core git stow curl unzip fontconfig
-
-          options='{"dotfiles_install_flatpak_apps":false,"dotfiles_fedora_skip_packages":["lazygit","yazi","starship","ghostty"],"dotfiles_stow_target":"/tmp/dotfiles-test-home"}'
-
-          ansible-playbook -i ansible/inventory.ini ansible/site.yml \
-            -e "$options" | tee /tmp/ansible-first-run.log
-
-          ansible-playbook -i ansible/inventory.ini ansible/site.yml \
-            -e "$options" | tee /tmp/ansible-second-run.log
-
-          grep -Eq 'localhost[[:space:]]*:[[:space:]]+ok=[0-9]+[[:space:]]+changed=0([[:space:]]|$)' \
-            /tmp/ansible-second-run.log
-          CONTAINER
+        run: docker run --rm dotfiles-fedora-test
 
   ubuntu-container:
     name: Ubuntu 24.04 provisioning
@@ -77,26 +62,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Build Ubuntu provisioning image
+        run: docker build --file ansible/containers/ubuntu.Dockerfile --tag dotfiles-ubuntu-test .
+
       - name: Provision Ubuntu container and verify idempotence
-        run: |
-          docker run --rm \
-            -v "$GITHUB_WORKSPACE:/workspace:ro" \
-            -w /workspace \
-            ubuntu:24.04 \
-            bash -euo pipefail -s <<'CONTAINER'
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update -qq
-          apt-get install --no-install-recommends -y -qq \
-            ansible-core git stow curl unzip fontconfig sudo
-
-          options='{"dotfiles_stow_target":"/tmp/dotfiles-test-home"}'
-
-          ansible-playbook -i ansible/inventory.ini ansible/site.yml \
-            -e "$options" | tee /tmp/ansible-first-run.log
-
-          ansible-playbook -i ansible/inventory.ini ansible/site.yml \
-            -e "$options" | tee /tmp/ansible-second-run.log
-
-          grep -Eq 'localhost[[:space:]]*:[[:space:]]+ok=[0-9]+[[:space:]]+changed=0([[:space:]]|$)' \
-            /tmp/ansible-second-run.log
-          CONTAINER
+        run: docker run --rm dotfiles-ubuntu-test

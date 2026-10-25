@@ -256,7 +256,9 @@ to use Zsh as its login shell if it is not already configured. Add or remove
 Fedora packages in `dnf-packages.txt` or Ubuntu packages in
 `ubuntu-packages.txt`; no Ansible variable list needs updating. Fedora package
 repositories for VS Code, Chrome, Terraform, and sesh are configured by the
-playbook. Flatpak apps are installed system-wide on Fedora.
+playbook. Flatpak apps are installed system-wide on Fedora. Ubuntu uses Snap
+packages for apps unavailable in its APT repositories; Snap app installation can
+be disabled with `-e dotfiles_install_snap_apps=false`.
 
 Bootstrap Ansible and clone this repository first:
 
@@ -281,23 +283,23 @@ Run the playbook on Fedora with privilege escalation:
 ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass
 ```
 
-To test Fedora provisioning in a minimal container, disable Flatpak and skip
-packages that are not available in the image's enabled Fedora repositories.
-For example, the Fedora 44 container does not provide `lazygit`, `yazi`,
-`starship`, or `ghostty` from its enabled repositories:
+To test Linux provisioning without changing your workstation, build and run
+the disposable Ubuntu or Fedora containers from the repository root:
 
 ```sh
-ansible-playbook -i ansible/inventory.ini ansible/site.yml \
-  -e '{"dotfiles_install_flatpak_apps":false,"dotfiles_fedora_skip_packages":["lazygit","yazi","starship","ghostty"],"dotfiles_stow_target":"/tmp/dotfiles-test-home"}'
+docker build -f ansible/containers/ubuntu.Dockerfile -t dotfiles-test:ubuntu .
+docker run --rm dotfiles-test:ubuntu
+
+docker build -f ansible/containers/fedora.Dockerfile -t dotfiles-test:fedora .
+docker run --rm dotfiles-test:fedora
 ```
 
-The container runs as root, so `--ask-become-pass` is unnecessary. Skipping
-these packages is only for the container test; they remain in
-`dnf-packages.txt` for normal setup when their package sources are configured.
-The separate `/tmp` Stow target avoids conflicts with files already present in
-the container's `/root` home. On a real system, Stow intentionally stops when
-existing files conflict; review and back up those files before resolving the
-conflict rather than using `--adopt` blindly.
+The containers run Ansible as root and use a separate `/tmp` Stow target, so no
+become password is needed and dotfiles are not linked over the container's home
+files. The container arguments disable Flatpak/Snap installation and skip
+desktop applications, services, or packages unavailable in the base image.
+These are container-test settings only; the normal workstation playbook still
+uses the platform package manifests and installs Flatpak or Snap apps.
 
 On macOS, run without privilege escalation:
 
@@ -311,10 +313,13 @@ On Ubuntu (including Ubuntu on WSL), run from the Ubuntu shell:
 ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass
 ```
 
-The Ubuntu package manifest installs command-line tools and build dependencies;
-it deliberately omits Flatpak, GUI applications, and Fedora-specific packages
-that are unsuitable or unavailable in a typical WSL environment. Use Windows
-VS Code with its WSL extension for editing from WSL.
+The Ubuntu APT manifest installs available equivalents of the Fedora tools;
+packages unavailable in Ubuntu repositories and selected desktop applications
+are installed from `ubuntu-snap-packages.txt`. Snap installation can be
+disabled for environments such as WSL where snapd is unavailable. Go is
+managed by mise and used to install LazyGit with `go install`. Sesh is downloaded
+from its latest upstream GitHub release and checked against the release asset
+SHA-256 digest; Google Chrome uses Google's signed APT repository on x86_64.
 
 GitHub Actions checks Ansible/YAML syntax on every push and pull request. Full
 Fedora 44 and Ubuntu 24.04 container provisioning tests run weekly and can also

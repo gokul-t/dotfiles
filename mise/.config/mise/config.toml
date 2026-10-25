@@ -1,6 +1,7 @@
 [settings]
 
 [tools]
+go = "latest"
 java = "zulu-21"
 maven = "3.9.11"
 node = "22"
