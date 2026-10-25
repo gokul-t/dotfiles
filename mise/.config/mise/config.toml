@@ -1,9 +1,11 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
 [settings]
 
 [tools]
 go = "latest"
-java = "zulu-21"
-maven = "3.9.11"
-node = "22"
-python = "3.14"
-rust = "1.99.0"
+java = "latest"
+maven = "latest"
+node = "latest"
+python = "latest"
+rust = "latest"
