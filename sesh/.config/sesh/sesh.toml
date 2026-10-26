@@ -19,7 +19,7 @@ windows = [ "yazi"]
 name = "Downloads 📥"
 path = "~/Downloads"
 icon = "📥"
-startup_command = "ls"
+startup_command = "curl wttr.in"
 windows = [ "yazi"]
 
 [[wildcard]]

@@ -11,3 +11,8 @@ vim.g.autoformat = false
 
 -- Enable 24-bit RGB color processing inside TUIs
 vim.opt.termguicolors = true
+
+-- Use tmux buffers inside tmux instead of launching wl-paste on Wayland.
+if vim.env.TMUX then
+  vim.g.clipboard = "tmux"
+end
