@@ -37,7 +37,7 @@ This repository contains configuration files for various applications and tools 
 
 ### Linux-Specific
 
-- **Toshy** - Keyboard remapping for Linux (Mac-like shortcuts): [https://github.com/gokul-t/Toshy](https://github.com/gokul-t/Toshy)
+- **Toshy** - Optional keyboard remapping for Linux (Mac-like shortcuts): [https://github.com/RedBearAK/Toshy](https://github.com/RedBearAK/Toshy)
 - **GNU Stow** - Symlink farm manager for managing dotfiles
 - **DNF Packages** - List of Fedora dependencies in `dnf-packages.txt`
 - **Flatpak Apps** - List of Flatpak applications in `flatpak-packages.txt`
@@ -246,7 +246,7 @@ This repository contains configuration files for various applications and tools 
     For keyboard remapping on Linux (Mac-like shortcuts):
 
     ```sh
-    # Follow instructions at: https://github.com/gokul-t/Toshy
+    # Follow instructions at: https://github.com/RedBearAK/Toshy
     ```
 
 ## Automated Setup with Ansible
@@ -268,6 +268,17 @@ then runs the playbook. Linux setup prompts for the become password when
 required. On WSL, it disables Snap app installation because Snap may require
 systemd. The playbook installs packages and links configurations, so review the
 [bootstrap script](ansible/bootstrap.sh) and the playbook before running it.
+
+On Fedora and non-WSL Ubuntu, if Toshy is not already installed, the script
+offers to install it. Toshy remaps keyboard shortcuts to provide a macOS-like
+experience and changes keyboard behavior. It needs a supported Fedora/Ubuntu
+system, admin access, and a compatible desktop/session (Wayland supports only
+certain desktops; GNOME requires a compatible extension). Use a fully updated
+system. The prompt explains these requirements before asking; Toshy's installer
+also checks system readiness and offers its own confirmation/configuration
+choices. See Toshy's [requirements](https://github.com/RedBearAK/Toshy#requirements)
+and [supported desktops](https://github.com/RedBearAK/Toshy#currently-working-desktop-environments-or-window-managers).
+Toshy is not offered on WSL or macOS.
 
 To inspect the downloaded script before executing it:
 
@@ -359,8 +370,9 @@ changes.
 
 Stow conflicts fail rather than overwriting existing files; resolve those
 conflicts before rerunning. The playbook leaves Git identity and default-shell
-selection to you. Configure Git identity using the manual steps above; on
-Linux, install Toshy separately using its project instructions.
+selection to you. Configure Git identity using the manual steps above. On
+Linux, use the optional Toshy prompt in the one-command setup or follow its
+[project instructions](https://github.com/RedBearAK/Toshy).
 
 ## Usage
 

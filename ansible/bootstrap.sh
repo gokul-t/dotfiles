@@ -75,6 +75,12 @@ fi
 command -v git >/dev/null 2>&1 || fail "Git is required but was not installed."
 command -v ansible-playbook >/dev/null 2>&1 || fail "Ansible is required but was not installed."
 
+is_wsl=false
+if [[ "$platform" == "ubuntu" ]] \
+  && { [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease; }; then
+  is_wsl=true
+fi
+
 if [[ -e "$DOTFILES_DIR" || -L "$DOTFILES_DIR" ]]; then
   [[ -d "$DOTFILES_DIR" ]] || fail "$DOTFILES_DIR exists but is not a directory."
   checkout_root="$(git -C "$DOTFILES_DIR" rev-parse --show-toplevel 2>/dev/null)" \
@@ -93,9 +99,39 @@ ansible_args=(-i ansible/inventory.ini ansible/site.yml)
 if [[ "$platform" != "macos" ]]; then
   ansible_args+=(--ask-become-pass)
 fi
-if [[ "$platform" == "ubuntu" ]] \
-  && { [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease; }; then
+if [[ "$is_wsl" == true ]]; then
   ansible_args+=(-e dotfiles_install_snap_apps=false)
 fi
 
 ansible-playbook "${ansible_args[@]}"
+
+if [[ "$platform" == "fedora" || ( "$platform" == "ubuntu" && "$is_wsl" == false ) ]]; then
+  if [[ -d "$HOME/.config/toshy" ]]; then
+    printf 'Toshy is already installed; skipping the optional Toshy setup.\n'
+  else
+    printf '\nToshy is an optional keyboard remapper that makes Linux shortcuts more like macOS.\n'
+    printf 'It requires a supported Fedora/Ubuntu system, a compatible desktop/session, and admin access.\n'
+    printf 'Use a fully updated system. On Wayland, only certain desktops are supported; GNOME needs a compatible extension.\n'
+    printf 'The installer checks system readiness and may install system packages or configure services.\n'
+    printf 'Requirements: https://github.com/RedBearAK/Toshy#requirements\n'
+    printf 'Supported desktops: https://github.com/RedBearAK/Toshy#currently-working-desktop-environments-or-window-managers\n'
+    if [[ -r /dev/tty ]]; then
+      printf 'Would you like to install Toshy? [y/N] ' >&2
+      IFS= read -r toshy_choice < /dev/tty || toshy_choice=""
+    else
+      toshy_choice=""
+      printf 'No interactive terminal; skipping optional Toshy installation.\n'
+    fi
+
+    if [[ "${toshy_choice,,}" == "y" || "${toshy_choice,,}" == "yes" ]]; then
+      toshy_bootstrap_file="$(mktemp)"
+      trap 'rm -f -- "$toshy_bootstrap_file"' EXIT
+      curl -fsSL \
+        https://raw.githubusercontent.com/RedBearAK/toshy/main/scripts/bootstrap.sh \
+        -o "$toshy_bootstrap_file"
+      bash "$toshy_bootstrap_file"
+    else
+      printf 'Skipping optional Toshy installation.\n'
+    fi
+  fi
+fi
