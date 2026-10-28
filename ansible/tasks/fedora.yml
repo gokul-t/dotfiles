@@ -95,6 +95,44 @@
         else dotfiles_dnf_packages
       }}
 
+- name: Check whether the Starship Copr repository is enabled
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:atim:starship.repo
+  register: dotfiles_starship_copr_repo
+  when: "'starship' in dotfiles_dnf_packages"
+
+- name: Enable the Starship Copr repository
+  become: true
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - copr
+      - enable
+      - --assumeyes
+      - atim/starship
+  when:
+    - "'starship' in dotfiles_dnf_packages"
+    - not dotfiles_starship_copr_repo.stat.exists
+
+- name: Check whether the Ghostty Copr repository is enabled
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:scottames:ghostty.repo
+  register: dotfiles_ghostty_copr_repo
+  when: "'ghostty' in dotfiles_dnf_packages"
+
+- name: Enable the Ghostty Copr repository
+  become: true
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - copr
+      - enable
+      - --assumeyes
+      - scottames/ghostty
+  when:
+    - "'ghostty' in dotfiles_dnf_packages"
+    - not dotfiles_ghostty_copr_repo.stat.exists
+
 - name: Check whether the LazyGit Copr repository is enabled
   ansible.builtin.stat:
     path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:dejan:lazygit.repo

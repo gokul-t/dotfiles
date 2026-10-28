@@ -296,8 +296,9 @@ plugins and development tools. It also sets the account running the playbook
 to use Zsh as its login shell if it is not already configured. Add or remove
 Fedora packages in `dnf-packages.txt` or Ubuntu packages in
 `ubuntu-packages.txt`; no Ansible variable list needs updating. Fedora package
-repositories for VS Code, Chrome, Terraform, and sesh are configured by the
-playbook. Flatpak apps are installed system-wide on Fedora. Ubuntu uses Snap
+repositories for VS Code, Chrome, Terraform, sesh, Starship, and Ghostty are
+configured by the playbook; Starship and Ghostty use Fedora COPR repositories.
+Flatpak apps are installed system-wide on Fedora. Ubuntu uses Snap
 packages for apps unavailable in its APT repositories; Snap app installation can
 be disabled with `-e dotfiles_install_snap_apps=false`.
 
