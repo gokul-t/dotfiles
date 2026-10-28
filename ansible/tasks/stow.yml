@@ -33,3 +33,17 @@
     }}
   register: dotfiles_stow_result
   changed_when: "'LINK:' in (dotfiles_stow_result.stdout | default(''))"
+  failed_when:
+    - dotfiles_stow_result.rc != 0
+    - "'would cause conflicts:' not in (dotfiles_stow_result.stderr | default(''))"
+
+- name: Warn about dotfile packages with existing-file conflicts
+  ansible.builtin.debug:
+    msg: >-
+      Stow skipped package '{{ item.item }}' because target files already exist.
+      Existing files were left untouched. Resolve these conflicts and rerun
+      setup to link this package:
+      {{ item.stderr | trim }}
+  loop: "{{ dotfiles_stow_result.results | selectattr('rc', 'ne', 0) | list }}"
+  loop_control:
+    label: "{{ item.item }}"

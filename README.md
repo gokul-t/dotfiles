@@ -369,10 +369,13 @@ be started manually from the repository's **Actions → Ansible → Run workflow
 page. Each test provisions twice and checks that the second run reports no
 changes.
 
-Stow conflicts fail rather than overwriting existing files; resolve those
-conflicts before rerunning. The playbook leaves Git identity and default-shell
-selection to you. Configure Git identity using the manual steps above. On
-Linux, use the optional Toshy prompt in the one-command setup or follow its
+Stow never overwrites existing files. If a package conflicts with files already
+in your home directory, that package is skipped with a warning and provisioning
+continues for the other packages. Review the conflict details, back up or
+reconcile the existing files, then rerun setup to link the skipped package.
+The playbook leaves Git identity and default-shell selection to you. Configure
+Git identity using the manual steps above. On Linux, use the optional Toshy
+prompt in the one-command setup or follow its
 [project instructions](https://github.com/RedBearAK/Toshy).
 
 ## Usage
