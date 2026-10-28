@@ -268,6 +268,9 @@ then runs the playbook. Linux setup prompts for the become password when
 required. On WSL, it disables Snap app installation because Snap may require
 systemd. The playbook installs packages and links configurations, so review the
 [bootstrap script](ansible/bootstrap.sh) and the playbook before running it.
+If Rust installation hits the known [Rustup 1.29.2 SIGILL bug](https://github.com/rust-lang/rustup/issues/5160),
+the setup warns and continues with the other tools; retry Rust installation once
+Rustup 1.29.3 or newer is available.
 
 On Fedora and non-WSL Ubuntu, if Toshy is not already installed, the script
 offers to install it. Toshy remaps keyboard shortcuts to provide a macOS-like
