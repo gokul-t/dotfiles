@@ -266,6 +266,7 @@
       - install
       - --system
       - --assumeyes
+      - --noninteractive
       - "{{ item.split()[0] }}"
       - "{{ item.split()[1] }}"
   loop: "{{ dotfiles_flatpak_apps }}"
