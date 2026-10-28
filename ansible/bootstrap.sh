@@ -129,7 +129,7 @@ if [[ "$platform" == "fedora" || ( "$platform" == "ubuntu" && "$is_wsl" == false
       curl -fsSL \
         https://raw.githubusercontent.com/RedBearAK/toshy/main/scripts/bootstrap.sh \
         -o "$toshy_bootstrap_file"
-      bash "$toshy_bootstrap_file"
+      bash "$toshy_bootstrap_file" </dev/tty
     else
       printf 'Skipping optional Toshy installation.\n'
     fi
