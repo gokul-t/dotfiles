@@ -262,6 +262,8 @@
   become: true
   ansible.builtin.command:
     argv:
+      - dbus-run-session
+      - --
       - flatpak
       - install
       - --system
