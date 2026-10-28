@@ -12,6 +12,7 @@ My .dotfiles repository - configuration files for development environment.
     - [Development Tools](#development-tools)
   - [Installation Steps](#installation-steps)
   - [Automated Setup with Ansible](#automated-setup-with-ansible)
+    - [One-Command Setup](#one-command-setup)
   - [Usage](#usage)
     - [Tmux Key Bindings](#tmux-key-bindings)
     - [Zsh Features](#zsh-features)
@@ -250,6 +251,34 @@ This repository contains configuration files for various applications and tools 
 
 ## Automated Setup with Ansible
 
+### One-Command Setup
+
+Run this from a terminal as your regular user to bootstrap and run the Ansible
+setup:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/bootstrap.sh | bash
+```
+
+The script supports Fedora, Ubuntu/WSL, and macOS. It installs missing Ansible
+and Git using DNF or APT on Linux; on macOS, install Homebrew first, and the
+script uses it to install missing tools. It clones this repository to
+`~/.dotfiles` if needed, reuses an existing valid checkout without updating it,
+then runs the playbook. Linux setup prompts for the become password when
+required. On WSL, it disables Snap app installation because Snap may require
+systemd. The playbook installs packages and links configurations, so review the
+[bootstrap script](ansible/bootstrap.sh) and the playbook before running it.
+
+To inspect the downloaded script before executing it:
+
+```sh
+curl -fsSLo /tmp/dotfiles-bootstrap.sh https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/bootstrap.sh
+less /tmp/dotfiles-bootstrap.sh
+bash /tmp/dotfiles-bootstrap.sh
+```
+
+### Manual Setup
+
 The local Ansible playbook installs platform packages, links every top-level
 Stow package (excluding the `ansible` automation directory), and sets up shell
 plugins and development tools. It also sets the account running the playbook
@@ -261,7 +290,7 @@ playbook. Flatpak apps are installed system-wide on Fedora. Ubuntu uses Snap
 packages for apps unavailable in its APT repositories; Snap app installation can
 be disabled with `-e dotfiles_install_snap_apps=false`.
 
-Bootstrap Ansible and clone this repository first:
+To run the playbook manually, install Ansible and Git, then clone this repository:
 
 ```sh
 # Fedora
