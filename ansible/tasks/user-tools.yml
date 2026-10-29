@@ -36,6 +36,115 @@
     dest: "{{ ansible_facts['env']['HOME'] }}/.lazy-idea"
     depth: 1
 
+- name: Create the user-local binary directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+    state: directory
+    mode: "0755"
+
+- name: Check whether bin is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
+  register: dotfiles_bin
+
+- name: Map the bin release platform
+  ansible.builtin.set_fact:
+    dotfiles_bin_platform: "{{ 'darwin' if ansible_facts['system'] == 'Darwin' else 'linux' }}"
+    dotfiles_bin_arch: >-
+      {{
+        {'x86_64': 'amd64', 'aarch64': 'arm64', 'arm64': 'arm64'}
+        .get(ansible_facts['architecture'], '')
+      }}
+  when:
+    - "'bin' not in dotfiles_skip_tools"
+    - not dotfiles_bin.stat.exists
+
+- name: Read the latest bin release metadata
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/marcosnils/bin/releases/latest
+    return_content: true
+    headers:
+      Accept: application/vnd.github+json
+  register: dotfiles_bin_release
+  changed_when: false
+  when:
+    - "'bin' not in dotfiles_skip_tools"
+    - not dotfiles_bin.stat.exists
+
+- name: Select the matching bin release asset
+  ansible.builtin.set_fact:
+    dotfiles_bin_asset: >-
+      {{
+        dotfiles_bin_release.json.assets
+        | selectattr(
+            'name',
+            'search',
+            '^bin_.*_' ~ dotfiles_bin_platform ~ '_' ~ dotfiles_bin_arch ~ '$'
+          )
+        | list
+      }}
+  when:
+    - "'bin' not in dotfiles_skip_tools"
+    - not dotfiles_bin.stat.exists
+
+- name: Validate the bin release asset
+  ansible.builtin.assert:
+    that:
+      - dotfiles_bin_arch | length > 0
+      - dotfiles_bin_asset | length == 1
+      - dotfiles_bin_asset[0].digest is defined
+      - dotfiles_bin_asset[0].digest is match('^sha256:[0-9a-f]{64}$')
+    fail_msg: "Could not find a checksummed bin release for this platform."
+  when:
+    - "'bin' not in dotfiles_skip_tools"
+    - not dotfiles_bin.stat.exists
+
+- name: Create a temporary directory for the bin bootstrap
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: dotfiles-bin-
+  register: dotfiles_bin_bootstrap
+  when:
+    - "'bin' not in dotfiles_skip_tools"
+    - not dotfiles_bin.stat.exists
+
+- name: Install bin using its quick-install command
+  block:
+    - name: Download the bin bootstrap executable
+      ansible.builtin.get_url:
+        url: "{{ dotfiles_bin_asset[0].browser_download_url }}"
+        dest: "{{ dotfiles_bin_bootstrap.path }}/bin"
+        checksum: "{{ dotfiles_bin_asset[0].digest }}"
+        mode: "0755"
+
+    - name: Install bin to the user-local binary directory
+      ansible.builtin.command:
+        argv:
+          - "{{ dotfiles_bin_bootstrap.path }}/bin"
+          - install
+          - github.com/marcosnils/bin
+          - "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
+      args:
+        creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
+  when:
+    - "'bin' not in dotfiles_skip_tools"
+    - not dotfiles_bin.stat.exists
+  always:
+    - name: Remove the bin bootstrap directory
+      ansible.builtin.file:
+        path: "{{ dotfiles_bin_bootstrap.path }}"
+        state: absent
+      when:
+        - dotfiles_bin_bootstrap is defined
+        - dotfiles_bin_bootstrap.path is defined
+
+- name: Ensure bin is executable
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
+    state: file
+    mode: "0755"
+  when: "'bin' not in dotfiles_skip_tools"
+
 - name: Install mise
   ansible.builtin.shell: set -o pipefail && curl -fsSL https://mise.run | sh
   args:

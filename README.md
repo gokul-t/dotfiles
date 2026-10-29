@@ -304,6 +304,9 @@ configured by the playbook; Starship and Ghostty use Fedora COPR repositories.
 Flatpak apps are installed system-wide on Fedora. Ubuntu uses Snap
 packages for apps unavailable in its APT repositories; Snap app installation can
 be disabled with `-e dotfiles_install_snap_apps=false`.
+The `bin` package manager is installed by default. To skip it, add
+`bin` to `dotfiles_skip_tools`, for example with
+`-e '{"dotfiles_skip_tools":["bin"]}'`.
 
 To run the playbook manually, install Ansible and Git, then clone this repository:
 
@@ -349,7 +352,8 @@ uses the platform package manifests and installs Flatpak or Snap apps.
 On macOS, run without privilege escalation:
 
 ```sh
-ansible-playbook -i ansible/inventory.ini ansible/site.yml
+ansible-playbook -i ansible/inventory.ini ansible/site.yml \
+  -e '{"dotfiles_skip_tools":["bin"]}'
 ```
 
 On Ubuntu (including Ubuntu on WSL), run from the Ubuntu shell:
