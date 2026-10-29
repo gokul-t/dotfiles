@@ -124,6 +124,7 @@
           - install
           - github.com/marcosnils/bin
           - "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
+        stdin: "9\n"
       args:
         creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
   when:
