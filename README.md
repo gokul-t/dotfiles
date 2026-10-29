@@ -307,6 +307,8 @@ be disabled with `-e dotfiles_install_snap_apps=false`.
 The `bin` package manager is installed by default. To skip it, add
 `bin` to `dotfiles_skip_tools`, for example with
 `-e '{"dotfiles_skip_tools":["bin"]}'`.
+Additional binaries managed by `bin` are listed in `ansible/vars.yml`;
+Caligula is installed from its pinned v0.5.0 release during provisioning.
 
 To run the playbook manually, install Ansible and Git, then clone this repository:
 

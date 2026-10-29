@@ -145,6 +145,18 @@
     mode: "0755"
   when: "'bin' not in dotfiles_skip_tools"
 
+- name: Install configured binaries with bin
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
+      - install
+      - "{{ item.source }}"
+      - "{{ ansible_facts['env']['HOME'] }}/.local/bin/{{ item.name }}"
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/{{ item.name }}"
+  loop: "{{ dotfiles_bin_packages }}"
+  when: "'bin' not in dotfiles_skip_tools"
+
 - name: Install mise
   ansible.builtin.shell: set -o pipefail && curl -fsSL https://mise.run | sh
   args:

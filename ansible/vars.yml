@@ -4,5 +4,8 @@ dotfiles_stow_target: "{{ ansible_facts['env']['HOME'] }}"
 dotfiles_install_flatpak_apps: true
 dotfiles_install_snap_apps: true
 dotfiles_skip_tools: []
+dotfiles_bin_packages:
+  - name: caligula
+    source: https://github.com/ifd3f/caligula/releases/tag/v0.5.0
 dotfiles_fedora_skip_packages: []
 dotfiles_ubuntu_skip_packages: []
