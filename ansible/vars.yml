@@ -9,3 +9,7 @@ dotfiles_bin_packages:
     source: https://github.com/ifd3f/caligula/releases/tag/v0.5.0
 dotfiles_fedora_skip_packages: []
 dotfiles_ubuntu_skip_packages: []
+dotfiles_stow_packages: []
+dotfiles_stow_skip_packages:
+  - ansible
+dotfiles_stow_strict: false

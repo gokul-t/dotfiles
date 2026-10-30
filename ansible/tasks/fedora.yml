@@ -80,7 +80,7 @@
     dotfiles_dnf_packages: >-
       {{
         dotfiles_dnf_packages
-        | reject('in', dotfiles_fedora_skip_packages | default([]))
+        | reject('in', dotfiles_fedora_skip_packages)
         | list
       }}
 

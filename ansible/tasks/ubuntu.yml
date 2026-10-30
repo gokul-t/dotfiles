@@ -8,7 +8,7 @@
         | map('trim')
         | reject('match', '^#')
         | reject('equalto', '')
-        | reject('in', dotfiles_ubuntu_skip_packages | default([]))
+        | reject('in', dotfiles_ubuntu_skip_packages)
         | list
       }}
 

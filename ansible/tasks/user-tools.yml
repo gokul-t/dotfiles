@@ -4,6 +4,7 @@
     repo: https://github.com/ohmyzsh/ohmyzsh.git
     dest: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
     depth: 1
+    update: false
 
 - name: Create Oh My Zsh plugin directory
   ansible.builtin.file:
@@ -16,6 +17,7 @@
     repo: "{{ item.repo }}"
     dest: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
     depth: 1
+    update: false
   loop:
     - name: zsh-autosuggestions
       repo: https://github.com/zsh-users/zsh-autosuggestions.git
@@ -29,18 +31,21 @@
     repo: https://github.com/tmux-plugins/tpm.git
     dest: "{{ ansible_facts['env']['HOME'] }}/.tmux/plugins/tpm"
     depth: 1
+    update: false
 
 - name: Install Lazy-Idea
   ansible.builtin.git:
     repo: https://github.com/cufarvid/lazy-idea.git
     dest: "{{ ansible_facts['env']['HOME'] }}/.lazy-idea"
     depth: 1
+    update: false
 
 - name: Create the user-local binary directory
   ansible.builtin.file:
     path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
     state: directory
     mode: "0755"
+  when: ansible_facts['env']['SHELL'] | default('') != dotfiles_zsh_path.stdout
 
 - name: Check whether bin is installed
   ansible.builtin.stat:

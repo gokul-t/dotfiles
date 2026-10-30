@@ -11,20 +11,15 @@
           - ansible_facts['distribution'] in ["Fedora", "Ubuntu"] or ansible_facts['system'] == "Darwin"
         fail_msg: "This playbook supports Fedora, Ubuntu, and macOS."
 
-    - name: Install Fedora packages and Flatpak apps
-      ansible.builtin.import_tasks: tasks/fedora.yml
-      when: ansible_facts['distribution'] == "Fedora"
-
-    - name: Install macOS packages
-      ansible.builtin.import_tasks: tasks/macos.yml
-      when: ansible_facts['system'] == "Darwin"
-
-    - name: Install Ubuntu packages
-      ansible.builtin.import_tasks: tasks/ubuntu.yml
-      when: ansible_facts['distribution'] == "Ubuntu"
+    - name: Install OS packages
+      ansible.builtin.include_tasks: 
+        file: "tasks/{{ 'macos' if ansible_facts['system'] = 'Darwin' else ansible_facts['distribution'] | lower }}.yml"
+      tags: [packages]
 
     - name: Link dotfile configurations
       ansible.builtin.import_tasks: tasks/stow.yml
+      tags: [stow]
 
     - name: Set up user tools
       ansible.builtin.import_tasks: tasks/user-tools.yml
+      tags: [tools]

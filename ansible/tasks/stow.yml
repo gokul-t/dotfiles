@@ -28,9 +28,11 @@
       dotfiles_stow_directories.files
       | map(attribute='path')
       | map('basename')
-      | reject('equalto', 'ansible')
+      | reject('in', dotfiles_stow_skip_packages)
       | reject('match', '^[.]')
       | list
+      if not dotfiles_stow_skip_packages
+      else dotfiles_stow_packages
     }}
   register: dotfiles_stow_result
   changed_when: "'LINK:' in (dotfiles_stow_result.stdout | default(''))"
@@ -48,3 +50,12 @@
   loop: "{{ dotfiles_stow_result.results | selectattr('rc', 'ne', 0) | list }}"
   loop_control:
     label: "{{ item.item }}"
+
+- name: Fail when strict mode finds Stow conflicts
+  ansible.builtin.fail:
+    msg: >-
+      Stow conflicts in: {{ dotfiles_stow_result.results
+      | selectattr('rc', 'ne', 0) | map(attribute='item') | join(', ') }}
+  when:
+    - dotfiles_stow_strict | bool
+    - dotfiles_stow_result.results | selectattr('rc', 'ne', 0) | list | length > 0
