@@ -124,6 +124,8 @@
           - install
           - "{{ dotfiles_bin_asset[0].browser_download_url }}"
           - "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
+      environment:
+        PATH: "{{ ansible_facts['env']['PATH'] }}:{{ ansible_facts['env']['HOME'] }}/.local/bin"
       args:
         creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
   when:
