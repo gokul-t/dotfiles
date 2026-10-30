@@ -29,6 +29,7 @@
       | map(attribute='path')
       | map('basename')
       | reject('equalto', 'ansible')
+      | reject('match', '^[.]')
       | list
     }}
   register: dotfiles_stow_result

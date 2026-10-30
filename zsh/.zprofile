@@ -10,9 +10,15 @@
 # eval "$(/opt/homebrew/bin/brew shellenv)"   # Apple Silicon
 # eval "$(/usr/local/bin/brew shellenv)"      # Intel Mac
 
-# Start ssh-agent if not running
+# Reuse a single ssh-agent across login shells
 if [[ -z "$SSH_AUTH_SOCK" ]]; then
-  eval "$(ssh-agent -s)" >/dev/null
+  export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
+fi
+ssh-add -l >/dev/null 2>&1
+if [[ $? -eq 2 ]]; then
+  mkdir -p "$HOME/.ssh" 
+  rm -f "$SSH_AUTH_SOCK"
+  eval "$(ssh-agent -a "$SSH_AUTH_SOCK" -s)" >/dev/null
 fi
 
 # GPG
