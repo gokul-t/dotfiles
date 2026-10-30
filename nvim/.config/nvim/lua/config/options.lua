@@ -13,6 +13,6 @@ vim.g.autoformat = false
 vim.opt.termguicolors = true
 
 -- Use tmux buffers inside tmux instead of launching wl-paste on Wayland.
-if vim.env.TMUX then
+if vim.env.TMUX and vim.fn.has("mac") == 0 then
   vim.g.clipboard = "tmux"
 end
