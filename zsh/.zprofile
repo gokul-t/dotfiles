@@ -16,7 +16,7 @@ if [[ -z "$SSH_AUTH_SOCK" ]]; then
 fi
 ssh-add -l >/dev/null 2>&1
 if [[ $? -eq 2 ]]; then
-  mkdir -p "$HOME/.ssh" 
+  mkdir -p "$HOME/.ssh"
   rm -f "$SSH_AUTH_SOCK"
   eval "$(ssh-agent -a "$SSH_AUTH_SOCK" -s)" >/dev/null
 fi
