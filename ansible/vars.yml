@@ -12,4 +12,6 @@ dotfiles_ubuntu_skip_packages: []
 dotfiles_stow_packages: []
 dotfiles_stow_skip_packages:
   - ansible
+  - vimium
+  - windows
 dotfiles_stow_strict: false
