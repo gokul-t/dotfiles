@@ -15,7 +15,9 @@ My .dotfiles repository - configuration files for development environment.
     - [One-Command Setup](#one-command-setup)
   - [Usage](#usage)
     - [Tmux Key Bindings](#tmux-key-bindings)
+    - [Sesh Session Manager](#sesh-session-manager)
     - [Zsh Features](#zsh-features)
+    - [Bin Manager](#bin-manager)
   - [Key Configured Tools](#key-configured-tools)
     - [Neovim](#neovim)
     - [Tmux](#tmux)
@@ -80,12 +82,12 @@ This repository contains configuration files for various applications and tools 
 - **Tmux Plugin Manager (TPM)**: [https://github.com/tmux-plugins/tpm](https://github.com/tmux-plugins/tpm)
 - **IdeaVim / Lazy-Idea** - Vim emulation for JetBrains IDEs
 - **sesh** - Terminal session manager integrated with Tmux
-- zoxide - A smarter cd command, inspired by z and autojump.
-- fzf - A general-purpose command-line fuzzy finder.
-- rg (ripgrep) - A line-oriented search tool that recursively searches your current directory for a regex pattern.
-- yazi - tui file manager written in Rust.
-- lazygit - Simple git tui.
-- starship - The customizable prompt for any shell.
+- **zoxide** - A smarter cd command, inspired by z and autojump.
+- **fzf** - A general-purpose command-line fuzzy finder.
+- **rg (ripgrep)** - A line-oriented search tool that recursively searches your current directory for a regex pattern.
+- **yazi** - tui file manager written in Rust.
+- **lazygit** - Simple git tui.
+- **starship** - The customizable prompt for any shell.
 
 ### Development Tools
 
@@ -153,11 +155,11 @@ This repository contains configuration files for various applications and tools 
 
 4. **Install Packages via Brewfile**
 
-  Installs CLI tools, casks, and VS Code extensions listed in `Brewfile`:
+   Installs CLI tools, casks, and VS Code extensions listed in `Brewfile`:
 
-    ```sh
-    brew bundle --file ~/.dotfiles/Brewfile
-    ```
+     ```sh
+     brew bundle --file ~/.dotfiles/Brewfile
+     ```
 
 1. **Set Up Tmux Plugin Manager**
 
@@ -409,8 +411,8 @@ Install sesh and its picker dependencies (`fzf`, `zoxide`, and `fd`). On macOS,
 these are included in the `Brewfile`; on other systems, install them with your
 package manager. Then run `stow sesh` to link its configuration. The Fedora
 Ansible workflow installs the Zsh completion system-wide at
-`/usr/local/share/zsh/site-functions/_sesh`. Homebrew generates and installs
-the completion automatically on macOS.
+`/usr/local/share/zsh/site-functions/_sesh`. Homebrew generates and installs the
+completion automatically on macOS.
 
 For a manual Linux installation, generate and install the completion with:
 
@@ -438,13 +440,19 @@ With the default Tmux prefix (`Ctrl+b`), use:
 - History sharing across sessions
 - Vi mode with `V` to edit command in Neovim
 
+### Bin Manager
+
+The `bin` manager is used to install and manage custom binaries and scripts. 
+Configurations and package lists for the bin manager are handled via the 
+Ansible workflow and listed in `ansible/vars.yml`.
+
 ## Key Configured Tools
 
 ### Neovim
 
 - **LazyVim** distribution with extensive language support
 - Languages configured: Python, Java, Terraform, YAML, TOML, Markdown
-- Plugins include: Copilot, DAP debugging, Treesitter, LSP support
+- Plugins include: Copilot, DAP debugging, Treesitter, LSP support, and Bufferline (configured to always show)
 - Theme: Tokyo Night
 
 ### Tmux
