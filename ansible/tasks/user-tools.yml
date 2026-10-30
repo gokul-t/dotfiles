@@ -122,7 +122,7 @@
         argv:
           - "{{ dotfiles_bin_bootstrap.path }}/bin"
           - install
-          - "{{ dotfiles_bin_asset[0].browser_download_url }}"
+          - github.com/marcosnils/bin
           - "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
         stdin: "{{ ansible_facts['env']['HOME'] }}/.local/bin\n"
       args:
