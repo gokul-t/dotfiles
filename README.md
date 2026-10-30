@@ -21,7 +21,7 @@ My .dotfiles repository - configuration files for development environment.
   - [Key Configured Tools](#key-configured-tools)
     - [Neovim](#neovim)
     - [Tmux](#tmux)
-    - [Alacritty](#alacritty)
+    - [Ghostty](#ghostty)
     - [Shell Configuration](#shell-configuration)
   - [Troubleshooting](#troubleshooting)
     - [Fonts not displaying correctly](#fonts-not-displaying-correctly)
@@ -33,7 +33,7 @@ My .dotfiles repository - configuration files for development environment.
 
 ## Overview
 
-This repository contains configuration files for various applications and tools including Neovim, Tmux, Alacritty, Zsh, and more.
+This repository contains configuration files for various applications and tools including Neovim, Tmux, Ghostty, Zsh, and more.
 
 ## Prerequisites
 
@@ -78,7 +78,7 @@ This repository contains configuration files for various applications and tools 
 - **Git** - Version control
 - **Neovim** - Text editor
 - **Tmux** - Terminal multiplexer
-- **Alacritty / Ghostty** - Terminal emulators
+- **Ghostty** - Terminal emulator
 - **Tmux Plugin Manager (TPM)**: [https://github.com/tmux-plugins/tpm](https://github.com/tmux-plugins/tpm)
 - **IdeaVim / Lazy-Idea** - Vim emulation for JetBrains IDEs
 - **sesh** - Terminal session manager integrated with Tmux
@@ -110,7 +110,6 @@ This repository contains configuration files for various applications and tools 
 
    ```sh
    cd ~/.dotfiles
-   stow alacritty  # Creates symlinks for Alacritty config
    stow zsh        # Creates symlinks for zsh config
    stow tmux       # Creates symlinks for tmux config
    stow nvim       # Creates symlinks for Neovim config
@@ -453,17 +452,17 @@ Ansible workflow and listed in `ansible/vars.yml`.
 - **LazyVim** distribution with extensive language support
 - Languages configured: Python, Java, Terraform, YAML, TOML, Markdown
 - Plugins include: Copilot, DAP debugging, Treesitter, LSP support, and Bufferline (configured to always show)
-- Theme: Tokyo Night
+- Theme: Catppuccin Macchiato
 
 ### Tmux
 
-- Theme: Minimal Theme
+- Theme: Catppuccin Macchiato
 - Plugins: vim-tmux-navigator, tmux-yank, tmux-resurrect, tmux-continuum
 - Auto-restore sessions on restart
 
-### Alacritty
+### Ghostty
 
-- Theme: Tokyo Night
+- Theme: Catppuccin Macchiato
 - Font: MesloLGS Nerd Font (size 12)
 - Custom keybindings for Alt-based word navigation
 
@@ -478,7 +477,7 @@ Ansible workflow and listed in `ansible/vars.yml`.
 ### Fonts not displaying correctly
 
 - Ensure MesloLGS Nerd Font is installed and font cache is refreshed
-- Verify Alacritty configuration points to the correct font family
+- Verify Ghostty configuration points to the correct font family
 
 ### Tmux plugins not loading
 
