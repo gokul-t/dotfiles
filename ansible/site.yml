@@ -12,8 +12,10 @@
         fail_msg: "This playbook supports Fedora, Ubuntu, and macOS."
 
     - name: Install OS packages
-      ansible.builtin.include_tasks: 
+      ansible.builtin.include_tasks:
         file: "tasks/{{ 'macos' if ansible_facts['system'] == 'Darwin' else ansible_facts['distribution'] | lower }}.yml"
+        apply:
+          tags: [packages]
       tags: [packages]
 
     - name: Link dotfile configurations
