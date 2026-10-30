@@ -31,7 +31,7 @@
       | reject('in', dotfiles_stow_skip_packages)
       | reject('match', '^[.]')
       | list
-      if not dotfiles_stow_skip_packages
+      if not dotfiles_stow_packages
       else dotfiles_stow_packages
     }}
   register: dotfiles_stow_result

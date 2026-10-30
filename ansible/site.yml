@@ -13,7 +13,7 @@
 
     - name: Install OS packages
       ansible.builtin.include_tasks: 
-        file: "tasks/{{ 'macos' if ansible_facts['system'] = 'Darwin' else ansible_facts['distribution'] | lower }}.yml"
+        file: "tasks/{{ 'macos' if ansible_facts['system'] == 'Darwin' else ansible_facts['distribution'] | lower }}.yml"
       tags: [packages]
 
     - name: Link dotfile configurations

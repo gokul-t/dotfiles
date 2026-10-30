@@ -45,7 +45,6 @@
     path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
     state: directory
     mode: "0755"
-  when: ansible_facts['env']['SHELL'] | default('') != dotfiles_zsh_path.stdout
 
 - name: Check whether bin is installed
   ansible.builtin.stat:
@@ -240,3 +239,4 @@
   ansible.builtin.user:
     name: "{{ ansible_facts['user_id'] }}"
     shell: "{{ dotfiles_zsh_path.stdout }}"
+  when: ansible_facts['env']['SHELL'] | default('') != dotfiles_zsh_path.stdout
