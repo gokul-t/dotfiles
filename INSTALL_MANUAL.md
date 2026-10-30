@@ -71,7 +71,6 @@ git clone https://github.com/cufarvid/lazy-idea.git ~/.lazy-idea
    git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
    git clone https://github.com/MichaelAquilina/zsh-you-should-use ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/you-should-use
    ```
-3. **User Config**: `touch ~/.zuserconfig.zsh`
 
 #### Mise (Development Tools)
 ```sh

@@ -1,8 +1,5 @@
 # General
 .DS_Store
 
-# zsh
-zsh/.zuserconfig.zsh
-
 # git
 git/.identity.conf
