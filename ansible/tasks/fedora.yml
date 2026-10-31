@@ -36,28 +36,6 @@
     gpgcheck: true
     enabled: true
 
-- name: Check which Copr repositories are enabled
-  ansible.builtin.stat:
-    path: "/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:{{ item.repo | replace('/', ':') }}.repo"
-  loop: "{{ dotfiles_fedora_copr_repos | selectattr('package', 'in', dotfiles_dnf_packages) | list }}"
-  loop_control:
-    label: "{{ item.repo }}"
-  register: dotfiles_copr_repo_status
-
-- name: Enable required Copr repositories
-  become: true
-  ansible.builtin.command:
-    argv:
-      - dnf
-      - copr
-      - enable
-      - --assumeyes
-      - "{{ item.item.repo }}"
-  loop: "{{ dotfiles_copr_repo_status.results }}"
-  loop_control:
-    label: "{{ item.item.repo }}"
-  when: not item.stat.exists
-
 - name: Read Fedora package manifest
   ansible.builtin.set_fact:
     dotfiles_dnf_packages_all: >-
@@ -100,6 +78,28 @@
         if ansible_facts['architecture'] != 'x86_64'
         else dotfiles_dnf_packages
       }}
+
+- name: Check which Copr repositories are enabled
+  ansible.builtin.stat:
+    path: "/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:{{ item.repo | replace('/', ':') }}.repo"
+  loop: "{{ dotfiles_fedora_copr_repos | selectattr('package', 'in', dotfiles_dnf_packages) | list }}"
+  loop_control:
+    label: "{{ item.repo }}"
+  register: dotfiles_copr_repo_status
+
+- name: Enable required Copr repositories
+  become: true
+  ansible.builtin.command:
+    argv:
+      - dnf
+      - copr
+      - enable
+      - --assumeyes
+      - "{{ item.item.repo }}"
+  loop: "{{ dotfiles_copr_repo_status.results }}"
+  loop_control:
+    label: "{{ item.item.repo }}"
+  when: not item.stat.exists
 
 - name: Check whether the Starship Copr repository is enabled
   ansible.builtin.stat:
