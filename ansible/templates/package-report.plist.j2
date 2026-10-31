@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "apple.com/DTDs/…">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>{{ dotfiles_package_report_label }}</string>
+  <key>ProgramArguments</key>
+  <array>
+{% for arg in dotfiles_package_report_command %}
+    <string>{{ arg | e }}</string>
+{% endfor %}
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>{{ dotfiles_package_report_path | e }}</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key>
+    <integer>1</integer>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/dev/null</string>
+  <key>StandardErrorPath</key>
+  <string>/dev/null</string>
+</dict>
+</plist>

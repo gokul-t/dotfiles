@@ -1,0 +1,180 @@
+---
+- name: Compute package report skip arguments
+  ansible.builtin.set_fact:
+    dotfiles_package_report_skips: >-
+      {{
+        (dotfiles_fedora_skip_packages if ansible_facts['distribution'] == 'Fedora'
+         else dotfiles_ubuntu_skip_packages if ansible_facts['distribution'] == 'Ubuntu'
+         else [])
+        | map('regex_replace', '^', '--skip=') | list
+      }}
+
+- name: Build package report command and PATH
+  ansible.builtin.set_fact:
+    dotfiles_package_report_label: com.dotfiles.package-report
+    dotfiles_package_report_command: >-
+      {{
+        ['/usr/bin/env', 'python3', dotfiles_repo_path ~ '/ansible/scripts/package-report.py',
+         '--output', dotfiles_package_report_dir ~ '/package-report.txt']
+        + (['--no-flatpak'] if not dotfiles_install_flatpak_apps | bool else [])
+        + (['--no-snap'] if not dotfiles_install_snap_apps | bool else [])
+        + dotfiles_package_report_skips
+      }}
+    dotfiles_package_report_path: >-
+      {{
+        (['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin',
+          ansible_facts['env']['HOME'] ~ '/.local/bin']
+         + (['/Applications/Visual Studio Code.app/Contents/Resources/app/bin']
+            if ansible_facts['system'] == 'Darwin' else []))
+        | join(':')
+      }}
+
+- name: Create the package report directory
+  ansible.builtin.file:
+    path: "{{ dotfiles_package_report_dir }}"
+    state: directory
+    mode: "0700"
+  when: dotfiles_package_report_schedule | bool
+
+- name: Manage the macOS LaunchAgent
+  when: ansible_facts['system'] == "Darwin"
+  block:
+    - name: Define LaunchAgent paths
+      ansible.builtin.set_fact:
+        dotfiles_launch_agent: "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents/{{ dotfiles_package_report_label }}.plist"
+        dotfiles_launch_domain: "gui/{{ ansible_facts['user_uid'] }}"
+
+    - name: Install the package report LaunchAgent
+      ansible.builtin.template:
+        src: package-report.plist.j2
+        dest: "{{ dotfiles_launch_agent }}"
+        mode: "0644"
+      register: dotfiles_launch_agent_file
+      when: dotfiles_package_report_schedule | bool
+
+    - name: Reload the package report LaunchAgent
+      ansible.builtin.shell: |
+        launchctl bootout {{ dotfiles_launch_domain | quote }}/{{ dotfiles_package_report_label }} 2>/dev/null || true
+        launchctl bootstrap {{ dotfiles_launch_domain | quote }} {{ dotfiles_launch_agent | quote }}
+      when:
+        - dotfiles_package_report_schedule | bool
+        - dotfiles_launch_agent_file.changed
+
+    - name: Check for an existing package report LaunchAgent
+      ansible.builtin.stat:
+        path: "{{ dotfiles_launch_agent }}"
+      register: dotfiles_launch_agent_stat
+      when: not dotfiles_package_report_schedule | bool
+
+    - name: Unload the disabled package report LaunchAgent
+      ansible.builtin.shell: >-
+        launchctl bootout {{ dotfiles_launch_domain | quote }}/{{ dotfiles_package_report_label }} 2>/dev/null || true
+      when:
+        - not dotfiles_package_report_schedule | bool
+        - dotfiles_launch_agent_stat.stat.exists
+      changed_when: true
+
+    - name: Remove the disabled package report LaunchAgent
+      ansible.builtin.file:
+        path: "{{ dotfiles_launch_agent }}"
+        state: absent
+      when: not dotfiles_package_report_schedule | bool
+
+- name: Manage the Linux package report schedule
+  when: ansible_facts['system'] == "Linux"
+  block:
+    - name: Check for a systemd user manager
+      ansible.builtin.command: systemctl --user show-environment
+      register: dotfiles_systemd_user
+      changed_when: false
+      failed_when: false
+
+    - name: Check for crontab
+      ansible.builtin.shell: command -v crontab
+      register: dotfiles_crontab
+      changed_when: false
+      failed_when: false
+
+    - name: Select the Linux scheduler
+      ansible.builtin.set_fact:
+        dotfiles_package_report_systemd: "{{ dotfiles_systemd_user.rc == 0 }}"
+        dotfiles_package_report_cron: >-
+          {{ dotfiles_systemd_user.rc != 0
+             and dotfiles_package_report_cron_fallback | bool
+             and dotfiles_crontab.rc == 0 }}
+        dotfiles_systemd_unit_dir: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user"
+
+    - name: Explain when no scheduler is available
+      ansible.builtin.debug:
+        msg: >-
+          No systemd user manager (and no enabled cron fallback). Run
+          ansible/scripts/package-report.py manually instead.
+      when:
+        - dotfiles_package_report_schedule | bool
+        - not dotfiles_package_report_systemd | bool
+        - not dotfiles_package_report_cron | bool
+
+    - name: Install package report systemd units
+      ansible.builtin.template:
+        src: "package-report.{{ item }}.j2"
+        dest: "{{ dotfiles_systemd_unit_dir }}/dotfiles-package-report.{{ item }}"
+        mode: "0644"
+      loop: [service, timer]
+      register: dotfiles_systemd_units
+      when:
+        - dotfiles_package_report_schedule | bool
+        - dotfiles_package_report_systemd | bool
+
+    - name: Enable the package report timer
+      ansible.builtin.systemd_service:
+        name: dotfiles-package-report.timer
+        scope: user
+        enabled: true
+        state: started
+        daemon_reload: "{{ dotfiles_systemd_units.changed }}"
+      when:
+        - dotfiles_package_report_schedule | bool
+        - dotfiles_package_report_systemd | bool
+
+    - name: Install the package report cron job
+      ansible.builtin.cron:
+        name: dotfiles package report
+        special_time: weekly
+        job: >-
+          PATH={{ dotfiles_package_report_path | quote }}
+          {{ dotfiles_package_report_command | map('quote') | join(' ') | replace('%', '\%') }}
+      when:
+        - dotfiles_package_report_schedule | bool
+        - dotfiles_package_report_cron | bool
+
+    - name: Check for installed package report systemd units
+      ansible.builtin.stat:
+        path: "{{ dotfiles_systemd_unit_dir }}/dotfiles-package-report.timer"
+      register: dotfiles_systemd_timer_stat
+      when: not dotfiles_package_report_schedule | bool
+
+    - name: Disable the package report timer
+      ansible.builtin.systemd_service:
+        name: dotfiles-package-report.timer
+        scope: user
+        enabled: false
+        state: stopped
+      when:
+        - not dotfiles_package_report_schedule | bool
+        - dotfiles_systemd_timer_stat.stat.exists
+        - dotfiles_package_report_systemd | bool
+
+    - name: Remove the package report systemd units
+      ansible.builtin.file:
+        path: "{{ dotfiles_systemd_unit_dir }}/dotfiles-package-report.{{ item }}"
+        state: absent
+      loop: [service, timer]
+      when: not dotfiles_package_report_schedule | bool
+
+    - name: Remove the package report cron job
+      ansible.builtin.cron:
+        name: dotfiles package report
+        state: absent
+      when:
+        - not dotfiles_package_report_schedule | bool
+        - dotfiles_crontab.rc == 0

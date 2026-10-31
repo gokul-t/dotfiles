@@ -49,3 +49,8 @@
       ansible.builtin.import_tasks: tasks/user-tools.yml
       when: dotfiles_profile == "workstation"
       tags: [tools]
+
+    - name: Schedule optional package drift reports
+      ansible.builtin.import_tasks: tasks/package-report.yml
+      when: dotfiles_profile == "workstation"
+      tags: [package-report]

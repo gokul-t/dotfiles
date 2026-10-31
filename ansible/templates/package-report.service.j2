@@ -1,0 +1,8 @@
+[Unit]
+Description=Dotfiles package drift report
+
+[Service]
+Type=oneshot
+Environment="PATH={{ dotfiles_package_report_path | replace('%', '%%') }}"
+ExecStart={% for arg in dotfiles_package_report_command %}"{{ arg | replace('\\', '\\\\') | replace('"', '\\"') | replace('%', '%%') | replace('$', '$$') }}"{{ ' ' if not loop.last }}{% endfor %}
+
