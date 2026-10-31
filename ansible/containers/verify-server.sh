@@ -53,4 +53,43 @@ for tool in "${UNWANTED[@]}"; do
 done
 printf "PASS: No unwanted workstation artifacts found.\n"
 
+for rel in .bashrc .bash_profile .tmux.conf .zshrc .config/nvim; do
+  if [[ -L "$HOME/$rel" ]]; then
+    printf "FAIL: Unexpected workstation symlink ~/%s.\n" "$rel"
+    exit 1
+  fi
+done
+for rel in .oh-my-zsh .tmux .lazy-idea .local/bin/mise; do
+  if [[ -e "$HOME/$rel" ]]; then
+    printf "FAIL: Unexpected workstation artifact ~/%s.\n" "$rel"
+    exit 1
+  fi
+done
+printf "PASS: No workstation dotfiles or tools were linked.\n"
+
+# 5. Smoke-test Vim with the linked config and tmux on an isolated socket
+vim -es -u "$HOME/.vimrc" -c 'qa!' || { printf "FAIL: Vim could not load ~/.vimrc.\n"; exit 1; }
+socket="dotfiles-verify-$$"
+tmux -L "$socket" -f /dev/null new-session -d 'sleep 30'
+tmux -L "$socket" list-sessions >/dev/null
+tmux -L "$socket" kill-server
+printf "PASS: Vim and tmux smoke tests.\n"
+
+# 6. Existing files must survive Stow conflicts; strict mode must fail
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$repo_root"
+rm -f "$HOME/.vimrc"
+printf '" local\n' > "$HOME/.vimrc"
+ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow -e dotfiles_profile=server >/dev/null
+if [[ -L "$HOME/.vimrc" || "$(cat "$HOME/.vimrc")" != '" local' ]]; then
+  printf "FAIL: Existing ~/.vimrc was overwritten.\n"
+  exit 1
+fi
+if ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow \
+  -e dotfiles_profile=server -e dotfiles_stow_strict=true >/dev/null 2>&1; then
+  printf "FAIL: Strict mode did not fail on a Stow conflict.\n"
+  exit 1
+fi
+printf "PASS: Stow conflicts preserve existing files and fail in strict mode.\n"
+
 printf "\nAll server verification checks PASSED!\n"
