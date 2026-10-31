@@ -6,7 +6,7 @@
       - bundle
       - check
       - --file
-      - "{{ dotfiles_repo_path }}/Brewfile"
+      - "{{ dotfiles_repo_path }}/ansible/packages/Brewfile"
   register: dotfiles_brew_bundle_check
   changed_when: false
   failed_when: false
@@ -18,5 +18,5 @@
       - bundle
       - install
       - --file
-      - "{{ dotfiles_repo_path }}/Brewfile"
+      - "{{ dotfiles_repo_path }}/ansible/packages/Brewfile"
   when: dotfiles_brew_bundle_check.rc != 0

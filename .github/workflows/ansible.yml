@@ -38,6 +38,21 @@ jobs:
       - name: Check playbook syntax
         run: ansible-playbook -i ansible/inventory.ini ansible/site.yml --syntax-check
 
+  stow-selection:
+    name: Stow package selection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Ansible and Stow
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ansible-core stow
+
+      - name: Check Stow selection against disposable targets
+        run: bash ansible/containers/test-stow.sh
+
   fedora-container:
     name: Fedora 44 provisioning
     if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')

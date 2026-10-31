@@ -11,6 +11,14 @@ Depending on your preference and system, choose one of the following paths:
 
 ---
 
+## 🗂️ Repository Layout
+
+- Top-level tool directories (`zsh`, `tmux`, `nvim`, ...) are Stow packages laid out like `$HOME`; defaults are listed per profile in `ansible/profiles/`.
+- `ansible/` holds provisioning, OS package manifests (`ansible/packages/`), and container tests.
+- `vimium/` and `windows/` are exports imported manually, not linked.
+
+---
+
 ## 🛠️ Key Configured Tools
 
 This environment is centered around a cohesive, keyboard-centric workflow:

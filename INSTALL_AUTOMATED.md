@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/boots
 1. **Bootstraps**: Installs Ansible and Git using the native package manager (`dnf` for Fedora, `apt` for Ubuntu/WSL, `brew` for macOS).
 2. **Clones**: Pulls this repository into `~/.dotfiles`.
 3. **Provisions**: Runs the Ansible playbook to:
-   - Install all system packages listed in `dnf-packages.txt` or `ubuntu-packages.txt`.
+   - Install all system packages listed in `ansible/packages/` (`dnf-packages.txt`, `ubuntu-packages.txt`, or `Brewfile`).
    - Install Flatpak/Snap applications.
    - Configure repositories for VS Code, Chrome, etc.
    - Use **GNU Stow** to symlink all configurations to your home directory.
@@ -52,8 +52,20 @@ If you want to skip specific tools (e.g., the `bin` manager), you can pass extra
 ansible-playbook -i ansible/inventory.ini ansible/site.yml -e '{"dotfiles_skip_tools":["bin"]}'
 ```
 
+### Choosing Stow Packages
+Each profile declares its default packages in `ansible/profiles/<profile>.yml` (`dotfiles_profile_stow_packages`); new top-level directories are not linked until added there. Override or exclude packages per run:
+```sh
+ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow \
+  -e '{"dotfiles_stow_packages":["zsh","tmux"],"dotfiles_stow_skip_packages":["tmux"]}'
+```
+- `dotfiles_stow_packages` replaces the profile default; `dotfiles_stow_skip_packages` is removed from either list.
+- Unknown package names fail. Existing conflicting files are left untouched and reported (`-e dotfiles_stow_strict=true` fails instead).
+- `dotfiles_stow_target` only changes where configs are linked, not where tool installers write.
+- Package installation, config linking (`--tags stow`) and user tools (`--tags tools`) are separate steps; linking fewer packages does not install fewer applications.
+- `dotfiles_skip_tools` currently supports only `bin`.
+
 ### WSL & macOS Notes
-- **WSL**: Snap installation is automatically disabled as `snapd` often requires systemd.
+- **WSL**: The bootstrap script disables Snap installation (`snapd` often requires systemd). When running the playbook directly, pass `-e dotfiles_install_snap_apps=false`.
 - **macOS**: Ensure Homebrew is installed before running the bootstrap script.
 
 ---
@@ -83,6 +95,9 @@ You can test the provisioning without affecting your host system using the provi
 docker build -f ansible/containers/fedora.Dockerfile -t dotfiles-test:fedora .
 docker run --rm dotfiles-test:fedora
 ```
+
+### Testing Stow Selection
+`bash ansible/containers/test-stow.sh` checks package selection, overrides, and conflict handling against disposable target directories (requires `stow` and `ansible-playbook`).
 
 To test the **server profile** (use `BASE_IMAGE=debian:13` for Debian; Docker is only needed for these tests):
 ```sh

@@ -1,4 +1,8 @@
-# 💤 LazyVim
+# Neovim (LazyVim)
 
-A starter template for [LazyVim](https://github.com/LazyVim/LazyVim).
-Refer to the [documentation](https://lazyvim.github.io/installation) to get started.
+LazyVim configuration. Customizations live in:
+
+- `lua/config/{options,keymaps}.lua` — options and keymaps
+- `lua/plugins/` — plugin specs and overrides
+- `lazyvim.json` — enabled LazyVim extras
+- `lazy-lock.json` — pinned plugin versions

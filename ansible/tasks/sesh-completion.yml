@@ -1,0 +1,23 @@
+---
+- name: Generate the sesh Zsh completion
+  ansible.builtin.command:
+    argv:
+      - sesh
+      - completion
+      - zsh
+  register: dotfiles_sesh_zsh_completion
+  changed_when: false
+
+- name: Create the system-wide Zsh completion directory
+  become: true
+  ansible.builtin.file:
+    path: /usr/local/share/zsh/site-functions
+    state: directory
+    mode: "0755"
+
+- name: Install the system-wide sesh Zsh completion
+  become: true
+  ansible.builtin.copy:
+    content: "{{ dotfiles_sesh_zsh_completion.stdout }}\n"
+    dest: /usr/local/share/zsh/site-functions/_sesh
+    mode: "0644"

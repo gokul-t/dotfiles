@@ -12,7 +12,25 @@
     state: directory
     mode: "0755"
 
-- name: Link all dotfile packages with GNU Stow
+- name: Select dotfile packages to link
+  ansible.builtin.set_fact:
+    dotfiles_stow_selected: >-
+      {{
+        (dotfiles_stow_packages if dotfiles_stow_packages | length > 0
+         else dotfiles_profile_stow_packages)
+        | difference(dotfiles_stow_skip_packages)
+        | list
+      }}
+
+- name: Validate selected dotfile packages
+  ansible.builtin.assert:
+    that:
+      - item in (dotfiles_stow_directories.files | map(attribute='path') | map('basename') | list)
+    fail_msg: "Unknown dotfile package '{{ item }}': no such top-level directory."
+    quiet: true
+  loop: "{{ dotfiles_stow_selected }}"
+
+- name: Link selected dotfile packages with GNU Stow
   ansible.builtin.command:
     argv:
       - stow
@@ -23,19 +41,9 @@
       - --stow
       - --verbose=1
       - "{{ item }}"
-  loop: >-
-    {{
-      dotfiles_stow_directories.files
-      | map(attribute='path')
-      | map('basename')
-      | reject('in', dotfiles_stow_skip_packages)
-      | reject('match', '^[.]')
-      | list
-      if not dotfiles_stow_packages
-      else dotfiles_stow_packages
-    }}
+  loop: "{{ dotfiles_stow_selected }}"
   register: dotfiles_stow_result
-  changed_when: "'LINK:' in (dotfiles_stow_result.stdout | default(''))"
+  changed_when: "'LINK:' in ((dotfiles_stow_result.stdout | default('')) ~ (dotfiles_stow_result.stderr | default('')))"
   failed_when:
     - dotfiles_stow_result.rc != 0
     - "'would cause conflicts:' not in (dotfiles_stow_result.stderr | default(''))"

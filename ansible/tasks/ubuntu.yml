@@ -3,7 +3,7 @@
   ansible.builtin.set_fact:
     dotfiles_ubuntu_packages_all: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/ubuntu-packages.txt')
+        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/ansible/packages/ubuntu-packages.txt')
         .splitlines()
         | map('trim')
         | reject('match', '^#')
@@ -158,30 +158,8 @@
     mode: "0755"
   when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
 
-- name: Generate the sesh Zsh completion
-  ansible.builtin.command:
-    argv:
-      - sesh
-      - completion
-      - zsh
-  register: dotfiles_sesh_zsh_completion
-  changed_when: false
-  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
-
-- name: Create the system-wide Zsh completion directory
-  become: true
-  ansible.builtin.file:
-    path: /usr/local/share/zsh/site-functions
-    state: directory
-    mode: "0755"
-  when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
-
-- name: Install the system-wide sesh Zsh completion
-  become: true
-  ansible.builtin.copy:
-    content: "{{ dotfiles_sesh_zsh_completion.stdout }}\n"
-    dest: /usr/local/share/zsh/site-functions/_sesh
-    mode: "0644"
+- name: Install the sesh Zsh completion
+  ansible.builtin.include_tasks: sesh-completion.yml
   when: "'tmux-sesh' in dotfiles_ubuntu_packages_all"
 
 - name: Install snapd when Snap apps are enabled
@@ -216,7 +194,7 @@
   ansible.builtin.set_fact:
     dotfiles_ubuntu_snaps: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/ubuntu-snap-packages.txt')
+        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/ansible/packages/ubuntu-snap-packages.txt')
         .splitlines()
         | map('trim')
         | reject('match', '^#')

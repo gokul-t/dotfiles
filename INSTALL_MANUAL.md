@@ -21,27 +21,27 @@ cd ~/.dotfiles
 ```
 
 ### 2. Symlink Configurations (GNU Stow)
-Stow manages your dotfiles by creating symlinks. You can stow everything at once:
+Stow manages your dotfiles by creating symlinks. Link the packages you want by name:
 ```sh
-stow */
+stow zsh tmux nvim git
 ```
-*This links zsh, tmux, nvim, git, bash, bin, code, ideavim, mise, npm, yazi, ghostty, lazygit, starship, claude, sesh, and vim.*
+The default workstation package list is `dotfiles_profile_stow_packages` in `ansible/profiles/workstation.yml`. `ansible/`, `vimium/` and `windows/` are not Stow packages: Vimium and PowerToys exports are imported manually into those applications.
 
 ### 3. Install System Packages
 Depending on your OS, install the required dependencies:
 
 **Fedora:**
 ```sh
-sudo dnf install $(grep -v '^#' ~/.dotfiles/dnf-packages.txt | xargs)
+sudo dnf install $(grep -v '^#' ~/.dotfiles/ansible/packages/dnf-packages.txt | xargs)
 while read -r remote app; do
   case "$remote" in ""|\#*) continue ;; esac
   flatpak install --assumeyes "$remote" "$app"
-done < ~/.dotfiles/flatpak-packages.txt
+done < ~/.dotfiles/ansible/packages/flatpak-packages.txt
 ```
 
 **macOS (using Brewfile):**
 ```sh
-brew bundle --file ~/.dotfiles/Brewfile
+brew bundle --file ~/.dotfiles/ansible/packages/Brewfile
 ```
 
 ### 4. Tool-Specific Configurations

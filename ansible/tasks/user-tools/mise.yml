@@ -1,0 +1,67 @@
+---
+- name: Install mise
+  ansible.builtin.shell: set -o pipefail && curl -fsSL https://mise.run | sh
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
+    executable: /bin/bash
+
+- name: Check whether the mise configuration is linked
+  ansible.builtin.stat:
+    path: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+  register: dotfiles_mise_config
+
+- name: Trust the linked mise configuration
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
+      - trust
+      - "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+  when: dotfiles_mise_config.stat.exists
+  changed_when: false
+  environment:
+    MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+
+- name: Install the configured tools with mise
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
+      - install
+  register: dotfiles_mise_install
+  changed_when: false
+  failed_when: >-
+    dotfiles_mise_install.rc != 0
+    and not (
+      'rust@' in (dotfiles_mise_install.stderr | default(''))
+      and 'SIGILL' in (dotfiles_mise_install.stderr | default(''))
+    )
+  environment:
+    MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+
+- name: Warn when Rust installation hits the known Rustup SIGILL bug
+  ansible.builtin.debug:
+    msg: >-
+      mise could not install Rust because rustup-init exited with SIGILL.
+      This matches the upstream Rustup 1.29.2 CPU-instruction bug
+      (rust-lang/rustup#5160). Other configured tools will continue installing,
+      but Rust is unavailable. Retry the Rust installation after Rustup 1.29.3
+      or newer is available.
+  when:
+    - dotfiles_mise_install.rc != 0
+    - "'rust@' in (dotfiles_mise_install.stderr | default(''))"
+    - "'SIGILL' in (dotfiles_mise_install.stderr | default(''))"
+
+- name: Install LazyGit with Go
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
+      - exec
+      - --
+      - go
+      - install
+      - github.com/jesseduffield/lazygit@latest
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/lazygit"
+  environment:
+    GOBIN: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+    MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+  when: ansible_facts['distribution'] == "Ubuntu"

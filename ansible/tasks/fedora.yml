@@ -36,12 +36,15 @@
     gpgcheck: true
     enabled: true
 
-- name: Check whether the sesh Copr repository is enabled
+- name: Check which Copr repositories are enabled
   ansible.builtin.stat:
-    path: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:buckaroogeek:Tmux_sesh.repo
-  register: dotfiles_sesh_copr_repo
+    path: "/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:{{ item.repo | replace('/', ':') }}.repo"
+  loop: "{{ dotfiles_fedora_copr_repos | selectattr('package', 'in', dotfiles_dnf_packages) | list }}"
+  loop_control:
+    label: "{{ item.repo }}"
+  register: dotfiles_copr_repo_status
 
-- name: Enable the sesh Copr repository
+- name: Enable required Copr repositories
   become: true
   ansible.builtin.command:
     argv:
@@ -49,14 +52,17 @@
       - copr
       - enable
       - --assumeyes
-      - buckaroogeek/Tmux_sesh
-  when: not dotfiles_sesh_copr_repo.stat.exists
+      - "{{ item.item.repo }}"
+  loop: "{{ dotfiles_copr_repo_status.results }}"
+  loop_control:
+    label: "{{ item.item.repo }}"
+  when: not item.stat.exists
 
 - name: Read Fedora package manifest
   ansible.builtin.set_fact:
     dotfiles_dnf_packages_all: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/dnf-packages.txt')
+        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/ansible/packages/dnf-packages.txt')
         .splitlines()
         | map('trim')
         | reject('match', '^#')
@@ -178,34 +184,15 @@
     state: present
     update_cache: true
 
-- name: Generate the sesh Zsh completion
-  ansible.builtin.command:
-    argv:
-      - sesh
-      - completion
-      - zsh
-  register: dotfiles_sesh_zsh_completion
-  changed_when: false
-
-- name: Create the system-wide Zsh completion directory
-  become: true
-  ansible.builtin.file:
-    path: /usr/local/share/zsh/site-functions
-    state: directory
-    mode: "0755"
-
-- name: Install the system-wide sesh Zsh completion
-  become: true
-  ansible.builtin.copy:
-    content: "{{ dotfiles_sesh_zsh_completion.stdout }}\n"
-    dest: /usr/local/share/zsh/site-functions/_sesh
-    mode: "0644"
+- name: Install the sesh Zsh completion
+  ansible.builtin.include_tasks: sesh-completion.yml
+  when: "'tmux-sesh' in dotfiles_dnf_packages"
 
 - name: Read Flatpak application manifest
   ansible.builtin.set_fact:
     dotfiles_flatpak_apps: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/flatpak-packages.txt')
+        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/ansible/packages/flatpak-packages.txt')
         .splitlines()
         | map('trim')
         | reject('match', '^#')

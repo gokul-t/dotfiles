@@ -15,7 +15,6 @@
     - name: Load profile defaults
       ansible.builtin.include_vars:
         file: "profiles/{{ dotfiles_profile }}.yml"
-      when: dotfiles_profile == "server"
       tags: [always]
 
     - name: Check supported operating system

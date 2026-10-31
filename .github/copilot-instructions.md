@@ -34,8 +34,11 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml
 # Link one package into the home directory manually
 stow <package-name>
 
-# Or link all tracked packages at once from the repo root
-stow */
+# Link the default workstation packages via Ansible
+ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow
+
+# Check package selection against disposable targets
+bash ansible/containers/test-stow.sh
 ```
 
 When changing one config package, prefer validating the package or the Ansible flow rather than adding project-level unit tests.
@@ -45,7 +48,7 @@ When changing one config package, prefer validating the package or the Ansible f
 The repository follows a simple pattern:
 
 - `ansible/` contains the provisioning logic. The main playbook checks the OS, installs Fedora, Ubuntu, or macOS packages, links dotfiles with GNU Stow, and installs user tools such as Oh My Zsh plugins, TPM, Lazy-Idea, and mise.
-- `ansible/tasks/stow.yml` discovers every top-level directory except `ansible` and runs `stow` against the repo root, which is the core of the dotfiles installation model.
+- `ansible/tasks/stow.yml` links the packages listed in the active profile (`ansible/profiles/*.yml`, `dotfiles_profile_stow_packages`); add new Stow packages there. `ansible/packages/` holds the OS package manifests.
 - `ansible/tasks/user-tools.yml` installs external ecosystem tooling such as Oh My Zsh, tmux plugin manager, Lazy-Idea, and `mise`.
 - The top-level package directories define the actual user-facing configuration. Examples:
   - `zsh` / `bash` / `tmux` for shell and terminal behavior
@@ -63,7 +66,7 @@ The repo is intentionally organized around machine setup, not app source code.
 - Preserve the home-directory layout expected by the tool, not the repo layout. The top-level directories are the package roots; the files inside them are arranged to match the target dotfiles paths.
 - Use the existing Ansible entry points for OS-specific installation and package setup instead of introducing ad hoc install scripts.
 - Respect the repository’s portability: the playbook supports Fedora, Ubuntu (including WSL), and macOS, with OS-specific tasks in `ansible/tasks/`.
-- Keep user-specific or machine-specific overrides outside the Git-tracked repo when appropriate; the repo already relies on generated or local config paths like `~/.zuserconfig.zsh` and `git/.identity.conf`.
+- Keep user-specific or machine-specific overrides outside the Git-tracked repo when appropriate; the repo already relies on local config paths like `git/.identity.conf`.
 - When editing a configuration package, update only that package and validate with the relevant Stow or Ansible flow.
 
 ## Files worth checking before changing behavior

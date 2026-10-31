@@ -1,0 +1,21 @@
+---
+# Workstation profile defaults
+dotfiles_profile_stow_packages:
+  - alacritty
+  - bash
+  - bin
+  - claude
+  - code
+  - ghostty
+  - git
+  - ideavim
+  - lazygit
+  - mise
+  - npm
+  - nvim
+  - sesh
+  - starship
+  - tmux
+  - vim
+  - yazi
+  - zsh
