@@ -6,6 +6,7 @@ source was compared, 2 when a source was unavailable or failed.
 """
 import argparse
 import fcntl
+import gzip
 import os
 import platform
 import re
@@ -20,6 +21,8 @@ PACKAGES_DIR = Path(__file__).resolve().parents[1] / "packages"
 TIMEOUT_SECONDS = 120
 BREW_DEFAULT_TAPS = {"homebrew/core", "homebrew/cask"}
 BREW_KINDS = ("tap", "brew", "cask", "vscode")
+BASE_INSTALL_WINDOW_SECONDS = 6 * 3600
+APT_INITIAL_STATUS = ("/var/log/installer/initial-status.gz",)
 SNAP_RUNTIME_PREFIXES = ("gnome-", "gtk-common-themes", "mesa-", "kf5-", "kf6-")
 
 
@@ -153,6 +156,32 @@ def check_homebrew(opts, runner):
     return results
 
 
+def dnf_base_packages(runner):
+    """Names installed in the first install window (the OS install), not by the user."""
+    times = {}
+    for line in lines(runner(["rpm", "-qa", "--qf", "%{NAME} %{INSTALLTIME}\\n"])):
+        name, _, stamp = line.rpartition(" ")
+        if stamp.isdigit():
+            times[name] = min(int(stamp), times.get(name, int(stamp)))
+    if not times:
+        return set()
+    cutoff = min(times.values()) + BASE_INSTALL_WINDOW_SECONDS
+    return {name for name, stamp in times.items() if stamp <= cutoff}
+
+
+def apt_base_packages():
+    """Packages present in the initial image, as recorded by the installer."""
+    for path in APT_INITIAL_STATUS:
+        try:
+            opener = gzip.open if path.endswith(".gz") else open
+            with opener(path, "rt", errors="replace") as handle:
+                text = handle.read()
+        except OSError:
+            continue
+        return {m.group(1) for m in re.finditer(r"^Package: (\S+)", text, re.M)}
+    return set()
+
+
 def check_dnf(opts, runner):
     declared = {n: n for n in read_text_manifest(opts.manifest_dir / "dnf-packages.txt")}
 
@@ -161,6 +190,7 @@ def check_dnf(opts, runner):
         explicit = set(
             lines(runner(["dnf", "repoquery", "--userinstalled", "--qf", "%{name}\\n"]))
         )
+        explicit -= dnf_base_packages(runner) - set(declared)
         return compare("DNF packages", declared, installed, explicit, opts.skip, str)
 
     return [guarded("DNF packages", native)] + check_flatpak(opts, runner)
@@ -178,15 +208,15 @@ def check_apt(opts, runner):
             if status.startswith("ii"):
                 installed.add(name.strip().split(":")[0])
         manual = {n.split(":")[0] for n in lines(runner(["apt-mark", "showmanual"]))}
-        return compare("APT packages", declared, installed, manual & installed, skip, str)
+        explicit = (manual & installed) - (apt_base_packages() - set(declared))
+        return compare("APT packages", declared, installed, explicit, skip, str)
 
     result = guarded("APT packages", native)
     result.notes.append(
         "tmux-sesh is installed from a release archive and is not checked. "
-        "Manual APT packages can include defaults from the OS image."
+        "Packages from the initial OS image are excluded from candidates."
     )
     return [result] + check_snap(opts, runner)
-
 
 def check_flatpak(opts, runner):
     title = "Flatpak apps"
