@@ -27,8 +27,9 @@ if [[ ! -L "$HOME/.vimrc" ]]; then
   printf "FAIL: ~/.vimrc is not a symlink.\n"
   exit 1
 fi
-if [[ "$(readlink "$HOME/.vimrc")" != *".dotfiles/vim/.vimrc"* ]]; then
-  printf "FAIL: ~/.vimrc does not point to the dotfiles repository.\n"
+TARGET=$(readlink -f "$HOME/.vimrc")
+if [[ "$TARGET" != *"/vim/.vimrc"* ]]; then
+  printf "FAIL: ~/.vimrc does not point to the dotfiles repository. Target: %s\n" "$TARGET"
   exit 1
 fi
 printf "PASS: Vim configuration is correctly linked.\n"
