@@ -5,17 +5,34 @@
   vars_files:
     - vars.yml
   tasks:
+    - name: Validate profile
+      ansible.builtin.assert:
+        that:
+          - dotfiles_profile in ["workstation", "server"]
+        fail_msg: "Invalid profile. Supported profiles are: workstation, server."
+
+    - name: Load profile defaults
+      ansible.builtin.include_vars:
+        file: "profiles/{{ dotfiles_profile }}.yml"
+      when: dotfiles_profile == "server"
+
     - name: Check supported operating system
       ansible.builtin.assert:
         that:
-          - ansible_facts['distribution'] in ["Fedora", "Ubuntu"] or ansible_facts['system'] == "Darwin"
-        fail_msg: "This playbook supports Fedora, Ubuntu, and macOS."
+          - (dotfiles_profile == "workstation" and (ansible_facts['distribution'] in ["Fedora", "Ubuntu"] or ansible_facts['system'] == "Darwin")) or
+            (dotfiles_profile == "server" and ansible_facts['distribution'] in ["Ubuntu", "Debian"])
+        fail_msg: "Unsupported OS/Profile combination. Workstation supports Fedora, Ubuntu, macOS. Server supports Ubuntu, Debian."
 
-    - name: Install OS packages
+    - name: Install workstation packages
       ansible.builtin.include_tasks:
         file: "tasks/{{ 'macos' if ansible_facts['system'] == 'Darwin' else ansible_facts['distribution'] | lower }}.yml"
-        apply:
-          tags: [packages]
+      when: dotfiles_profile == "workstation"
+      tags: [packages]
+
+    - name: Install server packages
+      ansible.builtin.include_tasks:
+        file: "tasks/server.yml"
+      when: dotfiles_profile == "server"
       tags: [packages]
 
     - name: Link dotfile configurations
@@ -24,4 +41,5 @@
 
     - name: Set up user tools
       ansible.builtin.import_tasks: tasks/user-tools.yml
+      when: dotfiles_profile == "workstation"
       tags: [tools]

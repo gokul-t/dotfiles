@@ -1,0 +1,21 @@
+---
+# Server profile defaults
+dotfiles_stow_packages: [vim]
+dotfiles_install_flatpak_apps: false
+dotfiles_install_snap_apps: false
+dotfiles_server_packages:
+  - ca-certificates
+  - curl
+  - git
+  - stow
+  - vim
+  - tmux
+  - rsync
+  - less
+  - htop
+  - ripgrep
+  - jq
+  - dnsutils
+  - iproute2
+  - iputils-ping
+  - openssh-client

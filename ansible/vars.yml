@@ -1,4 +1,5 @@
 ---
+dotfiles_profile: workstation
 dotfiles_repo_path: "{{ playbook_dir | dirname }}"
 dotfiles_stow_target: "{{ ansible_facts['env']['HOME'] }}"
 dotfiles_install_flatpak_apps: true

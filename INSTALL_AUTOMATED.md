@@ -23,6 +23,22 @@ curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/boots
 
 ---
 
+## 🏠 Homelab Server Setup
+
+For minimal server installations (Ubuntu 24.04 or Debian 13), use the `server` profile. This installs only a lean set of essentials, skips GUI apps, and avoids changing your login shell.
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/bootstrap.sh | bash -s -- --profile server
+```
+
+### Server Profile Details:
+- **Supported OS**: Ubuntu 24.04, Debian 13.
+- **Installed**: Core utilities (`curl`, `git`, `vim`, `tmux`, `htop`, `ripgrep`, `jq`, etc.).
+- **Stowed**: Only the `vim` configuration.
+- **Preserved**: Existing login shell and Bash configuration.
+
+---
+
 ## ⚙️ Customization
 
 ### Skipping Tools
@@ -52,9 +68,20 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass
 ansible-playbook -i ansible/inventory.ini ansible/site.yml -e '{"dotfiles_skip_tools":["bin"]}'
 ```
 
+To run the **server profile** manually:
+```sh
+ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass -e dotfiles_profile=server
+```
+
 ### Testing in Containers
 You can test the provisioning without affecting your host system using the provided Dockerfiles:
 ```sh
 docker build -f ansible/containers/fedora.Dockerfile -t dotfiles-test:fedora .
 docker run --rm dotfiles-test:fedora
+```
+
+To test the **server profile** (e.g., on Ubuntu):
+```sh
+docker build --build-arg BASE_IMAGE=ubuntu:24.04 -f ansible/containers/server.Dockerfile -t dotfiles-test:server .
+docker run -e DOTFILES_ANSIBLE_EXTRA_VARS="dotfiles_profile=server" --rm dotfiles-test:server
 ```

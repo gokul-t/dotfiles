@@ -10,6 +10,13 @@ fail() {
   exit 1
 }
 
+usage() {
+  printf "Usage: %s [--profile workstation|server] [options]\n" "$0"
+  printf "Options:\n"
+  printf "  --profile PROFILE  Select provisioning profile: workstation (default) or server\n"
+  printf "  --help             Show this help message\n"
+}
+
 if [[ -z "${HOME:-}" || "$HOME" == "/" ]]; then
   fail "HOME is unset or points to '/'. Run this script as your regular user."
 fi
@@ -17,6 +24,34 @@ fi
 if [[ "$(id -u)" -eq 0 ]]; then
   fail "Run this script as your regular user, not as root."
 fi
+
+dotfiles_profile="workstation"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --profile)
+      if [[ -z "${2:-}" ]]; then
+        fail "--profile requires an argument."
+      fi
+      case "$2" in
+        workstation|server)
+          dotfiles_profile="$2"
+          ;;
+        *)
+          fail "Unsupported profile '$2'. Supported: workstation, server."
+          ;;
+      esac
+      shift 2
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      fail "Unknown option '$1'. Use --help for usage."
+      ;;
+  esac
+done
 
 platform=""
 case "$(uname -s)" in
@@ -35,6 +70,13 @@ case "$(uname -s)" in
         ;;
       ubuntu)
         platform="ubuntu"
+        ;;
+      debian)
+        if [[ "$dotfiles_profile" == "server" ]]; then
+          platform="debian"
+        else
+          fail "Debian is only supported for the 'server' profile. Use --profile server."
+        fi
         ;;
       *)
         fail "Unsupported Linux distribution '${ID:-unknown}'. Supported: Fedora and Ubuntu/WSL."
@@ -60,7 +102,7 @@ if ((${#packages[@]})); then
       command -v sudo >/dev/null 2>&1 || fail "Install sudo to bootstrap system packages."
       sudo dnf install -y "${packages[@]}"
       ;;
-    ubuntu)
+    ubuntu|debian)
       command -v sudo >/dev/null 2>&1 || fail "Install sudo to bootstrap system packages."
       sudo apt-get update
       sudo apt-get install -y "${packages[@]}"
@@ -102,10 +144,11 @@ fi
 if [[ "$is_wsl" == true ]]; then
   ansible_args+=(-e dotfiles_install_snap_apps=false)
 fi
+ansible_args+=(-e dotfiles_profile="$dotfiles_profile")
 
 ansible-playbook "${ansible_args[@]}"
 
-if [[ "$platform" == "fedora" || ( "$platform" == "ubuntu" && "$is_wsl" == false ) ]]; then
+if [[ "$dotfiles_profile" == "workstation" ]] && { [[ "$platform" == "fedora" ]] || ( [[ "$platform" == "ubuntu" ]] && [[ "$is_wsl" == false ]] ); }; then
   if [[ -d "$HOME/.config/toshy" ]]; then
     printf 'Toshy is already installed; skipping the optional Toshy setup.\n'
   else
