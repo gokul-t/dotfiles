@@ -35,7 +35,8 @@ fi
 printf "PASS: Vim configuration is correctly linked.\n"
 
 # 3. Check login shell (should remain bash for server profile)
-CURRENT_SHELL=$(getent passwd "$USER" | cut -d: -f7)
+CURRENT_USER="${USER:-$(id -un)}"
+CURRENT_SHELL=$(getent passwd "$CURRENT_USER" | cut -d: -f7)
 if [[ "$CURRENT_SHELL" != "/bin/bash" ]]; then
   printf "FAIL: Login shell was changed to '%s', but should remain /bin/bash.\n" "$CURRENT_SHELL"
   exit 1
