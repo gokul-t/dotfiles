@@ -1,5 +1,9 @@
 # General
 .DS_Store
 
+# python
+__pycache__/
+*.pyc
+
 # git
 git/.identity.conf

@@ -21,6 +21,9 @@ dotfiles_fedora_copr_repos:
   - package: yazi
     repo: lihaohong/yazi
 dotfiles_ubuntu_skip_packages: []
+dotfiles_package_report_schedule: false
+dotfiles_package_report_cron_fallback: false
+dotfiles_package_report_dir: "{{ ansible_facts['env']['HOME'] }}/.local/state/dotfiles"
 dotfiles_stow_packages: []
 dotfiles_stow_skip_packages:
   - ansible

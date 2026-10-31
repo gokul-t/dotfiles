@@ -64,6 +64,28 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow \
 - Package installation, config linking (`--tags stow`) and user tools (`--tags tools`) are separate steps; linking fewer packages does not install fewer applications.
 - `dotfiles_skip_tools` currently supports only `bin`.
 
+### Package Drift Report
+Package manifests are curated by hand; a dump of everything installed would pull in dependencies, OS defaults, and machine-specific tools. Instead, a read-only report shows what differs:
+```sh
+python3 ansible/scripts/package-report.py            # print to the terminal
+python3 -m unittest ansible/tests/test_package_report.py
+```
+- `+` lines are installed (explicitly) but not in the manifest; `-` lines are in the manifest but not installed here (possibly intentional). Review, edit the file in `ansible/packages/`, and commit yourself. Nothing is installed, removed, edited, or committed.
+- Covers Homebrew formulae/casks/taps and Brewfile VS Code extensions (macOS), DNF + Flatpak (Fedora), APT + Snap (Ubuntu). Options: `--skip NAME`, `--no-flatpak`, `--no-snap`. Mise runtimes, plugins, and manually downloaded binaries are not covered.
+- Exit status `2` means a source was unavailable or failed, so its section is incomplete (it never produces false "missing" entries).
+
+Optional weekly report (off by default; Mondays 09:00 via a per-user LaunchAgent on macOS, a systemd user timer on Linux). The latest report is written to `~/.local/state/dotfiles/package-report.txt`:
+```sh
+ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags package-report -e dotfiles_package_report_schedule=true
+# Without a systemd user manager (e.g. some WSL setups), also allow a cron job:
+#   -e dotfiles_package_report_cron_fallback=true
+# Disable and remove the job:
+ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags package-report
+```
+The machine must be on and logged in; cron does not replay missed runs, systemd timers do (`Persistent=true`).
+
+---
+
 ### WSL & macOS Notes
 - **WSL**: The bootstrap script disables Snap installation (`snapd` often requires systemd). When running the playbook directly, pass `-e dotfiles_install_snap_apps=false`.
 - **macOS**: Ensure Homebrew is installed before running the bootstrap script.
