@@ -16,3 +16,7 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml \
 
 grep -Eq 'localhost[[:space:]]*:[[:space:]]+ok=[0-9]+[[:space:]]+changed=0([[:space:]]|$)' \
   "$second_run_log"
+
+if [[ -n "${DOTFILES_POST_CHECK:-}" ]]; then
+  bash "$DOTFILES_POST_CHECK"
+fi

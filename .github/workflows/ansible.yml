@@ -68,32 +68,26 @@ jobs:
       - name: Provision Ubuntu container and verify idempotence
         run: docker run --rm dotfiles-ubuntu-test
 
-  ubuntu-server-container:
-    name: Ubuntu 24.04 Server provisioning
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+  server-container:
+    name: ${{ matrix.name }} server provisioning
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu 24.04
+            image: ubuntu:24.04
+          - name: Debian 13
+            image: debian:13
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build Ubuntu Server provisioning image
-        run: docker build --build-arg BASE_IMAGE=ubuntu:24.04 --file ansible/containers/server.Dockerfile --tag dotfiles-ubuntu-server-test .
+      - name: Build server provisioning image
+        run: >-
+          docker build --build-arg BASE_IMAGE=${{ matrix.image }}
+          --file ansible/containers/server.Dockerfile --tag dotfiles-server-test .
 
-      - name: Provision Ubuntu Server container and verify idempotence
-        run: docker run -e DOTFILES_ANSIBLE_EXTRA_VARS="dotfiles_profile=server" --rm dotfiles-ubuntu-server-test
-
-  debian-server-container:
-    name: Debian 13 Server provisioning
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Build Debian Server provisioning image
-        run: docker build --build-arg BASE_IMAGE=debian:13 --file ansible/containers/server.Dockerfile --tag dotfiles-debian-server-test .
-
-      - name: Provision Debian Server container and verify idempotence
-        run: docker run -e DOTFILES_ANSIBLE_EXTRA_VARS="dotfiles_profile=server" --rm dotfiles-debian-server-test
+      - name: Provision server container, verify idempotence and results
+        run: docker run --rm dotfiles-server-test

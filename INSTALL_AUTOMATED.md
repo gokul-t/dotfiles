@@ -35,7 +35,11 @@ curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/boots
 - **Supported OS**: Ubuntu 24.04, Debian 13.
 - **Installed**: Core utilities (`curl`, `git`, `vim`, `tmux`, `htop`, `ripgrep`, `jq`, etc.).
 - **Stowed**: Only the `vim` configuration.
-- **Preserved**: Existing login shell and Bash configuration.
+- **Preserved**: Existing login shell and Bash configuration. tmux uses its defaults (the workstation tmux config is not linked).
+- **Not touched**: GUI apps, language runtimes, Zsh/plugins, Docker, SSH daemon, firewall, users, and services.
+- **Prerequisites**: Run locally (e.g. over SSH) as a regular user with `sudo` and network access, not as root.
+- **Existing files**: Stow never overwrites them; a conflicting `~/.vimrc` is left as is and reported. Pass `-e dotfiles_stow_strict=true` to fail instead.
+- **Additive only**: Switching profiles does not remove previously installed workstation software or links.
 
 ---
 
@@ -80,8 +84,8 @@ docker build -f ansible/containers/fedora.Dockerfile -t dotfiles-test:fedora .
 docker run --rm dotfiles-test:fedora
 ```
 
-To test the **server profile** (e.g., on Ubuntu):
+To test the **server profile** (use `BASE_IMAGE=debian:13` for Debian; Docker is only needed for these tests):
 ```sh
 docker build --build-arg BASE_IMAGE=ubuntu:24.04 -f ansible/containers/server.Dockerfile -t dotfiles-test:server .
-docker run -e DOTFILES_ANSIBLE_EXTRA_VARS="dotfiles_profile=server" --rm dotfiles-test:server
+docker run --rm dotfiles-test:server
 ```

@@ -79,7 +79,7 @@ case "$(uname -s)" in
         fi
         ;;
       *)
-        fail "Unsupported Linux distribution '${ID:-unknown}'. Supported: Fedora and Ubuntu/WSL."
+        fail "Unsupported Linux distribution '${ID:-unknown}'. Supported: Fedora and Ubuntu/WSL (Debian with --profile server)."
         ;;
     esac
     ;;
