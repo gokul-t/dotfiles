@@ -5,7 +5,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$repo_root"
 
-work="$(mktemp -d)"
+work="$(cd "$(mktemp -d)" && pwd -P)"
 trap 'rm -rf "$work" "$repo_root/zz-undeclared"' EXIT
 
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
