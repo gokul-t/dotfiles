@@ -1,6 +1,7 @@
-# Check and source OS-specific config files if they exist
-if [[ "$OSTYPE" == darwin* ]]; then
-  [[ -f ~/.config/zsh/env.d/macos.env ]] && source ~/.config/zsh/env.d/macos.env
-elif [[ "$OSTYPE" == linux* ]]; then
-  [[ -f ~/.config/zsh/env.d/linux.env ]] && source ~/.config/zsh/env.d/linux.env
-fi
+# Locale
+export LANG="en_US.UTF-8"
+
+# Base paths and tool roots (all shells)
+[[ -d "$HOME/bin" ]] && export PATH="$HOME/bin:$PATH"
+[[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
+[[ -d "$HOME/.cargo/bin" ]] && export PATH="$HOME/.cargo/bin:$PATH"

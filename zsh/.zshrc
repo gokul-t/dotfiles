@@ -6,12 +6,23 @@ ZSH_THEME="agnoster"  # replaced by starship below when available
 # Force 256color and True Color support across Tmux/Vim
 export COLORTERM="truecolor"
 
-# Plugins and other settings live in ~/.config/zsh/conf.d, loaded before Oh My Zsh
-setopt null_glob
-for config_file in ~/.config/zsh/conf.d/*.zsh; do
+# Common plugins and settings load before Oh My Zsh.
+for config_file in ~/.config/zsh/conf.d/*.zsh(N) ~/.config/zsh/user-conf.d/*.zsh(N); do
   source "$config_file"
 done
-unsetopt null_glob
+
+case "$OSTYPE" in
+  darwin*)
+    for config_file in ~/.config/zsh/darwin.conf.d/*.zsh(N) ~/.config/zsh/user-darwin.conf.d/*.zsh(N); do
+      source "$config_file"
+    done
+    ;;
+  linux*)
+    for config_file in ~/.config/zsh/linux.conf.d/*.zsh(N) ~/.config/zsh/user-linux.conf.d/*.zsh(N); do
+      source "$config_file"
+    done
+    ;;
+esac
 
 if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
   source "$ZSH/oh-my-zsh.sh"

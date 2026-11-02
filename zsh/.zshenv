@@ -1,17 +1,19 @@
-# Locale
-export LANG="en_US.UTF-8"
-
-# Base paths and tool roots (all shells)
-[[ -d "$HOME/bin" ]] && export PATH="$HOME/bin:$PATH"
-[[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
-[[ -d "$HOME/.cargo/bin" ]] && export PATH="$HOME/.cargo/bin:$PATH"
-
-setopt Null_glob
-for env_file in ~/.config/zsh/env.d/*.zsh; do
-  source "$env_file"
+for env_file in ~/.config/zsh/env.d/*.zsh(N) ~/.config/zsh/user-env.d/*.zsh(N); do
+ source "$env_file"
 done
-unsetopt null_glob
+
+case "$OSTYPE" in
+ darwin*)
+   for env_file in ~/.config/zsh/darwin.env.d/*.zsh(N) ~/.config/zsh/user-darwin.env.d/*.zsh(N); do
+     source "$env_file"
+   done
+   ;;
+ linux*)
+   for env_file in ~/.config/zsh/linux.env.d/*.zsh(N) ~/.config/zsh/user-linux.env.d/*.zsh(N); do
+     source "$env_file"
+   done
+   ;;
+esac
 
 # Dedupe PATH entries (preserve order)
 typeset -U path
-
