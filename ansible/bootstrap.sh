@@ -11,10 +11,11 @@ fail() {
 }
 
 usage() {
-  printf "Usage: %s [--profile personal|work|server] [options]\n" "$0"
+  printf "Usage: %s [--profile personal|work|server|workstation] [options]\n" "$0"
   printf "Options:\n"
-  printf "  --profile PROFILE  Select setup mode: personal (default), work, or server\n"
-  printf "                     workstation is retained as an alias for personal\n"
+  printf "  --profile PROFILE  Select setup mode: personal, work, or server\n"
+  printf "                     default: shared workstation setup without private settings\n"
+  printf "                     workstation is an alias for that shared setup\n"
   printf "  --help             Show this help message\n"
 }
 
@@ -27,7 +28,7 @@ if [[ "$(id -u)" -eq 0 ]]; then
 fi
 
 dotfiles_profile="workstation"
-dotfiles_mode="personal"
+dotfiles_mode="none"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -36,9 +37,13 @@ while [[ $# -gt 0 ]]; do
         fail "--profile requires an argument."
       fi
       case "$2" in
-        personal|workstation)
+        personal)
           dotfiles_profile="workstation"
           dotfiles_mode="personal"
+          ;;
+        workstation)
+          dotfiles_profile="workstation"
+          dotfiles_mode="none"
           ;;
         work)
           dotfiles_profile="workstation"
@@ -49,7 +54,7 @@ while [[ $# -gt 0 ]]; do
           dotfiles_mode="none"
           ;;
         *)
-          fail "Unsupported profile '$2'. Supported: personal, work, server (workstation is an alias for personal)."
+          fail "Unsupported profile '$2'. Supported: personal, work, server, workstation."
           ;;
       esac
       shift 2
@@ -186,7 +191,7 @@ if [[ "$dotfiles_profile" == "workstation" ]]; then
     elif [[ "$work_configured" == true || -n "${work_url:-}" ]]; then
       fail "The work submodule is missing required files (mise config overlay and Brewfile)."
     fi
-  else
+  elif [[ "$dotfiles_mode" == "personal" ]]; then
     git -C "$DOTFILES_DIR" submodule update --init personal \
       || fail "Could not initialize the personal submodule."
     personal_enabled=true

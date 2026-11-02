@@ -16,27 +16,25 @@ run_stow() {
     -e "dotfiles_stow_target=$target" "$@"
 }
 
-# Default workstation selection links profile packages and personal settings, not undeclared directories.
+# Default workstation selection links shared packages only, not private or undeclared directories.
 mkdir -p "$work/default" "$repo_root/zz-undeclared/.config"
 touch "$repo_root/zz-undeclared/.config/undeclared"
-default_args=()
-if [[ -f "$repo_root/personal/.identity.conf" && -f "$repo_root/personal/.config/zsh/user-env.d/env.zsh" ]]; then
-  default_args=(-e '{"dotfiles_stow_packages":["vim","tmux"]}' -e dotfiles_personal_enabled=true)
-  test_personal_overlay=true
-else
-  default_args=(-e '{"dotfiles_stow_packages":["vim","tmux"]}' -e dotfiles_personal_enabled=false)
-  test_personal_overlay=false
-fi
+default_args=(-e '{"dotfiles_stow_packages":["vim","tmux"]}')
 run_stow "$work/default" "${default_args[@]}" | tee "$work/first.log"
 grep -Eq 'changed=[1-9]' "$work/first.log" || fail "first run did not report changes"
 [[ "$(readlink -f "$work/default/.vimrc")" == "$repo_root/vim/.vimrc" ]] || fail ".vimrc not linked"
 [[ "$(readlink -f "$work/default/.tmux.conf")" == "$repo_root/tmux/.tmux.conf" ]] || fail ".tmux.conf not linked"
-if [[ "$test_personal_overlay" == true ]]; then
-  [[ "$(readlink -f "$work/default/.identity.conf")" == "$repo_root/personal/.identity.conf" ]] || fail "personal identity not linked by default"
-fi
+[[ ! -e "$work/default/.identity.conf" ]] || fail "personal identity linked by default"
 [[ ! -e "$work/default/.config/undeclared" ]] || fail "undeclared package was linked"
 run_stow "$work/default" "${default_args[@]}" | tee "$work/second.log"
 grep -Eq 'changed=0' "$work/second.log" || fail "second run reported changes"
+
+# Explicit personal selection links the optional overlay when its submodule is available.
+if [[ -f "$repo_root/personal/.identity.conf" && -f "$repo_root/personal/.config/zsh/user-env.d/env.zsh" ]]; then
+  mkdir -p "$work/personal"
+  run_stow "$work/personal" -e '{"dotfiles_stow_packages":["vim","tmux"],"dotfiles_personal_enabled":true}' >/dev/null
+  [[ "$(readlink -f "$work/personal/.identity.conf")" == "$repo_root/personal/.identity.conf" ]] || fail "explicit personal overlay not linked"
+fi
 
 # Explicit override and exclusions.
 mkdir -p "$work/override"

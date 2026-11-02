@@ -21,6 +21,8 @@ curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/boots
    - Set up shell plugins and development tools (`mise`, etc.).
    - (Optional) Install **Toshy** for macOS-like keyboard shortcuts on Linux.
 
+With no profile selected, bootstrap installs the shared workstation configuration only. It does not initialize or link the private personal or work settings.
+
 ---
 
 ## 🏠 Homelab Server Setup
@@ -65,7 +67,13 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow \
 - `dotfiles_skip_tools` currently supports only `bin`.
 
 ### Personal and Work Settings
-Personal settings are the default workstation overlay. Bootstrap initializes the `personal` submodule and links its Zsh additions, Git identity, and other home-layout files. For direct playbook runs, initialize it first with `git submodule update --init personal`.
+Personal and work settings are optional workstation overlays. Select personal mode to initialize the private `personal` submodule and link its Zsh additions, Git identity, and other home-layout files:
+
+```sh
+./ansible/bootstrap.sh --profile personal
+```
+
+For direct playbook runs, initialize the submodule first with `git submodule update --init personal`, then pass `-e dotfiles_personal_enabled=true`.
 
 Work and personal settings are mutually exclusive. Select work mode with:
 ```sh

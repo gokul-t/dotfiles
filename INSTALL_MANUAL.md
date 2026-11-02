@@ -18,15 +18,14 @@ Ensure you have the following installed based on your OS:
 ```sh
 git clone https://github.com/gokul-t/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-git submodule update --init personal
 ```
 
 ### 2. Symlink Configurations (GNU Stow)
 Stow manages your dotfiles by creating symlinks. Link the packages you want by name:
 ```sh
-stow zsh tmux nvim git personal
+stow zsh tmux nvim git
 ```
-The default workstation package list is `dotfiles_profile_stow_packages` in `ansible/profiles/workstation.yml`; personal settings are a separate overlay and should not be linked on work machines. `ansible/`, `vimium/` and `windows/` are not Stow packages: Vimium and PowerToys exports are imported manually into those applications.
+The default workstation package list is `dotfiles_profile_stow_packages` in `ansible/profiles/workstation.yml`. Personal settings are private and optional: only initialize and link them when desired with `git submodule update --init personal` and `stow personal`. `ansible/`, `vimium/` and `windows/` are not Stow packages: Vimium and PowerToys exports are imported manually into those applications.
 
 ### 3. Install System Packages
 Depending on your OS, install the required dependencies:
