@@ -17,7 +17,7 @@ RUN apt-get update \
 WORKDIR /workspace
 COPY . /workspace
 
-ENV DOTFILES_ANSIBLE_EXTRA_VARS='{"dotfiles_install_snap_apps":false,"dotfiles_ubuntu_skip_packages":["adb","google-chrome-stable","gnome-shell-extension-manager","gnome-shell-extensions","gnome-tweaks","syncthing","vlc"],"dotfiles_stow_target":"/tmp/dotfiles-test-home"}'
+ENV DOTFILES_ANSIBLE_EXTRA_VARS='{"dotfiles_install_snap_apps":false,"dotfiles_personal_enabled":false,"dotfiles_ubuntu_skip_packages":["adb","google-chrome-stable","gnome-shell-extension-manager","gnome-shell-extensions","gnome-tweaks","syncthing","vlc"],"dotfiles_stow_target":"/tmp/dotfiles-test-home"}'
 
 ENV DOTFILES_POST_CHECK=ansible/containers/verify-workstation.sh
 
