@@ -19,6 +19,7 @@
         (dotfiles_stow_packages if dotfiles_stow_packages | length > 0
          else dotfiles_profile_stow_packages)
         | union(['work'] if dotfiles_work_enabled | bool else [])
+        | union(['personal'] if dotfiles_personal_enabled | bool else [])
         | difference(dotfiles_stow_skip_packages)
         | list
       }}

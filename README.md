@@ -6,7 +6,7 @@ My .dotfiles repository - configuration files for a highly customized developmen
 
 Depending on your preference and system, choose one of the following paths:
 
-- **[Automated Setup](INSTALL_AUTOMATED.md)**: Recommended. A one-command bootstrap using Ansible to handle package installation and configuration. (Supports Workstation and Minimal Server profiles).
+- **[Automated Setup](INSTALL_AUTOMATED.md)**: Recommended. A one-command bootstrap using Ansible to handle package installation and configuration. (Supports personal/work workstation modes and a minimal server profile).
 - **[Manual Setup](INSTALL_MANUAL.md)**: For power users who prefer granular control or are on unsupported platforms.
 
 ---

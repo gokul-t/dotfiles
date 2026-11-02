@@ -18,14 +18,15 @@ Ensure you have the following installed based on your OS:
 ```sh
 git clone https://github.com/gokul-t/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
+git submodule update --init personal
 ```
 
 ### 2. Symlink Configurations (GNU Stow)
 Stow manages your dotfiles by creating symlinks. Link the packages you want by name:
 ```sh
-stow zsh tmux nvim git
+stow zsh tmux nvim git personal
 ```
-The default workstation package list is `dotfiles_profile_stow_packages` in `ansible/profiles/workstation.yml`. `ansible/`, `vimium/` and `windows/` are not Stow packages: Vimium and PowerToys exports are imported manually into those applications.
+The default workstation package list is `dotfiles_profile_stow_packages` in `ansible/profiles/workstation.yml`; personal settings are a separate overlay and should not be linked on work machines. `ansible/`, `vimium/` and `windows/` are not Stow packages: Vimium and PowerToys exports are imported manually into those applications.
 
 ### 3. Install System Packages
 Depending on your OS, install the required dependencies:
@@ -44,9 +45,14 @@ done < ~/.dotfiles/ansible/packages/flatpak-packages.txt
 brew bundle --file ~/.dotfiles/ansible/packages/Brewfile
 ```
 
-**Work machine (macOS):** initialize the submodule and apply the work taps first:
+**Work machine:** select work mode with the bootstrap script:
 ```sh
-git -C ~/.dotfiles submodule update --init work
+~/.dotfiles/ansible/bootstrap.sh --profile work
+```
+If no local `work` submodule exists, bootstrap prompts for its private repository URL. Leave it blank to continue with shared workstation configuration only. Adding the submodule stages a local `.gitmodules` entry and gitlink; do not commit or push the private URL to the public repository.
+
+For manual package setup after the work submodule is available:
+```sh
 brew bundle --file ~/.dotfiles/work/ansible/packages/Brewfile
 brew bundle --file ~/.dotfiles/ansible/packages/Brewfile
 stow --dir ~/.dotfiles --target ~ work
@@ -84,7 +90,7 @@ git clone https://github.com/cufarvid/lazy-idea.git ~/.lazy-idea
 ```sh
 curl https://mise.run | sh
 mise trust ~/.config/mise/config.toml
-mise trust ~/.config/mise/config.local.toml   # work machines only (linked from the work submodule)
+mise trust ~/.config/mise/config.local.toml   # work mode only (linked from the work submodule)
 mise install
 ```
 

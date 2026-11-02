@@ -32,6 +32,19 @@
       when: dotfiles_work_enabled | bool
       tags: [always]
 
+    - name: Require mutually exclusive private settings
+      ansible.builtin.assert:
+        that: not (dotfiles_work_enabled | bool and dotfiles_personal_enabled | bool)
+        fail_msg: "Select either personal or work settings, not both."
+      tags: [always]
+
+    - name: Require the workstation profile for personal settings
+      ansible.builtin.assert:
+        that: dotfiles_profile == "workstation"
+        fail_msg: "Personal settings are only supported with the workstation profile."
+      when: dotfiles_personal_enabled | bool
+      tags: [always]
+
     - name: Check the work submodule files
       ansible.builtin.stat:
         path: "{{ dotfiles_work_path }}/{{ item }}"
@@ -42,6 +55,16 @@
       when: dotfiles_work_enabled | bool
       tags: [always]
 
+    - name: Check the personal submodule files
+      ansible.builtin.stat:
+        path: "{{ dotfiles_repo_path }}/personal/{{ item }}"
+      loop:
+        - .identity.conf
+        - .config/zsh/user-env.d/env.zsh
+      register: dotfiles_personal_files
+      when: dotfiles_personal_enabled | bool
+      tags: [always]
+
     - name: Require an initialized work submodule
       ansible.builtin.assert:
         that: dotfiles_work_files.results | map(attribute='stat.exists') | list | min
@@ -50,6 +73,16 @@
           {{ dotfiles_work_path }}. Run: git submodule update --init work
         quiet: true
       when: dotfiles_work_enabled | bool
+      tags: [always]
+
+    - name: Require an initialized personal submodule
+      ansible.builtin.assert:
+        that: dotfiles_personal_files.results | map(attribute='stat.exists') | list | min
+        fail_msg: >-
+          Personal settings are enabled but required files are missing under
+          {{ dotfiles_repo_path }}/personal. Run: git submodule update --init personal
+        quiet: true
+      when: dotfiles_personal_enabled | bool
       tags: [always]
 
     - name: Install workstation packages

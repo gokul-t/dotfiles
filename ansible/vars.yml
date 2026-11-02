@@ -32,3 +32,4 @@ dotfiles_stow_skip_packages:
 dotfiles_stow_strict: false
 dotfiles_work_enabled: false
 dotfiles_work_path: "{{ dotfiles_repo_path }}/work"
+dotfiles_personal_enabled: "{{ dotfiles_profile == 'workstation' and not (dotfiles_work_enabled | bool) }}"

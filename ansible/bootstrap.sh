@@ -11,9 +11,10 @@ fail() {
 }
 
 usage() {
-  printf "Usage: %s [--profile workstation|server] [options]\n" "$0"
+  printf "Usage: %s [--profile personal|work|server] [options]\n" "$0"
   printf "Options:\n"
-  printf "  --profile PROFILE  Select provisioning profile: workstation (default) or server\n"
+  printf "  --profile PROFILE  Select setup mode: personal (default), work, or server\n"
+  printf "                     workstation is retained as an alias for personal\n"
   printf "  --help             Show this help message\n"
 }
 
@@ -26,6 +27,7 @@ if [[ "$(id -u)" -eq 0 ]]; then
 fi
 
 dotfiles_profile="workstation"
+dotfiles_mode="personal"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -34,11 +36,20 @@ while [[ $# -gt 0 ]]; do
         fail "--profile requires an argument."
       fi
       case "$2" in
-        workstation|server)
-          dotfiles_profile="$2"
+        personal|workstation)
+          dotfiles_profile="workstation"
+          dotfiles_mode="personal"
+          ;;
+        work)
+          dotfiles_profile="workstation"
+          dotfiles_mode="work"
+          ;;
+        server)
+          dotfiles_profile="server"
+          dotfiles_mode="none"
           ;;
         *)
-          fail "Unsupported profile '$2'. Supported: workstation, server."
+          fail "Unsupported profile '$2'. Supported: personal, work, server (workstation is an alias for personal)."
           ;;
       esac
       shift 2
@@ -136,6 +147,52 @@ else
   git clone "$REPOSITORY_URL" "$DOTFILES_DIR"
 fi
 
+work_enabled=false
+personal_enabled=false
+if [[ "$dotfiles_profile" == "workstation" ]]; then
+  if [[ "$dotfiles_mode" == "work" ]]; then
+    work_path="$DOTFILES_DIR/work"
+    work_configured=false
+    if git -C "$DOTFILES_DIR" config -f .gitmodules --get submodule.work.path >/dev/null 2>&1; then
+      work_configured=true
+    fi
+
+    if [[ "$work_configured" == true ]]; then
+      git -C "$DOTFILES_DIR" submodule update --init work \
+        || fail "Could not initialize the configured work submodule."
+    elif [[ ! -f "$work_path/.config/mise/config.local.toml" || ! -f "$work_path/ansible/packages/Brewfile" ]]; then
+      work_url=""
+      if exec 3<>/dev/tty 2>/dev/null; then
+        printf 'Private work submodule URL (leave blank to skip work settings): ' >&3
+        IFS= read -r work_url <&3 || work_url=""
+        exec 3>&-
+      else
+        printf 'No terminal available to request a work submodule URL; skipping private work settings.\n' >&2
+      fi
+
+      if [[ -n "$work_url" ]]; then
+        [[ ! -e "$work_path" && ! -L "$work_path" ]] \
+          || fail "$work_path already exists but is not a configured work submodule. Move it aside and retry."
+        git -C "$DOTFILES_DIR" submodule add --name work "$work_url" ./work \
+          || fail "Could not add the work submodule."
+        printf 'Added work submodule locally. Bootstrap will not commit or push its URL.\n'
+      else
+        printf 'Continuing without personal or work-specific settings.\n'
+      fi
+    fi
+
+    if [[ -f "$work_path/.config/mise/config.local.toml" && -f "$work_path/ansible/packages/Brewfile" ]]; then
+      work_enabled=true
+    elif [[ "$work_configured" == true || -n "${work_url:-}" ]]; then
+      fail "The work submodule is missing required files (mise config overlay and Brewfile)."
+    fi
+  else
+    git -C "$DOTFILES_DIR" submodule update --init personal \
+      || fail "Could not initialize the personal submodule."
+    personal_enabled=true
+  fi
+fi
+
 cd "$DOTFILES_DIR"
 ansible_args=(-i ansible/inventory.ini ansible/site.yml)
 if [[ "$platform" != "macos" ]]; then
@@ -145,6 +202,10 @@ if [[ "$is_wsl" == true ]]; then
   ansible_args+=(-e dotfiles_install_snap_apps=false)
 fi
 ansible_args+=(-e dotfiles_profile="$dotfiles_profile")
+if [[ "$dotfiles_profile" == "workstation" ]]; then
+  ansible_args+=(-e dotfiles_work_enabled="$work_enabled")
+  ansible_args+=(-e dotfiles_personal_enabled="$personal_enabled")
+fi
 
 ansible-playbook "${ansible_args[@]}"
 
