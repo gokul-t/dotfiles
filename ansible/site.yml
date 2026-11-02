@@ -25,6 +25,33 @@
         fail_msg: "Unsupported OS/Profile combination. Workstation supports Fedora, Ubuntu, macOS. Server supports Ubuntu, Debian."
       tags: [always]
 
+    - name: Require the workstation profile for work settings
+      ansible.builtin.assert:
+        that: dotfiles_profile == "workstation"
+        fail_msg: "dotfiles_work_enabled is only supported with the workstation profile."
+      when: dotfiles_work_enabled | bool
+      tags: [always]
+
+    - name: Check the work submodule files
+      ansible.builtin.stat:
+        path: "{{ dotfiles_work_path }}/{{ item }}"
+      loop:
+        - .config/mise/config.local.toml
+        - ansible/packages/Brewfile
+      register: dotfiles_work_files
+      when: dotfiles_work_enabled | bool
+      tags: [always]
+
+    - name: Require an initialized work submodule
+      ansible.builtin.assert:
+        that: dotfiles_work_files.results | map(attribute='stat.exists') | list | min
+        fail_msg: >-
+          dotfiles_work_enabled is true but required files are missing under
+          {{ dotfiles_work_path }}. Run: git submodule update --init work
+        quiet: true
+      when: dotfiles_work_enabled | bool
+      tags: [always]
+
     - name: Install workstation packages
       ansible.builtin.include_tasks:
         file: "tasks/{{ 'macos' if ansible_facts['system'] == 'Darwin' else ansible_facts['distribution'] | lower }}.yml"

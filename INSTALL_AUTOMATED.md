@@ -64,6 +64,17 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow \
 - Package installation, config linking (`--tags stow`) and user tools (`--tags tools`) are separate steps; linking fewer packages does not install fewer applications.
 - `dotfiles_skip_tools` currently supports only `bin`.
 
+### Work Settings
+The `work` submodule holds work-only settings: internal Homebrew taps (`ansible/packages/Brewfile`), a mise overlay (`.config/mise/config.local.toml`, layered over the shared `config.toml`), and other home-layout dotfiles. It is off by default; enable it on a workstation with:
+```sh
+git submodule update --init work
+ansible-playbook -i ansible/inventory.ini ansible/site.yml -e dotfiles_work_enabled=true
+```
+- Enabling fails early if the submodule files are missing. `dotfiles_stow_skip_packages` still applies (e.g. `["work"]`).
+- On macOS the work Brewfile runs before the shared one, and a warning is printed if an existing tap's remote differs. Brew Bundle does not change existing remotes; retap manually if needed.
+- Setting the flag back to false is not an undo: links and taps remain. Remove the links with `stow --dir ~/.dotfiles --target ~ --delete work`.
+- To move local edits of the shared Brewfile/mise config into `work`, reproduce them in the submodule, restore the shared files, commit inside `work` first, then commit the updated submodule pointer here.
+
 ### Package Drift Report
 Package manifests are curated by hand; a dump of everything installed would pull in dependencies, OS defaults, and machine-specific tools. Instead, a read-only report shows what differs:
 ```sh

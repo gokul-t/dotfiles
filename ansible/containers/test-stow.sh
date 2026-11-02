@@ -51,4 +51,18 @@ if run_stow "$work/conflict" -e '{"dotfiles_stow_packages":["vim"],"dotfiles_sto
   fail "strict mode did not fail"
 fi
 
+# Work mode is opt-in, fails without the submodule, and links the work package when present.
+mkdir -p "$work/work-missing"
+if run_stow "$work/work-missing" -e '{"dotfiles_stow_packages":["vim"],"dotfiles_work_enabled":true,"dotfiles_work_path":"'"$work"'/absent"}' >/dev/null 2>&1; then
+  fail "work mode without the submodule did not fail"
+fi
+if [[ -f work/.config/mise/config.local.toml && -f work/ansible/packages/Brewfile ]]; then
+  mkdir -p "$work/work-off" "$work/work-on"
+  run_stow "$work/work-off" -e '{"dotfiles_stow_packages":["vim"]}' >/dev/null
+  [[ ! -e "$work/work-off/.config/mise/config.local.toml" ]] || fail "work linked while disabled"
+  run_stow "$work/work-on" -e '{"dotfiles_stow_packages":["vim"],"dotfiles_work_enabled":true}' >/dev/null
+  [[ "$(readlink -f "$work/work-on/.config/mise/config.local.toml")" == "$repo_root/work/.config/mise/config.local.toml" ]] || fail "work mise overlay not linked"
+  [[ ! -e "$work/work-on/ansible" && ! -e "$work/work-on/README.md" ]] || fail "work provisioning files were linked"
+fi
+
 printf 'All Stow selection checks passed.\n'

@@ -21,11 +21,41 @@
   environment:
     MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
 
+- name: Check whether the work mise overlay is linked
+  ansible.builtin.stat:
+    path: "{{ dotfiles_stow_target }}/.config/mise/config.local.toml"
+  register: dotfiles_mise_work_config
+  when: dotfiles_work_enabled | bool
+
+- name: Require the linked work mise overlay
+  ansible.builtin.assert:
+    that: dotfiles_mise_work_config.stat.exists
+    fail_msg: >-
+      dotfiles_work_enabled is true but {{ dotfiles_stow_target }}/.config/mise/config.local.toml
+      is missing. Run the stow step (resolve any reported Stow conflicts) and retry.
+    quiet: true
+  when: dotfiles_work_enabled | bool
+
+- name: Trust the linked work mise overlay
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
+      - trust
+      - "{{ dotfiles_stow_target }}/.config/mise/config.local.toml"
+  args:
+    chdir: "{{ dotfiles_stow_target }}"
+  when: dotfiles_work_enabled | bool
+  changed_when: false
+  environment:
+    MISE_CONFIG_DIR: "{{ dotfiles_stow_target }}/.config/mise"
+
 - name: Install the configured tools with mise
   ansible.builtin.command:
     argv:
       - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
       - install
+  args:
+    chdir: "{{ dotfiles_stow_target }}"
   register: dotfiles_mise_install
   changed_when: false
   failed_when: >-
@@ -35,7 +65,7 @@
       and 'SIGILL' in (dotfiles_mise_install.stderr | default(''))
     )
   environment:
-    MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+    MISE_CONFIG_DIR: "{{ dotfiles_stow_target }}/.config/mise"
 
 - name: Warn when Rust installation hits the known Rustup SIGILL bug
   ansible.builtin.debug:
@@ -60,8 +90,9 @@
       - install
       - github.com/jesseduffield/lazygit@latest
   args:
+    chdir: "{{ dotfiles_stow_target }}"
     creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/lazygit"
   environment:
     GOBIN: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
-    MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
+    MISE_CONFIG_DIR: "{{ dotfiles_stow_target }}/.config/mise"
   when: ansible_facts['distribution'] == "Ubuntu"

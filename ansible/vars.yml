@@ -30,3 +30,5 @@ dotfiles_stow_skip_packages:
   - vimium
   - windows
 dotfiles_stow_strict: false
+dotfiles_work_enabled: false
+dotfiles_work_path: "{{ dotfiles_repo_path }}/work"

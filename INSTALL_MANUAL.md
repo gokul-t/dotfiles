@@ -44,6 +44,14 @@ done < ~/.dotfiles/ansible/packages/flatpak-packages.txt
 brew bundle --file ~/.dotfiles/ansible/packages/Brewfile
 ```
 
+**Work machine (macOS):** initialize the submodule and apply the work taps first:
+```sh
+git -C ~/.dotfiles submodule update --init work
+brew bundle --file ~/.dotfiles/work/ansible/packages/Brewfile
+brew bundle --file ~/.dotfiles/ansible/packages/Brewfile
+stow --dir ~/.dotfiles --target ~ work
+```
+
 ### 4. Tool-Specific Configurations
 
 #### Tmux Plugin Manager (TPM)
@@ -76,6 +84,7 @@ git clone https://github.com/cufarvid/lazy-idea.git ~/.lazy-idea
 ```sh
 curl https://mise.run | sh
 mise trust ~/.config/mise/config.toml
+mise trust ~/.config/mise/config.local.toml   # work machines only (linked from the work submodule)
 mise install
 ```
 
