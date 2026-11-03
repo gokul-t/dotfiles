@@ -17,4 +17,5 @@
   when: >-
     dotfiles_user_installed_packages_installed.rc != 0 or
     dotfiles_user_installed_packages_installed.stdout | default('') | trim !=
-    (dotfiles_user_installed_packages_version | regex_replace('^v', ''))
+    ('user-installed-packages ' ~
+     (dotfiles_user_installed_packages_version | regex_replace('^v', '')))
