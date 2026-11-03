@@ -13,13 +13,37 @@
     - /etc/yum.repos.d/rpmfusion-nonfree.repo
   register: dotfiles_rpmfusion_repos
 
-- name: Enable the RPM Fusion repositories (free and nonfree)
+# dnf5 refuses to install the release RPMs directly: the '@commandline'
+# repository has no OpenPGP keys configured. Import the keys and install
+# the signed release RPMs with rpm instead.
+- name: Import the RPM Fusion GPG keys
   become: true
-  ansible.builtin.dnf:
-    name:
-      - "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm"
-      - "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm"
+  ansible.builtin.rpm_key:
     state: present
+    key: "{{ item }}"
+  loop:
+    - https://download1.rpmfusion.org/free/fedora/RPM-GPG-KEY-rpmfusion-free-fedora-2020
+    - https://download1.rpmfusion.org/nonfree/fedora/RPM-GPG-KEY-rpmfusion-nonfree-fedora-2020
+  when: dotfiles_rpmfusion_repos.results | rejectattr('stat.exists') | list | length > 0
+
+- name: Download the RPM Fusion release RPMs
+  ansible.builtin.get_url:
+    url: "https://download1.rpmfusion.org/{{ item }}/fedora/rpmfusion-{{ item }}-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm"
+    dest: "/tmp/rpmfusion-{{ item }}-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm"
+    mode: "0644"
+  loop:
+    - free
+    - nonfree
+  when: dotfiles_rpmfusion_repos.results | rejectattr('stat.exists') | list | length > 0
+
+- name: Install the RPM Fusion release RPMs
+  become: true
+  ansible.builtin.command:
+    argv:
+      - rpm
+      - -Uvh
+      - "/tmp/rpmfusion-free-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm"
+      - "/tmp/rpmfusion-nonfree-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm"
   when: dotfiles_rpmfusion_repos.results | rejectattr('stat.exists') | list | length > 0
 
 - name: Configure the Microsoft Visual Studio Code repository
