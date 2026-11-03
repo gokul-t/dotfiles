@@ -65,6 +65,37 @@
       when: dotfiles_personal_enabled | bool
       tags: [always]
 
+    - name: Select personal package manifests for this platform
+      ansible.builtin.set_fact:
+        dotfiles_personal_package_manifests: >-
+          {{
+            (
+              ['Brewfile']
+              if ansible_facts['system'] == 'Darwin'
+              else (
+                ['ubuntu-packages.txt']
+                + (['ubuntu-snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
+                if ansible_facts['distribution'] == 'Ubuntu'
+                else (
+                  ['dnf-packages.txt']
+                  + (['flatpak-packages.txt'] if dotfiles_install_flatpak_apps | bool else [])
+                )
+              )
+            )
+            | map('regex_replace', '^', 'ansible/packages/')
+            | list
+          }}
+      when: dotfiles_personal_enabled | bool
+      tags: [always]
+
+    - name: Check the personal package manifests
+      ansible.builtin.stat:
+        path: "{{ dotfiles_repo_path }}/personal/{{ item }}"
+      loop: "{{ dotfiles_personal_package_manifests }}"
+      register: dotfiles_personal_package_manifest_files
+      when: dotfiles_personal_enabled | bool
+      tags: [always]
+
     - name: Require an initialized work submodule
       ansible.builtin.assert:
         that: dotfiles_work_files.results | map(attribute='stat.exists') | list | min
@@ -81,6 +112,18 @@
         fail_msg: >-
           Personal settings are enabled but required files are missing under
           {{ dotfiles_repo_path }}/personal. Run: git submodule update --init personal
+        quiet: true
+      when: dotfiles_personal_enabled | bool
+      tags: [always]
+
+    - name: Require the personal package manifests
+      ansible.builtin.assert:
+        that:
+          - dotfiles_personal_package_manifest_files.results | map(attribute='stat.exists') | list | min
+        fail_msg: >-
+          One or more personal package manifests are missing under
+          {{ dotfiles_repo_path }}/personal/ansible/packages.
+          Run: git submodule update --init personal
         quiet: true
       when: dotfiles_personal_enabled | bool
       tags: [always]

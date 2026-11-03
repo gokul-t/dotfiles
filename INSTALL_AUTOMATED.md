@@ -67,7 +67,7 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow \
 - `dotfiles_skip_tools` currently supports only `bin`.
 
 ### Personal and Work Settings
-Personal and work settings are optional workstation overlays. Select personal mode to initialize the private `personal` submodule and link its Zsh additions, Git identity, and other home-layout files:
+Personal and work settings are optional workstation overlays. Select personal mode to initialize the private `personal` submodule and link its Zsh additions, Git identity, and other home-layout files. Personal mode also adds packages from the OS-specific manifests under `personal/ansible/packages/` (DNF/Flatpak on Fedora, APT/Snap on Ubuntu, and a Brewfile on macOS); shared mode never reads those private manifests.
 
 ```sh
 ./ansible/bootstrap.sh --profile personal
@@ -88,14 +88,19 @@ Work and personal settings are mutually exclusive. Select work mode with:
 ### Package Drift Report
 Package manifests are curated by hand; a dump of everything installed would pull in dependencies, OS defaults, and machine-specific tools. Instead, a read-only report shows what differs:
 ```sh
-user-installed-packages report --manifest-dir ansible/packages
+user-installed-packages report --manifest-dir ~/.dotfiles/ansible/packages \
+  --apt-manifest ubuntu-packages.txt \
+  --apt-manifest ~/.dotfiles/personal/ansible/packages/ubuntu-packages.txt \
+  --snap-manifest ubuntu-snap-packages.txt \
+  --snap-manifest ~/.dotfiles/personal/ansible/packages/ubuntu-snap-packages.txt
 ```
 The [user-installed-packages](https://github.com/gokul-t/user-installed-packages) project provides the report command and the explicit APT/DNF package detection it uses. The playbook installs it via `pipx` into `~/.local/bin` on macOS, Fedora, and Ubuntu (`dotfiles_user_installed_packages_version` in `ansible/vars.yml` pins the release; bump it deliberately). To install by hand instead:
 ```sh
-pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.2.0
+pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.4.0
 ```
-- `+` lines are installed (explicitly) but not in the manifest; `-` lines are in the manifest but not installed here (possibly intentional). Review, edit the file in `ansible/packages/`, and commit yourself. Nothing is installed, removed, edited, or committed.
+- `+` lines are installed (explicitly) but not in the manifest; `-` lines are in the manifest but not installed here (possibly intentional). Review and edit the corresponding file in `ansible/packages/` or, for personal entries, `personal/ansible/packages/`. Nothing is installed, removed, or committed by the report.
 - Covers Homebrew formulae/casks/taps and Brewfile VS Code extensions (macOS), DNF + Flatpak (Fedora), APT + Snap (Ubuntu). Options: `--skip NAME`, `--no-flatpak`, `--no-snap`. Mise runtimes, plugins, and manually downloaded binaries are not covered.
+- `--manifest-dir` defaults to `./ansible/packages`. Per-package options (`--dnf-manifest`, `--apt-manifest`, `--flatpak-manifest`, `--snap-manifest`, `--brewfile`) accept paths or filenames relative to that directory, and may be repeated to compare shared and private manifests together. Personal mode passes the public and private manifest paths directly to the report command; no copied/merged report manifests are needed.
 - The DNF check compares only command-line-installed (`reason=User`) packages. OS-image packages are detected from the earliest dnf history transactions (falling back to an install-time window on machines without usable history). Group and dependency installs (including image group installs) and kernels installed by system updates are not compared.
 - Detection for DNF and APT uses the user-installed-packages library; see its README for the exact algorithm and known limitations (e.g. the apt check subtracts the installer-recorded base set from `/var/log/installer/initial-status.gz`, and image group installs can never be told apart in general). Degradations (missing installer log, missing dnf history) are surfaced as warnings in the report notes.
 - Exit status `2` means a source was unavailable or failed, so its section is incomplete (it never produces false "missing" entries).

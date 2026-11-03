@@ -56,17 +56,6 @@
     gpgcheck: true
     enabled: true
 
-- name: Configure the Google Chrome repository
-  become: true
-  ansible.builtin.yum_repository:
-    name: google-chrome
-    description: Google Chrome
-    baseurl: https://dl.google.com/linux/chrome/rpm/stable/$basearch
-    gpgkey: https://dl.google.com/linux/linux_signing_key.pub
-    gpgcheck: true
-    enabled: true
-  when: ansible_facts['architecture'] == "x86_64"
-
 - name: Configure the HashiCorp repository
   become: true
   ansible.builtin.yum_repository:
@@ -75,17 +64,6 @@
     baseurl: https://rpm.releases.hashicorp.com/fedora/$releasever/$basearch/stable
     gpgkey: https://rpm.releases.hashicorp.com/gpg
     gpgcheck: true
-    enabled: true
-
-- name: Configure the Tailscale repository
-  become: true
-  ansible.builtin.yum_repository:
-    name: tailscale-stable
-    description: Tailscale stable
-    baseurl: https://pkgs.tailscale.com/stable/fedora/$basearch
-    gpgkey: https://pkgs.tailscale.com/stable/fedora/repo.gpg
-    gpgcheck: true
-    repo_gpgcheck: true
     enabled: true
 
 - name: Read Fedora package manifest
@@ -97,6 +75,28 @@
         | map('trim')
         | reject('match', '^#')
         | reject('equalto', '')
+        | list
+      }}
+
+- name: Read personal Fedora package manifest
+  ansible.builtin.set_fact:
+    dotfiles_dnf_personal_packages: >-
+      {{
+        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/personal/ansible/packages/dnf-packages.txt')
+        .splitlines()
+        | map('trim')
+        | reject('match', '^#')
+        | reject('equalto', '')
+        | list
+      }}
+  when: dotfiles_personal_enabled | bool
+
+- name: Combine shared and personal Fedora package manifests
+  ansible.builtin.set_fact:
+    dotfiles_dnf_packages_all: >-
+      {{
+        dotfiles_dnf_packages_all
+        | union(dotfiles_dnf_personal_packages | default([]))
         | list
       }}
 
@@ -130,6 +130,31 @@
         if ansible_facts['architecture'] != 'x86_64'
         else dotfiles_dnf_packages
       }}
+
+- name: Configure the Tailscale repository
+  become: true
+  ansible.builtin.yum_repository:
+    name: tailscale-stable
+    description: Tailscale stable
+    baseurl: https://pkgs.tailscale.com/stable/fedora/$basearch
+    gpgkey: https://pkgs.tailscale.com/stable/fedora/repo.gpg
+    gpgcheck: true
+    repo_gpgcheck: true
+    enabled: true
+  when: "'tailscale' in dotfiles_dnf_packages"
+
+- name: Configure the Google Chrome repository
+  become: true
+  ansible.builtin.yum_repository:
+    name: google-chrome
+    description: Google Chrome
+    baseurl: https://dl.google.com/linux/chrome/rpm/stable/$basearch
+    gpgkey: https://dl.google.com/linux/linux_signing_key.pub
+    gpgcheck: true
+    enabled: true
+  when:
+    - ansible_facts['architecture'] == "x86_64"
+    - "'google-chrome-stable' in dotfiles_dnf_packages"
 
 - name: Check which Copr repositories are enabled
   ansible.builtin.stat:
@@ -258,6 +283,31 @@
         | map('trim')
         | reject('match', '^#')
         | reject('equalto', '')
+        | list
+      }}
+  when: dotfiles_install_flatpak_apps | bool
+
+- name: Read personal Flatpak application manifest
+  ansible.builtin.set_fact:
+    dotfiles_flatpak_personal_apps: >-
+      {{
+        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/personal/ansible/packages/flatpak-packages.txt')
+        .splitlines()
+        | map('trim')
+        | reject('match', '^#')
+        | reject('equalto', '')
+        | list
+      }}
+  when:
+    - dotfiles_install_flatpak_apps | bool
+    - dotfiles_personal_enabled | bool
+
+- name: Combine shared and personal Flatpak manifests
+  ansible.builtin.set_fact:
+    dotfiles_flatpak_apps: >-
+      {{
+        dotfiles_flatpak_apps
+        | union(dotfiles_flatpak_personal_apps | default([]))
         | list
       }}
   when: dotfiles_install_flatpak_apps | bool

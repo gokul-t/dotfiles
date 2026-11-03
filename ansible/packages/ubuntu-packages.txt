@@ -1,4 +1,4 @@
-# Ubuntu packages for the workstation setup.
+# Ubuntu packages for the shared workstation setup.
 # Apps unavailable in Ubuntu's APT repositories are listed in
 # ubuntu-snap-packages.txt.
 
@@ -12,7 +12,6 @@ stow
 git
 tmux
 tmux-sesh
-google-chrome-stable
 
 # CLI tools
 fzf
@@ -20,14 +19,8 @@ fd-find
 bat
 gh
 htop
-adb
 zoxide
 ripgrep
-gnome-shell-extension-manager
-gnome-shell-extensions
-gnome-tweaks
-vlc
-syncthing
 
 # Build dependencies for mise-managed tools
 fontconfig

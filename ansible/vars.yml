@@ -25,7 +25,7 @@ dotfiles_fedora_copr_repos:
 dotfiles_ubuntu_skip_packages: []
 # Version of https://github.com/gokul-t/user-installed-packages installed by
 # the playbook for package detection and drift reporting.
-dotfiles_user_installed_packages_version: "v0.2.0"
+dotfiles_user_installed_packages_version: "v0.4.0"
 dotfiles_package_report_schedule: false
 dotfiles_package_report_cron_fallback: false
 dotfiles_package_report_dir: "{{ ansible_facts['env']['HOME'] }}/.local/state/dotfiles"

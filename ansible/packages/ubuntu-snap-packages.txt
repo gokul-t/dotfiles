@@ -3,9 +3,7 @@
 code --classic
 ghostty --classic
 helm
-obsidian --classic
 postman --classic
 starship
 terraform
-thunderbird
 yazi --classic

@@ -9,14 +9,45 @@
         | map('regex_replace', '^', '--skip=') | list
       }}
 
+- name: Select the package report manifest directory
+  ansible.builtin.set_fact:
+    dotfiles_package_report_manifest_dir: "{{ dotfiles_repo_path }}/ansible/packages"
+    dotfiles_package_report_args: >-
+      {{
+        (['--brewfile', dotfiles_repo_path ~ '/ansible/packages/Brewfile']
+         + (['--brewfile', dotfiles_repo_path ~ '/personal/ansible/packages/Brewfile']
+            if dotfiles_personal_enabled | bool else []))
+        if ansible_facts['system'] == 'Darwin'
+        else (
+          ['--dnf-manifest', dotfiles_repo_path ~ '/ansible/packages/dnf-packages.txt']
+          + (['--dnf-manifest', dotfiles_repo_path ~ '/personal/ansible/packages/dnf-packages.txt']
+             if dotfiles_personal_enabled | bool else [])
+          + (['--flatpak-manifest', dotfiles_repo_path ~ '/ansible/packages/flatpak-packages.txt']
+             if dotfiles_install_flatpak_apps | bool else [])
+          + (['--flatpak-manifest', dotfiles_repo_path ~ '/personal/ansible/packages/flatpak-packages.txt']
+             if dotfiles_install_flatpak_apps | bool and dotfiles_personal_enabled | bool else [])
+          if ansible_facts['distribution'] == 'Fedora'
+          else (
+            ['--apt-manifest', dotfiles_repo_path ~ '/ansible/packages/ubuntu-packages.txt']
+            + (['--apt-manifest', dotfiles_repo_path ~ '/personal/ansible/packages/ubuntu-packages.txt']
+               if dotfiles_personal_enabled | bool else [])
+            + (['--snap-manifest', dotfiles_repo_path ~ '/ansible/packages/ubuntu-snap-packages.txt']
+               if dotfiles_install_snap_apps | bool else [])
+            + (['--snap-manifest', dotfiles_repo_path ~ '/personal/ansible/packages/ubuntu-snap-packages.txt']
+               if dotfiles_install_snap_apps | bool and dotfiles_personal_enabled | bool else [])
+          )
+        )
+      }}
+
 - name: Build package report command and PATH
   ansible.builtin.set_fact:
     dotfiles_package_report_label: com.dotfiles.package-report
     dotfiles_package_report_command: >-
       {{
         ['user-installed-packages', 'report',
-         '--manifest-dir', dotfiles_repo_path ~ '/ansible/packages',
+         '--manifest-dir', dotfiles_package_report_manifest_dir,
          '--output', dotfiles_package_report_dir ~ '/package-report.txt']
+        + dotfiles_package_report_args
         + (['--no-flatpak'] if not dotfiles_install_flatpak_apps | bool else [])
         + (['--no-snap'] if not dotfiles_install_snap_apps | bool else [])
         + dotfiles_package_report_skips
@@ -110,7 +141,8 @@
         msg: >-
           No systemd user manager (and no enabled cron fallback). Run
           user-installed-packages report --manifest-dir
-          {{ dotfiles_repo_path }}/ansible/packages manually instead.
+          {{ dotfiles_package_report_manifest_dir }}
+          {{ dotfiles_package_report_args | join(' ') }} manually instead.
       when:
         - dotfiles_package_report_schedule | bool
         - not dotfiles_package_report_systemd | bool

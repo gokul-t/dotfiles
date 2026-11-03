@@ -1,7 +1,7 @@
 # Fedora Packages
 # Install these using: sudo dnf install $(cat dnf-packages.txt)
-# Synced with packages explicitly installed (dnf install / GNOME Software) on
-# the reference system; system/base-image packages are intentionally omitted.
+# Shared workstation packages explicitly installed on the reference system;
+# system/base-image and personal-only packages are intentionally omitted.
 
 # Development
 neovim
@@ -44,25 +44,9 @@ lazygit
 yazi
 starship
 htop
-android-tools
-vulkan-tools
 
 # Terminal/UI
 ghostty
-gnome-tweaks
-
-# Utilities
-vlc
-ffmpeg
-libavcodec-freeworld
-syncthing
-google-chrome-stable
-wol
-tailscale
-fedy
-rocminfo
-amdsmi
-rocm-smi
 
 # Ansible bootstrap and Python build dependencies
 ansible-core

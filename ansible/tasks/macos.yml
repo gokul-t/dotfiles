@@ -1,4 +1,29 @@
 ---
+- name: Check whether the personal Brewfile is satisfied
+  ansible.builtin.command:
+    argv:
+      - brew
+      - bundle
+      - check
+      - --file
+      - "{{ dotfiles_repo_path }}/personal/ansible/packages/Brewfile"
+  register: dotfiles_personal_brew_bundle_check
+  changed_when: false
+  failed_when: false
+  when: dotfiles_personal_enabled | bool
+
+- name: Install packages and applications from the personal Brewfile
+  ansible.builtin.command:
+    argv:
+      - brew
+      - bundle
+      - install
+      - --file
+      - "{{ dotfiles_repo_path }}/personal/ansible/packages/Brewfile"
+  when:
+    - dotfiles_personal_enabled | bool
+    - dotfiles_personal_brew_bundle_check.rc != 0
+
 - name: Check whether the work Brewfile is satisfied
   ansible.builtin.command:
     argv:
