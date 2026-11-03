@@ -91,9 +91,15 @@ Package manifests are curated by hand; a dump of everything installed would pull
 python3 ansible/scripts/package-report.py            # print to the terminal
 python3 -m unittest ansible/tests/test_package_report.py
 ```
+The DNF and APT checks need the [user-installed-packages](https://github.com/gokul-t/user-installed-packages) helper (a small read-only tool that answers "which packages did the user explicitly install?" — distro package managers cannot, because image builds mark everything as user-requested). The playbook installs it automatically via `pipx` into `~/.local/bin` (`dotfiles_user_installed_packages_version` in `ansible/vars.yml` pins the release; bump it deliberately). To install by hand instead:
+```sh
+pipx install git+https://github.com/gokul-t/user-installed-packages.git
+```
+Without it those two sections report `[unavailable]` (exit status 2) rather than comparing.
 - `+` lines are installed (explicitly) but not in the manifest; `-` lines are in the manifest but not installed here (possibly intentional). Review, edit the file in `ansible/packages/`, and commit yourself. Nothing is installed, removed, edited, or committed.
 - Covers Homebrew formulae/casks/taps and Brewfile VS Code extensions (macOS), DNF + Flatpak (Fedora), APT + Snap (Ubuntu). Options: `--skip NAME`, `--no-flatpak`, `--no-snap`. Mise runtimes, plugins, and manually downloaded binaries are not covered.
 - The DNF check compares only command-line-installed (`reason=User`) packages. OS-image packages are detected from the earliest dnf history transactions (falling back to an install-time window on machines without usable history). Group and dependency installs (including image group installs) and kernels installed by system updates are not compared.
+- Detection for DNF and APT is delegated to the user-installed-packages helper; see its README for the exact algorithm and known limitations (e.g. the apt check subtracts the installer-recorded base set from `/var/log/installer/initial-status.gz`, and image group installs can never be told apart in general). Degradations (missing installer log, missing dnf history) are surfaced as warnings in the report notes.
 - Exit status `2` means a source was unavailable or failed, so its section is incomplete (it never produces false "missing" entries).
 
 Optional weekly report (off by default; Mondays 09:00 via a per-user LaunchAgent on macOS, a systemd user timer on Linux). The latest report is written to `~/.local/state/dotfiles/package-report.txt`:

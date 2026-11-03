@@ -6,7 +6,7 @@ source was compared, 2 when a source was unavailable or failed.
 """
 import argparse
 import fcntl
-import gzip
+import json
 import os
 import platform
 import re
@@ -21,21 +21,7 @@ PACKAGES_DIR = Path(__file__).resolve().parents[1] / "packages"
 TIMEOUT_SECONDS = 120
 BREW_DEFAULT_TAPS = {"homebrew/core", "homebrew/cask"}
 BREW_KINDS = ("tap", "brew", "cask", "vscode")
-BASE_INSTALL_WINDOW_SECONDS = 6 * 3600
-APT_INITIAL_STATUS = ("/var/log/installer/initial-status.gz",)
 SNAP_RUNTIME_PREFIXES = ("gnome-", "gtk-common-themes", "mesa-", "kf5-", "kf6-")
-# Installed automatically as versioned packages during system updates; never a
-# manifest concern.
-DNF_AUTO_PACKAGES = {
-    "kernel", "kernel-core", "kernel-devel",
-    "kernel-modules", "kernel-modules-core", "kernel-modules-extra",
-}
-RPM_ARCH_SUFFIX = re.compile(
-    r"\.(x86_64|i386|i586|i686|aarch64|armhfp|riscv64|noarch|src|nosrc)$"
-)
-HISTORY_LIST_ROW = re.compile(r"^\s*(\d+)\s.*?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s")
-HISTORY_BEGIN_TIME = re.compile(r"Begin time\s*:\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})")
-HISTORY_INSTALL_ROW = re.compile(r"^\s+(?:Install|Reinstall)\s+(\S+)", re.M)
 
 
 class CollectorError(Exception):
@@ -168,92 +154,28 @@ def check_homebrew(opts, runner):
     return results
 
 
-def rpm_package_name(token):
-    """Strip the arch and version-release (-epoch included) from an NVRA."""
-    token = RPM_ARCH_SUFFIX.sub("", token.strip())
-    parts = token.rsplit("-", 2)
-    return parts[0] if len(parts) == 3 else token
+def user_installed_packages(runner, distro):
+    """Packages the user explicitly installed (image base and auto updates
+    excluded), according to the user-installed-packages tool.
 
-
-def dnf_history(runner):
-    """Parse `dnf history list`; return [(timestamp, id)] sorted by time."""
-    out = runner(["dnf", "history", "list"])
-    stamps = {}
-    for line in lines(out):
-        match = HISTORY_LIST_ROW.match(line)
-        if match:
-            parsed = datetime.strptime(match.group(2), "%Y-%m-%d %H:%M:%S")
-            stamps[int(match.group(1))] = parsed.timestamp()
-    return sorted(((stamp, tid) for tid, stamp in stamps.items()))
-
-
-def dnf_transaction_installs(runner, tid):
-    out = runner(["dnf", "history", "info", str(tid)])
-    return {rpm_package_name(m.group(1)) for m in HISTORY_INSTALL_ROW.finditer(out)}
-
-
-def dnf_explicit_packages(runner):
-    """Names requested by the user at the command line (reason 'User').
-
-    Dependency installs, weak dependencies and group members are not compared:
-    on images built with kiwi every group package is marked as user-requested,
-    which cannot be told apart from packages the user asked for.
+    See https://github.com/gokul-t/user-installed-packages for how the
+    per-distro detection works. Returns (names, warnings).
     """
-    out = runner(["dnf", "repoquery", "--installed", "--qf", "%{name} %{reason}\n"])
-    explicit = set()
-    for line in lines(out):
-        name, sep, reason = line.partition(" ")
-        if sep and reason.strip() == "User":
-            explicit.add(name)
-    return explicit
-
-
-def dnf_base_packages(runner):
-    """Names installed in the first transactions (the OS install), not by the user.
-
-    The rpmdb only records the last install time, so an initial-install window
-    on INSTALLTIME misclassifies every base package that was later upgraded.
-    dnf history keeps the transaction times, which are stable, so base packages
-    are detected from the transactions that ran first (e.g. the image build).
-    Falls back to the INSTALLTIME window when history is unusable.
-    """
+    argv = ["user-installed-packages", "--distro", distro, "--json"]
     try:
-        transactions = dnf_history(runner)
-    except CollectorError:
-        transactions = []
-    if transactions:
-        start = transactions[0][0]
-        base = set()
-        for stamp, tid in transactions:
-            if stamp > start + BASE_INSTALL_WINDOW_SECONDS:
-                break
-            try:
-                base |= dnf_transaction_installs(runner, tid)
-            except CollectorError:
-                continue
-        return base
-    times = {}
-    for line in lines(runner(["rpm", "-qa", "--qf", "%{NAME} %{INSTALLTIME}\\n"])):
-        name, _, stamp = line.rpartition(" ")
-        if stamp.isdigit():
-            times[name] = min(int(stamp), times.get(name, int(stamp)))
-    if not times:
-        return set()
-    cutoff = min(times.values()) + BASE_INSTALL_WINDOW_SECONDS
-    return {name for name, stamp in times.items() if stamp <= cutoff}
-
-
-def apt_base_packages():
-    """Packages present in the initial image, as recorded by the installer."""
-    for path in APT_INITIAL_STATUS:
-        try:
-            opener = gzip.open if path.endswith(".gz") else open
-            with opener(path, "rt", errors="replace") as handle:
-                text = handle.read()
-        except OSError:
-            continue
-        return {m.group(1) for m in re.finditer(r"^Package: (\S+)", text, re.M)}
-    return set()
+        out = runner(argv)
+    except ToolMissing:
+        raise ToolMissing(
+            "user-installed-packages not found; install it with "
+            "`pipx install git+https://github.com/gokul-t/user-installed-packages.git`"
+        ) from None
+    try:
+        data = json.loads(out)
+        return set(data["packages"]), list(data.get("warnings", []))
+    except (ValueError, KeyError, TypeError) as error:
+        raise CollectorError(
+            f"user-installed-packages returned unexpected output: {error}"
+        ) from None
 
 
 def check_dnf(opts, runner):
@@ -261,9 +183,7 @@ def check_dnf(opts, runner):
 
     def native():
         installed = set(lines(runner(["rpm", "-qa", "--qf", "%{NAME}\\n"])))
-        explicit = dnf_explicit_packages(runner)
-        explicit -= dnf_base_packages(runner) - set(declared)
-        explicit -= DNF_AUTO_PACKAGES - set(declared)
+        explicit, warnings = user_installed_packages(runner, "dnf")
         result = compare("DNF packages", declared, installed, explicit, opts.skip, str)
         result.notes.append(
             "Packages installed as dependency, weak dependency, or group members "
@@ -272,6 +192,7 @@ def check_dnf(opts, runner):
         result.notes.append(
             "Kernel packages installed by system updates are not compared."
         )
+        result.notes += [f"user-installed-packages: {w}" for w in warnings]
         return result
 
     return [guarded("DNF packages", native)] + check_flatpak(opts, runner)
@@ -288,9 +209,10 @@ def check_apt(opts, runner):
             status, _, name = line.partition(" ")
             if status.startswith("ii"):
                 installed.add(name.strip().split(":")[0])
-        manual = {n.split(":")[0] for n in lines(runner(["apt-mark", "showmanual"]))}
-        explicit = (manual & installed) - (apt_base_packages() - set(declared))
-        return compare("APT packages", declared, installed, explicit, skip, str)
+        explicit, warnings = user_installed_packages(runner, "apt")
+        result = compare("APT packages", declared, installed, explicit, skip, str)
+        result.notes += [f"user-installed-packages: {w}" for w in warnings]
+        return result
 
     result = guarded("APT packages", native)
     result.notes.append(

@@ -61,9 +61,9 @@ bindkey -M vicmd 'V' edit-command-line
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-if command -v podman >/dev/null; then
-  alias docker="podman"
-fi
+# if command -v podman >/dev/null; then
+#   alias docker="podman"
+# fi
 
 ############################
 # Terraform

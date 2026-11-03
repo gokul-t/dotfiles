@@ -70,6 +70,22 @@
     update_cache: true
     cache_valid_time: 3600
 
+- name: Install pipx
+  become: true
+  ansible.builtin.apt:
+    name: pipx
+    state: present
+    update_cache: true
+
+- name: Install the user-installed-packages helper for the drift report
+  ansible.builtin.command:
+    argv:
+      - pipx
+      - install
+      - "git+https://github.com/gokul-t/user-installed-packages.git@{{ dotfiles_user_installed_packages_version }}"
+  args:
+    creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/user-installed-packages"
+
 - name: Install Google Chrome
   become: true
   ansible.builtin.apt:

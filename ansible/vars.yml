@@ -23,6 +23,9 @@ dotfiles_fedora_copr_repos:
   - package: fedy
     repo: kwizart/fedy
 dotfiles_ubuntu_skip_packages: []
+# Version of https://github.com/gokul-t/user-installed-packages installed by
+# the playbook for the drift report's DNF/APT checks. Bump deliberately.
+dotfiles_user_installed_packages_version: "v0.1.0"
 dotfiles_package_report_schedule: false
 dotfiles_package_report_cron_fallback: false
 dotfiles_package_report_dir: "{{ ansible_facts['env']['HOME'] }}/.local/state/dotfiles"

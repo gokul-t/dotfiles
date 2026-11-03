@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -17,60 +18,21 @@ helm 1 1 latest/stable x -
 newapp 1 1 latest/stable x -
 """
 
-DNF_HISTORY_LIST = """ID Command line                            Date and time       Action(s) Altered
-2 dnf5 --config /kiwi_dnf5.conf -y install  2025-04-09 12:06:00              286
-1 dnf5 --config /kiwi_dnf5.conf -y install  2025-04-09 12:05:10             1722
-3 dnf install fedy -y                        2025-08-24 17:36:20                2
-4 dnf install vim-enhanced                   2025-12-22 18:01:59                4
-"""
+DNF_CLI_JSON = json.dumps({
+    "backend": "dnf",
+    "packages": ["fedy", "vim-enhanced", "extra-user"],
+    "image_packages": ["glibc", "fedora-release-workstation"],
+    "excluded_auto": ["kernel", "kernel-core"],
+    "warnings": [],
+})
 
-DNF_HISTORY_INFO_1 = """Transaction ID : 1
-Begin time     : 2025-04-09 12:05:10
-End time       : 2025-04-09 12:05:10
-Status         : Ok
-Packages altered:
-  Action   Package                          Reason Repository
-  Install  glibc-0:2.41-10.fc44.x86_64       Group  updates
-  Install  kernel-core-0:7.0.0-1.fc44.x86_64  Group  updates
-"""
-
-DNF_HISTORY_INFO_2 = """Transaction ID : 2
-Begin time     : 2025-04-09 12:06:00
-End time       : 2025-04-09 12:06:00
-Status         : Ok
-Packages altered:
-  Action   Package                          Reason Repository
-  Install  fedora-release-workstation-0:44-18.noarch Group fedora
-"""
-
-DNF_HISTORY_INFO_3 = """Transaction ID : 3
-Begin time     : 2025-08-24 17:36:20
-Packages altered:
-  Action   Package                          Reason Repository
-  Install  fedy-0:5.1.18-1.fc44.noarch      User   copr
-"""
-
-DNF_HISTORY_INFO_4 = """Transaction ID : 4
-Begin time     : 2025-12-22 18:01:59
-Packages altered:
-  Action   Package                          Reason Repository
-  Install  vim-enhanced-2:9.2.1202-1.fc44.x86_64 User updates
-"""
-
-DNF_REPOQUERY = """glibc Group
-kernel-core User
-kernel-devel User
-kernel-modules User
-kernel-modules-core User
-kernel-modules-extra User
-kernel User
-gpu-firmware Group
-fedora-release-workstation Group
-fedy User
-vim-enhanced User
-subversion Group
-extra-user User
-"""
+APT_CLI_JSON = json.dumps({
+    "backend": "apt",
+    "packages": ["extra"],
+    "image_packages": ["git"],
+    "excluded_auto": [],
+    "warnings": [],
+})
 
 DNF_INSTALLED = """glibc
 kernel-core
@@ -90,18 +52,14 @@ neovim
 """
 
 
-def dnf_runner(argv, **overrides):
+def dnf_runner(argv, overrides=None):
     mapping = {
         ("rpm", "-qa"): DNF_INSTALLED,
-        ("dnf", "repoquery"): DNF_REPOQUERY,
-        ("dnf", "history", "list"): DNF_HISTORY_LIST,
-        ("dnf", "history", "info", "1"): DNF_HISTORY_INFO_1,
-        ("dnf", "history", "info", "2"): DNF_HISTORY_INFO_2,
-        ("dnf", "history", "info", "3"): DNF_HISTORY_INFO_3,
-        ("dnf", "history", "info", "4"): DNF_HISTORY_INFO_4,
+        ("user-installed-packages",): DNF_CLI_JSON,
     }
-    mapping.update(overrides)
-    for size in range(len(argv), 1, -1):
+    if overrides:
+        mapping.update(overrides)
+    for size in range(len(argv), 0, -1):
         if tuple(argv[:size]) in mapping:
             value = mapping[tuple(argv[:size])]
             if isinstance(value, Exception):
@@ -139,7 +97,11 @@ class ReportTest(unittest.TestCase):
 
     def test_snap_filters_runtimes_and_keeps_manifest_arguments(self):
         def runner(argv):
-            return SNAP_LIST if argv[0] == "snap" else "ii  git\n"
+            if argv[0] == "snap":
+                return SNAP_LIST
+            if argv[0] == "user-installed-packages":
+                return APT_CLI_JSON
+            return "ii  git\n"
         text, complete = report.build_report(opts_for(self.root, "ubuntu", flatpak=False), runner=runner)
         self.assertIn("+ newapp", text)
         self.assertNotIn("core22", text)
@@ -152,8 +114,8 @@ class ReportTest(unittest.TestCase):
         def runner(argv):
             if argv[0] == "dpkg-query":
                 return "ii  git\nii  zsh\nii  extra\nrc  old\n"
-            if argv[0] == "apt-mark":
-                return "git\nzsh\nextra\nold\n"
+            if argv[0] == "user-installed-packages":
+                return APT_CLI_JSON
             return SNAP_LIST
         text, _ = report.build_report(opts_for(self.root, "ubuntu"), runner=runner)
         self.assertIn("+ extra", text)
@@ -192,22 +154,35 @@ class ReportTest(unittest.TestCase):
         self.assertNotIn("+ gpu-firmware", text)
         self.assertTrue(complete)
 
-    def test_dnf_history_unavailable_falls_back_to_install_time_window(self):
-        rpm_qa_with_times = "glibc 100\nold-base 100\nextra-user 1000000\n"
-
-        def runner(argv, **overrides):
-            if tuple(argv) == ("rpm", "-qa", "--qf", "%{NAME} %{INSTALLTIME}\\n"):
-                return rpm_qa_with_times
-            if argv[:2] == ["dnf", "history"]:
-                raise report.CollectorError("history unavailable")
-            return dnf_runner(argv, **overrides)
+    def test_dnf_tool_missing_is_unavailable_and_incomplete(self):
+        def runner(argv):
+            if argv[0] == "user-installed-packages":
+                raise report.ToolMissing("nope")
+            return dnf_runner(argv)
 
         text, complete = report.build_report(
-            opts_for(self.root, "fedora", flatpak=False), runner=runner
+            opts_for(self.root, "fedora", flatpak=False), runner=runner,
         )
-        self.assertIn("+ extra-user", text)
-        self.assertNotIn("+ glibc", text)
-        self.assertNotIn("+ old-base", text)
+        self.assertIn("[unavailable]", text)
+        self.assertFalse(complete)
+
+    def test_dnf_tool_warnings_are_surfaced(self):
+        cli_json = json.dumps({
+            "backend": "dnf",
+            "packages": ["fedy"],
+            "image_packages": [],
+            "excluded_auto": [],
+            "warnings": ["dnf history is unavailable; fell back to the rpm INSTALLTIME window"],
+        })
+        def runner(argv):
+            if argv[0] == "user-installed-packages":
+                return cli_json
+            return dnf_runner(argv)
+
+        text, complete = report.build_report(
+            opts_for(self.root, "fedora", flatpak=False), runner=runner,
+        )
+        self.assertIn("user-installed-packages: dnf history is unavailable", text)
         self.assertTrue(complete)
 
     def test_failed_collector_never_fabricates_missing_packages(self):
@@ -229,6 +204,8 @@ class ReportTest(unittest.TestCase):
         def runner(argv):
             if argv[0] == "flatpak":
                 return "a.B\tflathub\tsystem\nc.D\tflathub\tuser\nx.Y\tflathub\tsystem\n"
+            if argv[0] == "user-installed-packages":
+                return DNF_CLI_JSON
             return ""
         text, _ = report.build_report(opts_for(self.root, "fedora"), runner=runner)
         self.assertIn("+ flathub x.Y", text)
