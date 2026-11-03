@@ -20,6 +20,8 @@ dotfiles_fedora_copr_repos:
     repo: dejan/lazygit
   - package: yazi
     repo: lihaohong/yazi
+  - package: fedy
+    repo: kwizart/fedy
 dotfiles_ubuntu_skip_packages: []
 dotfiles_package_report_schedule: false
 dotfiles_package_report_cron_fallback: false

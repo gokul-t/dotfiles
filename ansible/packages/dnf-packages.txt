@@ -1,5 +1,7 @@
 # Fedora Packages
 # Install these using: sudo dnf install $(cat dnf-packages.txt)
+# Synced with packages explicitly installed (dnf install / GNOME Software) on
+# the reference system; system/base-image packages are intentionally omitted.
 
 # Development
 neovim
@@ -11,6 +13,27 @@ podman-compose
 luarocks
 stow
 git
+vim-enhanced
+cargo
+clang-devel
+systemd-devel
+libinput-devel
+numactl-devel
+
+# Python and build tooling (explicitly installed)
+python3-devel
+python3-pip
+python3-tkinter
+cairo-devel
+cairo-gobject-devel
+dbus-devel
+gobject-introspection-devel
+libjpeg-turbo-devel
+libxkbcommon-devel
+wayland-devel
+evtest
+libappindicator-gtk3
+libinput-utils
 
 # CLI Tools
 fzf
@@ -22,6 +45,7 @@ yazi
 starship
 htop
 android-tools
+vulkan-tools
 
 # Terminal/UI
 ghostty
@@ -29,8 +53,16 @@ gnome-tweaks
 
 # Utilities
 vlc
+ffmpeg
+libavcodec-freeworld
 syncthing
 google-chrome-stable
+wol
+tailscale
+fedy
+rocminfo
+amdsmi
+rocm-smi
 
 # Ansible bootstrap and Python build dependencies
 ansible-core
@@ -50,6 +82,5 @@ tk-devel
 tmux
 unzip
 xz-devel
-zlib-devel
 zoxide
 tmux-sesh

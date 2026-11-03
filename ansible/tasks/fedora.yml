@@ -77,6 +77,17 @@
     gpgcheck: true
     enabled: true
 
+- name: Configure the Tailscale repository
+  become: true
+  ansible.builtin.yum_repository:
+    name: tailscale-stable
+    description: Tailscale stable
+    baseurl: https://pkgs.tailscale.com/stable/fedora/$basearch
+    gpgkey: https://pkgs.tailscale.com/stable/fedora/repo.gpg
+    gpgcheck: true
+    repo_gpgcheck: true
+    enabled: true
+
 - name: Read Fedora package manifest
   ansible.builtin.set_fact:
     dotfiles_dnf_packages_all: >-
