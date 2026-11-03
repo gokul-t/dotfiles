@@ -16,7 +16,7 @@ curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/boots
 3. **Provisions**: Runs the Ansible playbook to:
    - Install all system packages listed in `ansible/packages/` (`dnf-packages.txt`, `ubuntu-packages.txt`, or `Brewfile`).
    - Install Flatpak/Snap applications.
-   - Configure repositories for VS Code, Chrome, etc.
+   - Configure repositories for RPM Fusion (free/nonfree), VS Code, Chrome, etc.
    - Use **GNU Stow** to symlink all configurations to your home directory.
    - Set up shell plugins and development tools (`mise`, etc.).
    - (Optional) Install **Toshy** for macOS-like keyboard shortcuts on Linux.

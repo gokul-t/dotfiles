@@ -32,6 +32,7 @@ Depending on your OS, install the required dependencies:
 
 **Fedora:**
 ```sh
+sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 sudo dnf install $(grep -v '^#' ~/.dotfiles/ansible/packages/dnf-packages.txt | xargs)
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 flatpak remote-add --if-not-exists fedora https://dl.fedoraproject.org/pub/flatpak/repo/fedora.flatpakrepo

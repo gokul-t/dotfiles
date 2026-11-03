@@ -5,6 +5,23 @@
     name: dnf-plugins-core
     state: present
 
+- name: Check whether the RPM Fusion repositories are configured
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - /etc/yum.repos.d/rpmfusion-free.repo
+    - /etc/yum.repos.d/rpmfusion-nonfree.repo
+  register: dotfiles_rpmfusion_repos
+
+- name: Enable the RPM Fusion repositories (free and nonfree)
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm"
+      - "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_facts['distribution_version'] }}.noarch.rpm"
+    state: present
+  when: dotfiles_rpmfusion_repos.results | rejectattr('stat.exists') | list | length > 0
+
 - name: Configure the Microsoft Visual Studio Code repository
   become: true
   ansible.builtin.yum_repository:
