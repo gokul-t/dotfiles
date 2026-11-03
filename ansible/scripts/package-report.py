@@ -24,6 +24,18 @@ BREW_KINDS = ("tap", "brew", "cask", "vscode")
 BASE_INSTALL_WINDOW_SECONDS = 6 * 3600
 APT_INITIAL_STATUS = ("/var/log/installer/initial-status.gz",)
 SNAP_RUNTIME_PREFIXES = ("gnome-", "gtk-common-themes", "mesa-", "kf5-", "kf6-")
+# Installed automatically as versioned packages during system updates; never a
+# manifest concern.
+DNF_AUTO_PACKAGES = {
+    "kernel", "kernel-core", "kernel-devel",
+    "kernel-modules", "kernel-modules-core", "kernel-modules-extra",
+}
+RPM_ARCH_SUFFIX = re.compile(
+    r"\.(x86_64|i386|i586|i686|aarch64|armhfp|riscv64|noarch|src|nosrc)$"
+)
+HISTORY_LIST_ROW = re.compile(r"^\s*(\d+)\s.*?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s")
+HISTORY_BEGIN_TIME = re.compile(r"Begin time\s*:\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})")
+HISTORY_INSTALL_ROW = re.compile(r"^\s+(?:Install|Reinstall)\s+(\S+)", re.M)
 
 
 class CollectorError(Exception):
@@ -156,8 +168,70 @@ def check_homebrew(opts, runner):
     return results
 
 
+def rpm_package_name(token):
+    """Strip the arch and version-release (-epoch included) from an NVRA."""
+    token = RPM_ARCH_SUFFIX.sub("", token.strip())
+    parts = token.rsplit("-", 2)
+    return parts[0] if len(parts) == 3 else token
+
+
+def dnf_history(runner):
+    """Parse `dnf history list`; return [(timestamp, id)] sorted by time."""
+    out = runner(["dnf", "history", "list"])
+    stamps = {}
+    for line in lines(out):
+        match = HISTORY_LIST_ROW.match(line)
+        if match:
+            parsed = datetime.strptime(match.group(2), "%Y-%m-%d %H:%M:%S")
+            stamps[int(match.group(1))] = parsed.timestamp()
+    return sorted(((stamp, tid) for tid, stamp in stamps.items()))
+
+
+def dnf_transaction_installs(runner, tid):
+    out = runner(["dnf", "history", "info", str(tid)])
+    return {rpm_package_name(m.group(1)) for m in HISTORY_INSTALL_ROW.finditer(out)}
+
+
+def dnf_explicit_packages(runner):
+    """Names requested by the user at the command line (reason 'User').
+
+    Dependency installs, weak dependencies and group members are not compared:
+    on images built with kiwi every group package is marked as user-requested,
+    which cannot be told apart from packages the user asked for.
+    """
+    out = runner(["dnf", "repoquery", "--installed", "--qf", "%{name} %{reason}\n"])
+    explicit = set()
+    for line in lines(out):
+        name, sep, reason = line.partition(" ")
+        if sep and reason.strip() == "User":
+            explicit.add(name)
+    return explicit
+
+
 def dnf_base_packages(runner):
-    """Names installed in the first install window (the OS install), not by the user."""
+    """Names installed in the first transactions (the OS install), not by the user.
+
+    The rpmdb only records the last install time, so an initial-install window
+    on INSTALLTIME misclassifies every base package that was later upgraded.
+    dnf history keeps the transaction times, which are stable, so base packages
+    are detected from the transactions that ran first (e.g. the image build).
+    Falls back to the INSTALLTIME window when history is unusable.
+    """
+    try:
+        transactions = dnf_history(runner)
+    except CollectorError:
+        transactions = []
+    if transactions:
+        start = transactions[0][0]
+        base = set()
+        for stamp, tid in transactions:
+            if stamp > start + BASE_INSTALL_WINDOW_SECONDS:
+                break
+            try:
+                base |= dnf_transaction_installs(runner, tid)
+            except CollectorError:
+                continue
+        return base
     times = {}
     for line in lines(runner(["rpm", "-qa", "--qf", "%{NAME} %{INSTALLTIME}\\n"])):
         name, _, stamp = line.rpartition(" ")
@@ -187,11 +261,18 @@ def check_dnf(opts, runner):
 
     def native():
         installed = set(lines(runner(["rpm", "-qa", "--qf", "%{NAME}\\n"])))
-        explicit = set(
-            lines(runner(["dnf", "repoquery", "--userinstalled", "--qf", "%{name}\\n"]))
-        )
+        explicit = dnf_explicit_packages(runner)
         explicit -= dnf_base_packages(runner) - set(declared)
-        return compare("DNF packages", declared, installed, explicit, opts.skip, str)
+        explicit -= DNF_AUTO_PACKAGES - set(declared)
+        result = compare("DNF packages", declared, installed, explicit, opts.skip, str)
+        result.notes.append(
+            "Packages installed as dependency, weak dependency, or group members "
+            "(including image-installed groups) are not compared."
+        )
+        result.notes.append(
+            "Kernel packages installed by system updates are not compared."
+        )
+        return result
 
     return [guarded("DNF packages", native)] + check_flatpak(opts, runner)
 

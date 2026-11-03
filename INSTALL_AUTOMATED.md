@@ -93,6 +93,7 @@ python3 -m unittest ansible/tests/test_package_report.py
 ```
 - `+` lines are installed (explicitly) but not in the manifest; `-` lines are in the manifest but not installed here (possibly intentional). Review, edit the file in `ansible/packages/`, and commit yourself. Nothing is installed, removed, edited, or committed.
 - Covers Homebrew formulae/casks/taps and Brewfile VS Code extensions (macOS), DNF + Flatpak (Fedora), APT + Snap (Ubuntu). Options: `--skip NAME`, `--no-flatpak`, `--no-snap`. Mise runtimes, plugins, and manually downloaded binaries are not covered.
+- The DNF check compares only command-line-installed (`reason=User`) packages. OS-image packages are detected from the earliest dnf history transactions (falling back to an install-time window on machines without usable history). Group and dependency installs (including image group installs) and kernels installed by system updates are not compared.
 - Exit status `2` means a source was unavailable or failed, so its section is incomplete (it never produces false "missing" entries).
 
 Optional weekly report (off by default; Mondays 09:00 via a per-user LaunchAgent on macOS, a systemd user timer on Linux). The latest report is written to `~/.local/state/dotfiles/package-report.txt`:

@@ -17,6 +17,98 @@ helm 1 1 latest/stable x -
 newapp 1 1 latest/stable x -
 """
 
+DNF_HISTORY_LIST = """ID Command line                            Date and time       Action(s) Altered
+2 dnf5 --config /kiwi_dnf5.conf -y install  2025-04-09 12:06:00              286
+1 dnf5 --config /kiwi_dnf5.conf -y install  2025-04-09 12:05:10             1722
+3 dnf install fedy -y                        2025-08-24 17:36:20                2
+4 dnf install vim-enhanced                   2025-12-22 18:01:59                4
+"""
+
+DNF_HISTORY_INFO_1 = """Transaction ID : 1
+Begin time     : 2025-04-09 12:05:10
+End time       : 2025-04-09 12:05:10
+Status         : Ok
+Packages altered:
+  Action   Package                          Reason Repository
+  Install  glibc-0:2.41-10.fc44.x86_64       Group  updates
+  Install  kernel-core-0:7.0.0-1.fc44.x86_64  Group  updates
+"""
+
+DNF_HISTORY_INFO_2 = """Transaction ID : 2
+Begin time     : 2025-04-09 12:06:00
+End time       : 2025-04-09 12:06:00
+Status         : Ok
+Packages altered:
+  Action   Package                          Reason Repository
+  Install  fedora-release-workstation-0:44-18.noarch Group fedora
+"""
+
+DNF_HISTORY_INFO_3 = """Transaction ID : 3
+Begin time     : 2025-08-24 17:36:20
+Packages altered:
+  Action   Package                          Reason Repository
+  Install  fedy-0:5.1.18-1.fc44.noarch      User   copr
+"""
+
+DNF_HISTORY_INFO_4 = """Transaction ID : 4
+Begin time     : 2025-12-22 18:01:59
+Packages altered:
+  Action   Package                          Reason Repository
+  Install  vim-enhanced-2:9.2.1202-1.fc44.x86_64 User updates
+"""
+
+DNF_REPOQUERY = """glibc Group
+kernel-core User
+kernel-devel User
+kernel-modules User
+kernel-modules-core User
+kernel-modules-extra User
+kernel User
+gpu-firmware Group
+fedora-release-workstation Group
+fedy User
+vim-enhanced User
+subversion Group
+extra-user User
+"""
+
+DNF_INSTALLED = """glibc
+kernel-core
+kernel-devel
+kernel-modules
+kernel-modules-core
+kernel-modules-extra
+kernel
+gpu-firmware
+fedora-release-workstation
+fedy
+vim-enhanced
+subversion
+extra-user
+git
+neovim
+"""
+
+
+def dnf_runner(argv, **overrides):
+    mapping = {
+        ("rpm", "-qa"): DNF_INSTALLED,
+        ("dnf", "repoquery"): DNF_REPOQUERY,
+        ("dnf", "history", "list"): DNF_HISTORY_LIST,
+        ("dnf", "history", "info", "1"): DNF_HISTORY_INFO_1,
+        ("dnf", "history", "info", "2"): DNF_HISTORY_INFO_2,
+        ("dnf", "history", "info", "3"): DNF_HISTORY_INFO_3,
+        ("dnf", "history", "info", "4"): DNF_HISTORY_INFO_4,
+    }
+    mapping.update(overrides)
+    for size in range(len(argv), 1, -1):
+        if tuple(argv[:size]) in mapping:
+            value = mapping[tuple(argv[:size])]
+            if isinstance(value, Exception):
+                raise value
+            return value
+    raise report.CollectorError(f"unexpected command: {argv}")
+
 
 def make_manifests(root):
     (root / "Brewfile").write_text(
@@ -84,6 +176,38 @@ class ReportTest(unittest.TestCase):
         self.assertIn('+ tap "new/tap"', text)
         self.assertIn('+ vscode "baz.qux"', text)
         self.assertIn('mas "Xcode"', text)
+        self.assertTrue(complete)
+
+    def test_dnf_image_packages_and_auto_updates_are_not_candidates(self):
+        text, complete = report.build_report(
+            opts_for(self.root, "fedora", flatpak=False), runner=dnf_runner
+        )
+        self.assertIn("+ fedy", text)
+        self.assertIn("+ vim-enhanced", text)
+        self.assertIn("+ extra-user", text)
+        self.assertNotIn("+ kernel", text)
+        self.assertNotIn("+ glibc", text)
+        self.assertNotIn("+ fedora-release-workstation", text)
+        self.assertNotIn("+ subversion", text)
+        self.assertNotIn("+ gpu-firmware", text)
+        self.assertTrue(complete)
+
+    def test_dnf_history_unavailable_falls_back_to_install_time_window(self):
+        rpm_qa_with_times = "glibc 100\nold-base 100\nextra-user 1000000\n"
+
+        def runner(argv, **overrides):
+            if tuple(argv) == ("rpm", "-qa", "--qf", "%{NAME} %{INSTALLTIME}\\n"):
+                return rpm_qa_with_times
+            if argv[:2] == ["dnf", "history"]:
+                raise report.CollectorError("history unavailable")
+            return dnf_runner(argv, **overrides)
+
+        text, complete = report.build_report(
+            opts_for(self.root, "fedora", flatpak=False), runner=runner
+        )
+        self.assertIn("+ extra-user", text)
+        self.assertNotIn("+ glibc", text)
+        self.assertNotIn("+ old-base", text)
         self.assertTrue(complete)
 
     def test_failed_collector_never_fabricates_missing_packages(self):
