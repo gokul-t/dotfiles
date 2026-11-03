@@ -14,7 +14,8 @@
     dotfiles_package_report_label: com.dotfiles.package-report
     dotfiles_package_report_command: >-
       {{
-        ['/usr/bin/env', 'python3', dotfiles_repo_path ~ '/ansible/scripts/package-report.py',
+        ['user-installed-packages', 'report',
+         '--manifest-dir', dotfiles_repo_path ~ '/ansible/packages',
          '--output', dotfiles_package_report_dir ~ '/package-report.txt']
         + (['--no-flatpak'] if not dotfiles_install_flatpak_apps | bool else [])
         + (['--no-snap'] if not dotfiles_install_snap_apps | bool else [])
@@ -108,7 +109,8 @@
       ansible.builtin.debug:
         msg: >-
           No systemd user manager (and no enabled cron fallback). Run
-          ansible/scripts/package-report.py manually instead.
+          user-installed-packages report --manifest-dir
+          {{ dotfiles_repo_path }}/ansible/packages manually instead.
       when:
         - dotfiles_package_report_schedule | bool
         - not dotfiles_package_report_systemd | bool
