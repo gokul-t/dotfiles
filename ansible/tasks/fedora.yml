@@ -225,7 +225,7 @@
       - "{{ item.url }}"
   loop:
     - name: flathub
-      url: https://flathub.org/repo/flathub.flatpakrepo
+      url: https://dl.flathub.org/repo/flathub.flatpakrepo
     - name: fedora
       url: https://dl.fedoraproject.org/pub/flatpak/repo/fedora.flatpakrepo
   when:

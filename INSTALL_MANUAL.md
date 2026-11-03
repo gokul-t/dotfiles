@@ -33,6 +33,8 @@ Depending on your OS, install the required dependencies:
 **Fedora:**
 ```sh
 sudo dnf install $(grep -v '^#' ~/.dotfiles/ansible/packages/dnf-packages.txt | xargs)
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak remote-add --if-not-exists fedora https://dl.fedoraproject.org/pub/flatpak/repo/fedora.flatpakrepo
 while read -r remote app; do
   case "$remote" in ""|\#*) continue ;; esac
   flatpak install --assumeyes "$remote" "$app"
