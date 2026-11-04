@@ -73,6 +73,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 platform=""
+is_ubuntu=false
 case "$(uname -s)" in
   Darwin)
     platform="macos"
@@ -83,27 +84,25 @@ case "$(uname -s)" in
     fi
     # shellcheck disable=SC1091
     . /etc/os-release
-    case "${ID:-}" in
-      fedora)
-        platform="fedora"
-        ;;
-      ubuntu)
-        platform="ubuntu"
-        ;;
-      debian)
-        if [[ "$dotfiles_profile" == "server" ]]; then
-          platform="debian"
-        else
-          fail "Debian is only supported for the 'server' profile. Use --profile server."
-        fi
-        ;;
-      *)
-        fail "Unsupported Linux distribution '${ID:-unknown}'. Supported: Fedora and Ubuntu/WSL (Debian with --profile server)."
-        ;;
-    esac
+    # Classify into a package-manager family: Fedora (dnf) or the Debian
+    # family (apt). Fedora is matched strictly by ID: EL derivatives
+    # (Rocky, Alma, Oracle, ...) list "fedora" in ID_LIKE and must fail.
+    # The Debian family is matched by ID or ID_LIKE (derivatives such as
+    # Linux Mint report e.g. ID=linuxmint, ID_LIKE="ubuntu debian").
+    linux_release_tokens=" $(printf '%s %s' "${ID:-}" "${ID_LIKE:-}" | tr '[:upper:]' '[:lower:]') "
+    if [[ "$(printf '%s' "${ID:-}" | tr '[:upper:]' '[:lower:]')" == "fedora" ]]; then
+      platform="fedora"
+    elif [[ "$linux_release_tokens" == *" debian "* || "$linux_release_tokens" == *" ubuntu "* ]]; then
+      platform="apt"
+      if [[ "$linux_release_tokens" == *" ubuntu "* ]]; then
+        is_ubuntu=true
+      fi
+    else
+      fail "Unsupported Linux distribution '${ID:-unknown}'. Supported: Fedora; Ubuntu 24.04+ and Debian 13+ and their derivatives (incl. WSL); macOS."
+    fi
     ;;
   *)
-    fail "Unsupported operating system. Supported: Fedora, Ubuntu/WSL, and macOS."
+    fail "Unsupported operating system. Supported: Fedora, Ubuntu 24.04+ and Debian 13+ (and their derivatives, incl. WSL), and macOS."
     ;;
 esac
 
@@ -121,7 +120,7 @@ if ((${#packages[@]})); then
       command -v sudo >/dev/null 2>&1 || fail "Install sudo to bootstrap system packages."
       sudo dnf install -y "${packages[@]}"
       ;;
-    ubuntu|debian)
+    apt)
       command -v sudo >/dev/null 2>&1 || fail "Install sudo to bootstrap system packages."
       sudo apt-get update
       sudo apt-get install -y "${packages[@]}"
@@ -137,8 +136,8 @@ command -v git >/dev/null 2>&1 || fail "Git is required but was not installed."
 command -v ansible-playbook >/dev/null 2>&1 || fail "Ansible is required but was not installed."
 
 is_wsl=false
-if [[ "$platform" == "ubuntu" ]] \
-  && { [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease; }; then
+if [[ "$(uname -s)" == "Linux" ]] \
+  && { [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease 2>/dev/null; }; then
   is_wsl=true
 fi
 
@@ -239,7 +238,7 @@ fi
 
 ansible-playbook "${ansible_args[@]}"
 
-if [[ "$dotfiles_profile" != "server" ]] && { [[ "$platform" == "fedora" ]] || ( [[ "$platform" == "ubuntu" ]] && [[ "$is_wsl" == false ]] ); }; then
+if [[ "$dotfiles_profile" != "server" ]] && { [[ "$platform" == "fedora" ]] || ( [[ "$is_ubuntu" == true ]] && [[ "$is_wsl" == false ]] ); }; then
   if [[ -d "$HOME/.config/toshy" ]]; then
     printf 'Toshy is already installed; skipping the optional Toshy setup.\n'
   else

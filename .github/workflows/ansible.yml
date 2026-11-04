@@ -83,6 +83,24 @@ jobs:
       - name: Provision Ubuntu container and verify idempotence
         run: docker run --rm dotfiles-ubuntu-test
 
+  debian-container:
+    name: Debian 13 provisioning
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build Debian 13 provisioning image
+        run: >-
+          docker build --build-arg BASE_IMAGE=debian:13
+          --file ansible/containers/ubuntu.Dockerfile
+          --tag dotfiles-debian-test .
+
+      - name: Provision Debian 13 container and verify idempotence
+        run: docker run --rm dotfiles-debian-test
+
   server-container:
     name: ${{ matrix.name }} server provisioning
     if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')

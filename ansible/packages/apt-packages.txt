@@ -1,4 +1,4 @@
-# Ubuntu packages for the shared workstation setup.
+# Ubuntu/Debian packages for the shared workstation setup.
 # Apps unavailable in Ubuntu's APT repositories are listed in
 # snap-packages.txt.
 

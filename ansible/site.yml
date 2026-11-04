@@ -22,14 +22,45 @@
         file: "profiles/{{ dotfiles_base_profile }}.yml"
       tags: [always]
 
+    - name: Disable Snap by default outside Ubuntu
+      ansible.builtin.set_fact:
+        dotfiles_install_snap_apps: false
+      when:
+        - ansible_facts['os_family'] == 'Debian'
+        - ansible_facts['distribution'] != 'Ubuntu'
+        - dotfiles_install_snap_apps | bool
+      tags: [always]
+
     - name: Check supported operating system
       ansible.builtin.assert:
         that:
           - >-
             (dotfiles_profile in ["default", "personal", "work"] and
-             (ansible_facts['distribution'] in ["Fedora", "Ubuntu"] or ansible_facts['system'] == "Darwin")) or
-            (dotfiles_profile == "server" and ansible_facts['distribution'] in ["Ubuntu", "Debian"])
-        fail_msg: "Unsupported OS/Profile combination. Profiles default/personal/work support Fedora, Ubuntu, macOS. Server supports Ubuntu, Debian."
+             (ansible_facts['system'] == "Darwin" or
+              ansible_facts['distribution'] == "Fedora" or
+              ansible_facts['os_family'] == "Debian")) or
+            (dotfiles_profile == "server" and
+             ansible_facts['os_family'] == "Debian")
+        fail_msg: >-
+          Unsupported OS/profile combination. Profiles default/personal/work support
+          Fedora, macOS, and Debian-family distributions (Ubuntu 24.04+ or Debian 13+).
+          The server profile supports Debian-family distributions only (Ubuntu 24.04+ or Debian 13+).
+      tags: [always]
+
+    - name: Require Debian 13 or newer
+      ansible.builtin.assert:
+        that:
+          - (ansible_facts['distribution_major_version'] | int) >= 13
+        fail_msg: "Debian {{ ansible_facts['distribution_version'] }} is not supported. Debian 13 (trixie) or newer is required."
+      when: ansible_facts['distribution'] == 'Debian'
+      tags: [always]
+
+    - name: Require Ubuntu 24.04 or newer
+      ansible.builtin.assert:
+        that:
+          - (ansible_facts['distribution_major_version'] | int) >= 24
+        fail_msg: "Ubuntu {{ ansible_facts['distribution_version'] }} is not supported. Ubuntu 24.04 or newer is required."
+      when: ansible_facts['distribution'] == 'Ubuntu'
       tags: [always]
 
     - name: Require a supported private overlay profile
@@ -48,29 +79,6 @@
         dotfiles_private_package_manifests: >-
           {{
             (['Brewfile']
-             if dotfiles_private_profile == 'work'
-             else (
-               ['Brewfile']
-               if ansible_facts['system'] == 'Darwin'
-               else (
-                 ['apt-packages.txt']
-                 + (['snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
-                 if ansible_facts['distribution'] == 'Ubuntu'
-                 else (
-                   ['dnf-packages.txt']
-                   + (['flatpak-packages.txt'] if dotfiles_install_flatpak_apps | bool else [])
-                 )
-               )
-             ))
-          }}
-      when: dotfiles_private_enabled | bool
-      tags: [always]
-
-    - name: Select private overlay package manifests for this platform
-      ansible.builtin.set_fact:
-        dotfiles_private_package_manifests: >-
-          {{
-            (['Brewfile']
              if dotfiles_private_profile in ['work', 'personal'] and ansible_facts['system'] == 'Darwin'
              else (
                ['Brewfile']
@@ -78,7 +86,7 @@
                else (
                  ['apt-packages.txt']
                  + (['snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
-                 if ansible_facts['distribution'] == 'Ubuntu'
+                 if ansible_facts['os_family'] == 'Debian'
                  else (
                    ['dnf-packages.txt']
                    + (['flatpak-packages.txt'] if dotfiles_install_flatpak_apps | bool else [])
@@ -109,14 +117,14 @@
         - ansible_facts['distribution'] == "Fedora"
       tags: [packages]
 
-    - name: Install Ubuntu packages
+    - name: Install apt-family packages
       ansible.builtin.include_tasks:
         file: tasks/ubuntu.yml
         apply:
           tags: [packages]
       when:
         - dotfiles_profile in ["default", "personal", "work"]
-        - ansible_facts['distribution'] == "Ubuntu"
+        - ansible_facts['os_family'] == "Debian"
       tags: [packages]
 
     - name: Install macOS packages

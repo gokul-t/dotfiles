@@ -4,7 +4,7 @@
     dotfiles_package_report_skips: >-
       {{
         (dotfiles_fedora_skip_packages if ansible_facts['distribution'] == 'Fedora'
-         else dotfiles_ubuntu_skip_packages if ansible_facts['distribution'] == 'Ubuntu'
+         else dotfiles_ubuntu_skip_packages if ansible_facts['os_family'] == 'Debian'
          else [])
         | map('regex_replace', '^', '--skip=') | list
       }}

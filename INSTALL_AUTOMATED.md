@@ -11,7 +11,7 @@ curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/boots
 ```
 
 ### What this does:
-1. **Bootstraps**: Installs Ansible and Git using the native package manager (`dnf` for Fedora, `apt` for Ubuntu/WSL, `brew` for macOS).
+1. **Bootstraps**: Installs Ansible and Git using the native package manager (`dnf` for Fedora, `apt` for Ubuntu/Debian and derivatives (incl. WSL), `brew` for macOS).
 2. **Clones**: Pulls this repository into `~/.dotfiles`.
 3. **Provisions**: Runs the Ansible playbook to:
    - Install all system packages listed in `ansible/packages/` (`dnf-packages.txt`, `apt-packages.txt`, or `Brewfile`).
@@ -23,18 +23,33 @@ curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/boots
 
 With the default profile selected, bootstrap installs the shared public workstation configuration only. It does not initialize or link the private personal or work settings.
 
+## 🖥️ Supported Operating Systems
+
+| Platform | Profiles |
+|---|---|
+| Fedora (current stable) | all |
+| macOS | all |
+| Ubuntu 24.04+ and derivatives based on it (Linux Mint 22, Pop!_OS 24.04, Zorin 18, Kali, ...), incl. WSL | all |
+| Debian 13+ and derivatives based on it (Raspberry Pi OS trixie, ...), incl. WSL | all |
+
+Notes:
+- Minimum versions are enforced: Ubuntu 24.04 and Debian 13 (trixie) are the floors; older releases fail fast with a clear error.
+- Derivatives are supported when based on those floors.
+- Snap is off by default on non-Ubuntu Debian-family systems; opt in with `-e dotfiles_install_snap_apps=true`.
+- Anything outside this list fails fast with a message naming the supported platforms.
+
 ---
 
 ## 🏠 Homelab Server Setup
 
-For minimal server installations (Ubuntu 24.04 or Debian 13), use the `server` profile. This installs only a lean set of essentials, skips GUI apps, and avoids changing your login shell.
+For minimal server installations (Ubuntu 24.04+ or Debian 13+), use the `server` profile. This installs only a lean set of essentials, skips GUI apps, and avoids changing your login shell.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/bootstrap.sh | bash -s -- --profile server
 ```
 
 ### Server Profile Details:
-- **Supported OS**: Ubuntu 24.04, Debian 13.
+- **Supported OS**: Ubuntu 24.04+, Debian 13+.
 - **Installed**: Core utilities (`curl`, `git`, `vim`, `tmux`, `htop`, `ripgrep`, `jq`, etc.).
 - **Stowed**: Only the `vim` configuration.
 - **Preserved**: Existing login shell and Bash configuration. tmux uses its defaults (the workstation tmux config is not linked).
@@ -71,7 +86,7 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow \
 **Key symmetry**: Both `personal` and `work` overlays can include the same types of files:
 - `ansible/packages/Brewfile` (macOS Homebrew packages)
 - `.config/mise/config.local.toml` (mise tool versioning config)
-- OS-specific package manifests (Fedora DNF/Flatpak, Ubuntu APT/Snap, macOS Brewfile)
+- OS-specific package manifests (Fedora DNF/Flatpak, Ubuntu/Debian APT/Snap, macOS Brewfile)
 - Home-layout dotfiles (`.identity.conf`, `.config/zsh/...`, etc.)
 
 **All files are optional**: Only include what you need in your overlay. Missing files are silently skipped.
@@ -99,12 +114,12 @@ user-installed-packages report --manifest-dir ~/.dotfiles/ansible/packages \
   --snap-manifest snap-packages.txt \
   --snap-manifest ~/.dotfiles/personal/ansible/packages/snap-packages.txt
 ```
-The [user-installed-packages](https://github.com/gokul-t/user-installed-packages) project provides the report command and the explicit APT/DNF package detection it uses. The playbook installs it via `pipx` into `~/.local/bin` on macOS, Fedora, and Ubuntu (`dotfiles_user_installed_packages_version` in `ansible/vars.yml` pins the release; bump it deliberately). To install by hand instead:
+The [user-installed-packages](https://github.com/gokul-t/user-installed-packages) project provides the report command and the explicit APT/DNF package detection it uses. The playbook installs it via `pipx` into `~/.local/bin` on macOS, Fedora, and Ubuntu/Debian (`dotfiles_user_installed_packages_version` in `ansible/vars.yml` pins the release; bump it deliberately). To install by hand instead:
 ```sh
 pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.5.0
 ```
 - `+` lines are installed (explicitly) but not in the manifest; `-` lines are in the manifest but not installed here (possibly intentional). Review and edit the corresponding file in `ansible/packages/` or, for personal entries, `personal/ansible/packages/`. Nothing is installed, removed, or committed by the report.
-- Covers Homebrew formulae/casks/taps and Brewfile VS Code extensions (macOS), DNF + Flatpak (Fedora), APT + Snap (Ubuntu). Options: `--skip NAME`, `--no-flatpak`, `--no-snap`. Mise runtimes, plugins, and manually downloaded binaries are not covered.
+- Covers Homebrew formulae/casks/taps and Brewfile VS Code extensions (macOS), DNF + Flatpak (Fedora), APT + Snap (Ubuntu/Debian). Options: `--skip NAME`, `--no-flatpak`, `--no-snap`. Mise runtimes, plugins, and manually downloaded binaries are not covered.
 - `--manifest-dir` defaults to `./ansible/packages`. Per-package options (`--dnf-manifest`, `--apt-manifest`, `--flatpak-manifest`, `--snap-manifest`, `--brewfile`) accept paths or filenames relative to that directory, and may be repeated to compare shared and private manifests together. Personal mode passes the public and private manifest paths directly to the report command; no copied/merged report manifests are needed.
 - The DNF check compares only command-line-installed (`reason=User`) packages. OS-image packages are detected from the earliest dnf history transactions (falling back to an install-time window on machines without usable history). Group and dependency installs (including image group installs) and kernels installed by system updates are not compared.
 - Detection for DNF and APT uses the user-installed-packages library; see its README for the exact algorithm and known limitations (e.g. the apt check subtracts the installer-recorded base set from `/var/log/installer/initial-status.gz`, and image group installs can never be told apart in general). Degradations (missing installer log, missing dnf history) are surfaced as warnings in the report notes.
@@ -123,7 +138,8 @@ The machine must be on and logged in; cron does not replay missed runs, systemd 
 ---
 
 ### WSL & macOS Notes
-- **WSL**: The bootstrap script disables Snap installation (`snapd` often requires systemd). When running the playbook directly, pass `-e dotfiles_install_snap_apps=false`.
+- **WSL**: The bootstrap script disables Snap installation on WSL (`snapd` often requires systemd), on any Linux distribution. When running the playbook directly, pass `-e dotfiles_install_snap_apps=false`.
+- **Debian-family "derivatives"**: Linux Mint, Pop!_OS, Zorin, etc. are recognized through `ID_LIKE`; support requires a base on Ubuntu 24.04+ or Debian 13+. Snap is off by default outside Ubuntu (opt in with `-e dotfiles_install_snap_apps=true`).
 - **macOS**: Ensure Homebrew is installed before running the bootstrap script.
 
 ---
@@ -135,7 +151,7 @@ The automated setup is a wrapper around a set of manual steps. If you are curiou
 ### Manual Playbook Execution
 If you already have Ansible installed and want to run the playbook manually:
 ```sh
-# Fedora/Ubuntu
+# Fedora/Ubuntu/Debian
 ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass
 
 # macOS
@@ -148,10 +164,14 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass -e 
 ```
 
 ### Testing in Containers
-You can test the provisioning without affecting your host system using the provided Dockerfiles:
+You can test the provisioning without affecting your host system using the provided Dockerfiles (the Ubuntu image is parameterized; pass `BASE_IMAGE` for Debian):
 ```sh
 docker build -f ansible/containers/fedora.Dockerfile -t dotfiles-test:fedora .
 docker run --rm dotfiles-test:fedora
+
+docker build --build-arg BASE_IMAGE=debian:13 \
+  -f ansible/containers/ubuntu.Dockerfile -t dotfiles-test:debian .
+docker run --rm dotfiles-test:debian
 ```
 
 ### Testing Stow Selection

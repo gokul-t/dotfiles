@@ -88,4 +88,4 @@
   environment:
     GOBIN: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
     MISE_CONFIG_DIR: "{{ dotfiles_stow_target }}/.config/mise"
-  when: ansible_facts['distribution'] == "Ubuntu"
+  when: ansible_facts['os_family'] == "Debian"

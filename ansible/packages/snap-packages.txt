@@ -1,4 +1,4 @@
-# Ubuntu alternatives to apps delivered through Fedora repositories or Flatpak.
+# APT-family (Ubuntu/Debian) alternatives to apps delivered through Fedora repositories or Flatpak.
 # Add --classic only for snaps that require classic confinement.
 code --classic
 ghostty --classic
