@@ -24,22 +24,15 @@
     - dotfiles_private_enabled | bool
     - dotfiles_overlay_brew_bundle_check.rc != 0
 
-- name: Install work taps from the private overlay Brewfile
-  ansible.builtin.command:
-    argv:
-      - brew
-      - bundle
-      - install
-      - --file
-      - "{{ dotfiles_private_path }}/ansible/packages/Brewfile"
-  when:
-    - dotfiles_private_enabled | bool
-    - dotfiles_overlay_brew_bundle_check.rc != 0
-
 - name: Read the configured overlay tap remotes
   ansible.builtin.command:
     cmd: "git -C \"$(brew --repo {{ item[0] }})\" remote get-url origin"
-  loop: "{{ lookup('file', dotfiles_private_path ~ '/ansible/packages/Brewfile') | regex_findall('(?m)^tap \"([^\"]+)\", \"([^\"]+)\"') }}"
+  loop: >-
+    {{
+      (lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/Brewfile', errors='ignore') | regex_findall('(?m)^tap "([^"]+)", "([^"]+)"')
+       if (dotfiles_private_package_manifests | default([]) | contains('Brewfile'))
+       else [])
+    }}
   loop_control:
     label: "{{ item[0] }}"
   register: dotfiles_overlay_tap_remotes
@@ -47,7 +40,7 @@
   failed_when: false
   when: dotfiles_private_enabled | bool
 
-- name: Warn about overlay taps that do not use the work remote
+- name: Warn about overlay taps that do not use the expected remote
   ansible.builtin.debug:
     msg: >-
       Tap {{ item.item[0] }} uses '{{ item.stdout | default('unknown') | trim }}' instead of

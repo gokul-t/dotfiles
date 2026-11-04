@@ -82,16 +82,10 @@
   ansible.builtin.set_fact:
     dotfiles_dnf_overlay_packages: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/dnf-packages.txt')
-        .splitlines()
-        | map('trim')
-        | reject('match', '^#')
-        | reject('equalto', '')
-        | list
+        (lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/dnf-packages.txt', errors='ignore') | default('') | splitlines()
+         | map('trim') | reject('match', '^#') | reject('equalto', '') | list) if ('dnf-packages.txt' in (dotfiles_private_package_manifests | default([])) else []
       }}
-  when:
-    - dotfiles_private_enabled | bool
-    - "'dnf-packages.txt' in dotfiles_private_package_manifests"
+  when: dotfiles_private_enabled | bool
 
 - name: Combine shared and private overlay Fedora package manifests
   ansible.builtin.set_fact:

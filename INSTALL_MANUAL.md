@@ -66,6 +66,17 @@ brew bundle --file ~/.dotfiles/ansible/packages/Brewfile
 stow --dir ~/.dotfiles --target ~ work
 ```
 
+**Personal machine:** select personal mode with the bootstrap script:
+```sh
+~/.dotfiles/ansible/bootstrap.sh --profile personal
+```
+Then install the personal overlay Brewfile before the shared one and link the personal overlay:
+```sh
+brew bundle --file ~/.dotfiles/personal/ansible/packages/Brewfile
+brew bundle --file ~/.dotfiles/ansible/packages/Brewfile
+stow --dir ~/.dotfiles --target ~ personal
+```
+
 ### 4. Tool-Specific Configurations
 
 #### Tmux Plugin Manager (TPM)
@@ -98,7 +109,7 @@ git clone https://github.com/cufarvid/lazy-idea.git ~/.lazy-idea
 ```sh
 curl https://mise.run | sh
 mise trust ~/.config/mise/config.toml
-mise trust ~/.config/mise/config.local.toml   # work mode only (linked from the work submodule)
+mise trust ~/.config/mise/config.local.toml   # personal or work mode (linked from the private overlay submodule)
 mise install
 ```
 

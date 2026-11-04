@@ -159,20 +159,8 @@ dotfiles_overlay_initialized=false
 
 dotfiles_overlay_required_files() {
   case "$1" in
-    personal)
+    personal|work)
       cat <<'EOF'
-.identity.conf
-.config/zsh/user-env.d/env.zsh
-ansible/packages/Brewfile
-ansible/packages/dnf-packages.txt
-ansible/packages/flatpak-packages.txt
-ansible/packages/ubuntu-packages.txt
-ansible/packages/ubuntu-snap-packages.txt
-EOF
-      ;;
-    work)
-      cat <<'EOF'
-.config/mise/config.local.toml
 ansible/packages/Brewfile
 EOF
       ;;

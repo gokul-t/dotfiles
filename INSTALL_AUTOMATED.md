@@ -67,23 +67,28 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow \
 - `dotfiles_skip_tools` currently supports only `bin`.
 
 ### Personal and Work Settings
-Personal and work settings are optional workstation overlays. Select personal mode to initialize the private `personal` submodule and link its Zsh additions, Git identity, and other home-layout files. Personal mode also adds packages from the OS-specific manifests under `personal/ansible/packages/` (DNF/Flatpak on Fedora, APT/Snap on Ubuntu, and a Brewfile on macOS); shared mode never reads those private manifests.
 
+**Key symmetry**: Both `personal` and `work` overlays can include the same types of files:
+- `ansible/packages/Brewfile` (macOS Homebrew packages)
+- `.config/mise/config.local.toml` (mise tool versioning config)
+- OS-specific package manifests (Fedora DNF/Flatpak, Ubuntu APT/Snap, macOS Brewfile)
+- Home-layout dotfiles (`.identity.conf`, `.config/zsh/...`, etc.)
+
+**All files are optional**: Only include what you need in your overlay. Missing files are silently skipped.
+
+Select personal mode:
 ```sh
 ./ansible/bootstrap.sh --profile personal
 ```
 
-For direct playbook runs, initialize the submodule first with `git submodule update --init personal`, then pass `-e dotfiles_private_enabled=true -e dotfiles_private_profile=personal`.
-
-Work and personal settings are mutually exclusive. Select work mode with:
+Work and personal settings are mutually exclusive. Select work mode:
 ```sh
 ./ansible/bootstrap.sh --profile work
 ```
-- If the `work` submodule is not already present, bootstrap prompts for its private repository URL and adds it locally as `work`. Leave the URL blank to continue with shared workstation configuration only; personal settings are not linked in work mode.
-- `git submodule add` stages the local `.gitmodules` entry and `work` gitlink. Bootstrap does not commit or push them; keep the private URL local and do not push it to the public dotfiles repository.
-- Work mode uses internal Homebrew taps (`work/ansible/packages/Brewfile`), a mise overlay (`.config/mise/config.local.toml`, layered over the shared `config.toml`), and other home-layout dotfiles. Required files are checked before provisioning.
-- On macOS the work Brewfile runs before the shared one, and a warning is printed if an existing tap's remote differs. Brew Bundle does not change existing remotes; retap manually if needed.
-- Selecting a different mode later is not an undo: old links and taps remain. Remove work links with `stow --dir ~/.dotfiles --target ~ --delete work`; personal links with `stow --dir ~/.dotfiles --target ~ --delete personal`.
+- If the `work` submodule is not already present, bootstrap prompts for its private repository URL. Leave the URL blank to continue with shared workstation configuration only.
+- On macOS an overlay Brewfile runs before the shared one; a warning is printed if an existing tap's remote differs. Brew Bundle leaves existing tap remotes untouched; retap manually if needed.
+- Selecting a different mode later is not an undo: old links remain. Remove work links with `stow --dir ~/.dotfiles --target ~ --delete work`; personal links with `stow --dir ~/.dotfiles --target ~ --delete personal`.
+
 
 ### Package Drift Report
 Package manifests are curated by hand; a dump of everything installed would pull in dependencies, OS defaults, and machine-specific tools. Instead, a read-only report shows what differs:

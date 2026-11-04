@@ -27,15 +27,6 @@
   register: dotfiles_mise_overlay_config
   when: dotfiles_private_enabled | bool
 
-- name: Require the linked private overlay mise config
-  ansible.builtin.assert:
-    that: dotfiles_mise_overlay_config.stat.exists
-    fail_msg: >-
-      dotfiles_private_enabled is true but {{ dotfiles_stow_target }}/.config/mise/config.local.toml
-      is missing. Run the stow step (resolve any reported Stow conflicts) and retry.
-    quiet: true
-  when: dotfiles_private_enabled | bool
-
 - name: Trust the linked private overlay mise config
   ansible.builtin.command:
     argv:
@@ -44,7 +35,9 @@
       - "{{ dotfiles_stow_target }}/.config/mise/config.local.toml"
   args:
     chdir: "{{ dotfiles_stow_target }}"
-  when: dotfiles_private_enabled | bool
+  when:
+    - dotfiles_private_enabled | bool
+    - dotfiles_mise_overlay_config.stat.exists
   changed_when: false
   environment:
     MISE_CONFIG_DIR: "{{ dotfiles_stow_target }}/.config/mise"

@@ -15,16 +15,10 @@
   ansible.builtin.set_fact:
     dotfiles_ubuntu_overlay_packages: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/ubuntu-packages.txt')
-        .splitlines()
-        | map('trim')
-        | reject('match', '^#')
-        | reject('equalto', '')
-        | list
+        (lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/ubuntu-packages.txt', errors='ignore') | default('') | splitlines()
+         | map('trim') | reject('match', '^#') | reject('equalto', '') | list) if ('ubuntu-packages.txt' in (dotfiles_private_package_manifests | default([]))) else []
       }}
-  when:
-    - dotfiles_private_enabled | bool
-    - "'ubuntu-packages.txt' in dotfiles_private_package_manifests"
+  when: dotfiles_private_enabled | bool
 
 - name: Combine and filter Ubuntu APT packages
   ansible.builtin.set_fact:
@@ -241,17 +235,10 @@
   ansible.builtin.set_fact:
     dotfiles_ubuntu_overlay_snaps: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/ubuntu-snap-packages.txt')
-        .splitlines()
-        | map('trim')
-        | reject('match', '^#')
-        | reject('equalto', '')
-        | list
+        (lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/ubuntu-snap-packages.txt', errors='ignore') | default('') | splitlines()
+         | map('trim') | reject('match', '^#') | reject('equalto', '') | list) if ('ubuntu-snap-packages.txt' in (dotfiles_private_package_manifests | default([]))) else []
       }}
-  when:
-    - dotfiles_install_snap_apps | bool
-    - dotfiles_private_enabled | bool
-    - "'ubuntu-snap-packages.txt' in dotfiles_private_package_manifests"
+  when: dotfiles_install_snap_apps | bool and dotfiles_private_enabled | bool
 
 - name: Combine shared and private overlay Ubuntu Snap manifests
   ansible.builtin.set_fact:

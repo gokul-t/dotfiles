@@ -43,37 +43,6 @@
       when: dotfiles_private_enabled | bool
       tags: [always]
 
-    - name: Check the private overlay files
-      ansible.builtin.stat:
-        path: "{{ dotfiles_private_path }}/{{ item }}"
-      loop: >-
-        {{
-          (['.config/mise/config.local.toml', 'ansible/packages/Brewfile'] if dotfiles_private_profile == 'work'
-           else [
-             '.identity.conf',
-             '.config/zsh/user-env.d/env.zsh',
-             'ansible/packages/Brewfile',
-             'ansible/packages/dnf-packages.txt',
-             'ansible/packages/flatpak-packages.txt',
-             'ansible/packages/ubuntu-packages.txt',
-             'ansible/packages/ubuntu-snap-packages.txt',
-           ])
-        }}
-      register: dotfiles_private_files
-      when: dotfiles_private_enabled | bool
-      tags: [always]
-
-    - name: Require an initialized private overlay
-      ansible.builtin.assert:
-        that:
-          - dotfiles_private_files.results | map(attribute='stat.exists') | list | min
-        fail_msg: >-
-          dotfiles_private_enabled is true but required files are missing under
-          {{ dotfiles_private_path }}. Run: git submodule update --init {{ dotfiles_private_profile }}
-        quiet: true
-      when: dotfiles_private_enabled | bool
-      tags: [always]
-
     - name: Select private overlay package manifests for this platform
       ansible.builtin.set_fact:
         dotfiles_private_package_manifests: >-
@@ -97,24 +66,37 @@
       when: dotfiles_private_enabled | bool
       tags: [always]
 
+    - name: Select private overlay package manifests for this platform
+      ansible.builtin.set_fact:
+        dotfiles_private_package_manifests: >-
+          {{
+            (['Brewfile']
+             if dotfiles_private_profile in ['work', 'personal'] and ansible_facts['system'] == 'Darwin'
+             else (
+               ['Brewfile']
+               if dotfiles_private_profile in ['work', 'personal']
+               else (
+                 ['ubuntu-packages.txt']
+                 + (['ubuntu-snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
+                 if ansible_facts['distribution'] == 'Ubuntu'
+                 else (
+                   ['dnf-packages.txt']
+                   + (['flatpak-packages.txt'] if dotfiles_install_flatpak_apps | bool else [])
+                 )
+               )
+             ))
+          }}
+      when: dotfiles_private_enabled | bool
+      tags: [always]
+
     - name: Check the private overlay package manifests
       ansible.builtin.stat:
         path: "{{ dotfiles_private_path }}/ansible/packages/{{ item }}"
       loop: "{{ dotfiles_private_package_manifests | default([]) }}"
       register: dotfiles_private_package_manifest_files
-      when: dotfiles_private_enabled | bool
-      tags: [always]
-
-    - name: Require the private overlay package manifests
-      ansible.builtin.assert:
-        that:
-          - dotfiles_private_package_manifest_files.results | map(attribute='stat.exists') | list | min
-        fail_msg: >-
-          One or more private overlay package manifests are missing under
-          {{ dotfiles_private_path }}/ansible/packages.
-          Run: git submodule update --init {{ dotfiles_private_profile }}
-        quiet: true
-      when: dotfiles_private_enabled | bool
+      when:
+        - dotfiles_private_enabled | bool
+        - dotfiles_private_package_manifests | length > 0
       tags: [always]
 
     - name: Install Fedora packages

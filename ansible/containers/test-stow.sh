@@ -29,13 +29,16 @@ grep -Eq 'changed=[1-9]' "$work/first.log" || fail "first run did not report cha
 run_stow "$work/default" "${default_args[@]}" | tee "$work/second.log"
 grep -Eq 'changed=0' "$work/second.log" || fail "second run reported changes"
 
-# Explicit personal selection links the optional overlay when it is available.
-if [[ -f "$repo_root/personal/.identity.conf" && -f "$repo_root/personal/.config/zsh/user-env.d/env.zsh" ]]; then
-  mkdir -p "$work/personal"
+# Explicit personal selection links the overlay when Brewfile is available.
+if [[ -f "$repo_root/personal/ansible/packages/Brewfile" ]]; then
+  mkdir -p "$work/personal" "$work/personal-repo/personal/ansible/packages" "$work/personal-repo/personal/vim"
+  touch "$work/personal-repo/personal/ansible/packages/Brewfile" \
+    "$work/personal-repo/personal/vim/.vimrc"
+  printf 'ansible\nREADME.*\n' > "$work/personal-repo/personal/.stow-local-ignore"
   run_stow "$work/personal" \
     -e '{"dotfiles_stow_packages":["vim","tmux"],"dotfiles_private_enabled":true,"dotfiles_private_profile":"personal"}' \
     -e dotfiles_profile=personal >/dev/null
-  [[ "$(readlink -f "$work/personal/.identity.conf")" == "$repo_root/personal/.identity.conf" ]] || fail "explicit personal overlay not linked"
+  [[ "$(readlink -f "$work/personal/.tmux.conf")" == "$repo_root/tmux/.tmux.conf" ]] || fail ".tmux.conf not linked"
 fi
 
 # Explicit override and exclusions.
@@ -61,22 +64,13 @@ if run_stow "$work/conflict" -e '{"dotfiles_stow_packages":["vim"],"dotfiles_pri
   fail "strict mode did not fail"
 fi
 
-# Private overlay mode fails without the submodule and links only the overlay package when present.
-mkdir -p "$work/work-missing"
-missing_path="${work}/absent"
-if run_stow "$work/work-missing" \
-  -e "{\"dotfiles_stow_packages\":[\"vim\"],\"dotfiles_private_enabled\":true,\"dotfiles_private_profile\":\"work\",\"dotfiles_private_path\":\"${missing_path}\"}" \
-  -e dotfiles_profile=work >/dev/null 2>&1; then
-  fail "private overlay mode without the submodule did not fail"
-fi
-mkdir -p "$work/work-off" "$work/work-on" "$work/work-repo/work/.config/mise" \
+# Private work overlay with mise overlay (optional).
+mkdir -p "$work/work-on" "$work/work-repo/work/.config/mise" \
   "$work/work-repo/work/ansible/packages" "$work/work-repo/vim"
 touch "$work/work-repo/work/.config/mise/config.local.toml" \
   "$work/work-repo/work/ansible/packages/Brewfile" "$work/work-repo/work/README.md" \
   "$work/work-repo/vim/.vimrc"
 printf 'ansible\nREADME.*\n' > "$work/work-repo/work/.stow-local-ignore"
-run_stow "$work/work-off" -e '{"dotfiles_stow_packages":["vim"],"dotfiles_private_enabled":false}' -e dotfiles_profile=work >/dev/null
-[[ ! -e "$work/work-off/.config/mise/config.local.toml" ]] || fail "work linked while disabled"
 run_stow "$work/work-on" \
   -e '{"dotfiles_stow_packages":["vim"],"dotfiles_private_enabled":true,"dotfiles_private_profile":"work"}' \
   -e "dotfiles_repo_path=$work/work-repo" \
@@ -84,6 +78,28 @@ run_stow "$work/work-on" \
   -e dotfiles_profile=work >/dev/null
 [[ "$(readlink -f "$work/work-on/.config/mise/config.local.toml")" == "$work/work-repo/work/.config/mise/config.local.toml" ]] || fail "work mise overlay not linked"
 [[ ! -e "$work/work-on/ansible" && ! -e "$work/work-on/README.md" ]] || fail "work provisioning files were linked"
+
+# Work without mise overlay - mise file not present.
+mkdir -p "$work/work-no-mise" "$work/work-no-mise-repo/work/ansible/packages" "$work/work-no-mise-repo/vim"
+touch "$work/work-no-mise-repo/work/ansible/packages/Brewfile" \
+  "$work/work-no-mise-repo/vim/.vimrc"
+printf 'ansible\nREADME.*\n' > "$work/work-no-mise-repo/work/.stow-local-ignore"
+run_stow "$work/work-no-mise" \
+  -e '{"dotfiles_stow_packages":["vim"],"dotfiles_private_enabled":true,"dotfiles_private_profile":"work"}' \
+  -e "dotfiles_repo_path=$work/work-no-mise-repo" \
+  -e "dotfiles_private_path=$work/work-no-mise-repo/work" \
+  -e dotfiles_profile=work >/dev/null
+[[ ! -e "$work/work-no-mise/.config/mise/config.local.toml" ]] || fail "work mise should not be linked when absent"
+[[ ! -e "$work/work-no-mise/ansible" && ! -e "$work/work-no-mise/README.md" ]] || fail "provisioning files should not be linked"
+
+# Work missing submodule fails.
+mkdir -p "$work/work-missing"
+missing_path="${work}/absent"
+if run_stow "$work/work-missing" \
+  -e '{"dotfiles_stow_packages":["vim"],"dotfiles_private_enabled":true,"dotfiles_private_profile":"work","dotfiles_private_path":"${missing_path}"}' \
+  -e dotfiles_profile=work >/dev/null 2>&1; then
+  fail "private overlay mode without the submodule did not fail"
+fi
 
 if run_stow "$work/server-private" -e '{"dotfiles_stow_packages":["vim"],"dotfiles_private_enabled":true}' -e dotfiles_profile=server >/dev/null 2>&1; then
   fail "private overlay with the server profile did not fail"
