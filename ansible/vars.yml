@@ -1,5 +1,5 @@
 ---
-dotfiles_profile: workstation
+dotfiles_profile: default
 dotfiles_repo_path: "{{ playbook_dir | dirname }}"
 dotfiles_stow_target: "{{ ansible_facts['env']['HOME'] }}"
 dotfiles_install_flatpak_apps: true
@@ -35,6 +35,6 @@ dotfiles_stow_skip_packages:
   - vimium
   - windows
 dotfiles_stow_strict: false
-dotfiles_work_enabled: false
-dotfiles_work_path: "{{ dotfiles_repo_path }}/work"
-dotfiles_personal_enabled: false
+dotfiles_private_enabled: false
+dotfiles_private_profile: ""
+dotfiles_private_path: "{{ dotfiles_repo_path }}/{{ dotfiles_private_profile }}"

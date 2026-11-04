@@ -25,7 +25,7 @@ Stow manages your dotfiles by creating symlinks. Link the packages you want by n
 ```sh
 stow zsh tmux nvim git
 ```
-The default workstation package list is `dotfiles_profile_stow_packages` in `ansible/profiles/workstation.yml`. Personal settings are private and optional: only initialize and link them when desired with `git submodule update --init personal` and `stow personal`. `ansible/`, `vimium/` and `windows/` are not Stow packages: Vimium and PowerToys exports are imported manually into those applications.
+The default package list is `dotfiles_profile_stow_packages` in `ansible/profiles/default.yml`. Personal settings are private and optional: only initialize and link them when desired with `git submodule update --init personal` and `stow personal`. `ansible/`, `vimium/` and `windows/` are not Stow packages: Vimium and PowerToys exports are imported manually into those applications.
 
 ### 3. Install System Packages
 Depending on your OS, install the required dependencies:

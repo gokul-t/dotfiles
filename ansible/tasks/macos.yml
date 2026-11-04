@@ -1,76 +1,63 @@
 ---
-- name: Check whether the personal Brewfile is satisfied
+- name: Check whether the private overlay Brewfile is satisfied
   ansible.builtin.command:
     argv:
       - brew
       - bundle
       - check
       - --file
-      - "{{ dotfiles_repo_path }}/personal/ansible/packages/Brewfile"
-  register: dotfiles_personal_brew_bundle_check
+      - "{{ dotfiles_private_path }}/ansible/packages/Brewfile"
+  register: dotfiles_overlay_brew_bundle_check
   changed_when: false
   failed_when: false
-  when: dotfiles_personal_enabled | bool
+  when: dotfiles_private_enabled | bool
 
-- name: Install packages and applications from the personal Brewfile
+- name: Install packages and applications from the private overlay Brewfile
   ansible.builtin.command:
     argv:
       - brew
       - bundle
       - install
       - --file
-      - "{{ dotfiles_repo_path }}/personal/ansible/packages/Brewfile"
+      - "{{ dotfiles_private_path }}/ansible/packages/Brewfile"
   when:
-    - dotfiles_personal_enabled | bool
-    - dotfiles_personal_brew_bundle_check.rc != 0
+    - dotfiles_private_enabled | bool
+    - dotfiles_overlay_brew_bundle_check.rc != 0
 
-- name: Check whether the work Brewfile is satisfied
-  ansible.builtin.command:
-    argv:
-      - brew
-      - bundle
-      - check
-      - --file
-      - "{{ dotfiles_work_path }}/ansible/packages/Brewfile"
-  register: dotfiles_work_brew_bundle_check
-  changed_when: false
-  failed_when: false
-  when: dotfiles_work_enabled | bool
-
-- name: Install work taps from the work Brewfile
+- name: Install work taps from the private overlay Brewfile
   ansible.builtin.command:
     argv:
       - brew
       - bundle
       - install
       - --file
-      - "{{ dotfiles_work_path }}/ansible/packages/Brewfile"
+      - "{{ dotfiles_private_path }}/ansible/packages/Brewfile"
   when:
-    - dotfiles_work_enabled | bool
-    - dotfiles_work_brew_bundle_check.rc != 0
+    - dotfiles_private_enabled | bool
+    - dotfiles_overlay_brew_bundle_check.rc != 0
 
-- name: Read the configured work tap remotes
+- name: Read the configured overlay tap remotes
   ansible.builtin.command:
     cmd: "git -C \"$(brew --repo {{ item[0] }})\" remote get-url origin"
-  loop: "{{ lookup('file', dotfiles_work_path ~ '/ansible/packages/Brewfile') | regex_findall('(?m)^tap \"([^\"]+)\", \"([^\"]+)\"') }}"
+  loop: "{{ lookup('file', dotfiles_private_path ~ '/ansible/packages/Brewfile') | regex_findall('(?m)^tap \"([^\"]+)\", \"([^\"]+)\"') }}"
   loop_control:
     label: "{{ item[0] }}"
-  register: dotfiles_work_tap_remotes
+  register: dotfiles_overlay_tap_remotes
   changed_when: false
   failed_when: false
-  when: dotfiles_work_enabled | bool
+  when: dotfiles_private_enabled | bool
 
-- name: Warn about work taps that do not use the work remote
+- name: Warn about overlay taps that do not use the work remote
   ansible.builtin.debug:
     msg: >-
       Tap {{ item.item[0] }} uses '{{ item.stdout | default('unknown') | trim }}' instead of
       '{{ item.item[1] }}'. Brew Bundle leaves existing tap remotes untouched; retap manually
       (brew untap, then brew tap {{ item.item[0] }} {{ item.item[1] }}) after reviewing the impact.
-  loop: "{{ dotfiles_work_tap_remotes.results | default([]) }}"
+  loop: "{{ dotfiles_overlay_tap_remotes.results | default([]) }}"
   loop_control:
     label: "{{ item.item[0] }}"
   when:
-    - dotfiles_work_enabled | bool
+    - dotfiles_private_enabled | bool
     - (item.stdout | default('') | trim) != item.item[1]
 
 - name: Check whether the Brewfile is satisfied

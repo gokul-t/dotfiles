@@ -41,7 +41,7 @@ When changing a single config package, prefer validating that package with `stow
 
 - `ansible/site.yml` is the main provisioning entry point. It validates the selected profile and dispatches to OS-specific package installs, `stow`, and user-tool setup.
 - `ansible/tasks/stow.yml` is the critical link step: it discovers top-level package directories, filters the selected packages from `ansible/profiles/*.yml`, and runs `stow --dir ... --target ... --stow` for each one.
-- `ansible/profiles/*.yml` defines the package list for each profile. The default workstation profile contains the active tool set (for example `alacritty`, `bash`, `git`, `nvim`, `tmux`, `zsh`, `starship`, `yazi`, `claude`, etc.).
+- `ansible/profiles/*.yml` defines the package list for each profile. The default profile contains the active tool set (for example `alacritty`, `bash`, `git`, `nvim`, `tmux`, `zsh`, `starship`, `yazi`, `claude`, etc.). Personal and work are private overlays layered on the default profile.
 - `ansible/tasks/user-tools.yml` installs additional user-space tools such as Oh My Zsh, TPM, LazyVim/Idea plugins, and `mise`.
 - `ansible/packages/` holds OS-specific package manifests; `ansible/containers/test-stow.sh` checks that package selection works with disposable targets.
 - Top-level directories such as `nvim/`, `tmux/`, `zsh/`, `git/`, `code/`, and `ghostty/` are the actual config packages, not application source trees.

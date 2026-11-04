@@ -8,159 +8,148 @@
     - name: Validate profile
       ansible.builtin.assert:
         that:
-          - dotfiles_profile in ["workstation", "server"]
-        fail_msg: "Invalid profile. Supported profiles are: workstation, server."
+          - dotfiles_profile in ["default", "server", "personal", "work"]
+        fail_msg: "Invalid profile. Supported profiles are: default, server, personal, work."
+      tags: [always]
+
+    - name: Resolve base profile for workstation-based profiles
+      ansible.builtin.set_fact:
+        dotfiles_base_profile: "{{ 'server' if dotfiles_profile == 'server' else 'default' }}"
       tags: [always]
 
     - name: Load profile defaults
       ansible.builtin.include_vars:
-        file: "profiles/{{ dotfiles_profile }}.yml"
+        file: "profiles/{{ dotfiles_base_profile }}.yml"
       tags: [always]
 
     - name: Check supported operating system
       ansible.builtin.assert:
         that:
-          - (dotfiles_profile == "workstation" and (ansible_facts['distribution'] in ["Fedora", "Ubuntu"] or ansible_facts['system'] == "Darwin")) or
+          - >-
+            (dotfiles_profile in ["default", "personal", "work"] and
+             (ansible_facts['distribution'] in ["Fedora", "Ubuntu"] or ansible_facts['system'] == "Darwin")) or
             (dotfiles_profile == "server" and ansible_facts['distribution'] in ["Ubuntu", "Debian"])
-        fail_msg: "Unsupported OS/Profile combination. Workstation supports Fedora, Ubuntu, macOS. Server supports Ubuntu, Debian."
+        fail_msg: "Unsupported OS/Profile combination. Profiles default/personal/work support Fedora, Ubuntu, macOS. Server supports Ubuntu, Debian."
       tags: [always]
 
-    - name: Require the workstation profile for work settings
-      ansible.builtin.assert:
-        that: dotfiles_profile == "workstation"
-        fail_msg: "dotfiles_work_enabled is only supported with the workstation profile."
-      when: dotfiles_work_enabled | bool
-      tags: [always]
-
-    - name: Require mutually exclusive private settings
-      ansible.builtin.assert:
-        that: not (dotfiles_work_enabled | bool and dotfiles_personal_enabled | bool)
-        fail_msg: "Select either personal or work settings, not both."
-      tags: [always]
-
-    - name: Require the workstation profile for personal settings
-      ansible.builtin.assert:
-        that: dotfiles_profile == "workstation"
-        fail_msg: "Personal settings are only supported with the workstation profile."
-      when: dotfiles_personal_enabled | bool
-      tags: [always]
-
-    - name: Check the work submodule files
-      ansible.builtin.stat:
-        path: "{{ dotfiles_work_path }}/{{ item }}"
-      loop:
-        - .config/mise/config.local.toml
-        - ansible/packages/Brewfile
-      register: dotfiles_work_files
-      when: dotfiles_work_enabled | bool
-      tags: [always]
-
-    - name: Check the personal submodule files
-      ansible.builtin.stat:
-        path: "{{ dotfiles_repo_path }}/personal/{{ item }}"
-      loop:
-        - .identity.conf
-        - .config/zsh/user-env.d/env.zsh
-      register: dotfiles_personal_files
-      when: dotfiles_personal_enabled | bool
-      tags: [always]
-
-    - name: Select personal package manifests for this platform
-      ansible.builtin.set_fact:
-        dotfiles_personal_package_manifests: >-
-          {{
-            (
-              ['Brewfile']
-              if ansible_facts['system'] == 'Darwin'
-              else (
-                ['ubuntu-packages.txt']
-                + (['ubuntu-snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
-                if ansible_facts['distribution'] == 'Ubuntu'
-                else (
-                  ['dnf-packages.txt']
-                  + (['flatpak-packages.txt'] if dotfiles_install_flatpak_apps | bool else [])
-                )
-              )
-            )
-            | map('regex_replace', '^', 'ansible/packages/')
-            | list
-          }}
-      when: dotfiles_personal_enabled | bool
-      tags: [always]
-
-    - name: Check the personal package manifests
-      ansible.builtin.stat:
-        path: "{{ dotfiles_repo_path }}/personal/{{ item }}"
-      loop: "{{ dotfiles_personal_package_manifests }}"
-      register: dotfiles_personal_package_manifest_files
-      when: dotfiles_personal_enabled | bool
-      tags: [always]
-
-    - name: Require an initialized work submodule
-      ansible.builtin.assert:
-        that: dotfiles_work_files.results | map(attribute='stat.exists') | list | min
-        fail_msg: >-
-          dotfiles_work_enabled is true but required files are missing under
-          {{ dotfiles_work_path }}. Run: git submodule update --init work
-        quiet: true
-      when: dotfiles_work_enabled | bool
-      tags: [always]
-
-    - name: Require an initialized personal submodule
-      ansible.builtin.assert:
-        that: dotfiles_personal_files.results | map(attribute='stat.exists') | list | min
-        fail_msg: >-
-          Personal settings are enabled but required files are missing under
-          {{ dotfiles_repo_path }}/personal. Run: git submodule update --init personal
-        quiet: true
-      when: dotfiles_personal_enabled | bool
-      tags: [always]
-
-    - name: Require the personal package manifests
+    - name: Require a supported private overlay profile
       ansible.builtin.assert:
         that:
-          - dotfiles_personal_package_manifest_files.results | map(attribute='stat.exists') | list | min
+          - dotfiles_profile in ["personal", "work"]
         fail_msg: >-
-          One or more personal package manifests are missing under
-          {{ dotfiles_repo_path }}/personal/ansible/packages.
-          Run: git submodule update --init personal
-        quiet: true
-      when: dotfiles_personal_enabled | bool
+          dotfiles_private_enabled is true but the selected profile '{{ dotfiles_profile }}'
+          is not an overlay-capable profile. Private overlays are only available with the
+          'personal' or 'work' profiles.
+      when: dotfiles_private_enabled | bool
       tags: [always]
 
-    - name: Install Fedora workstation packages
+    - name: Check the private overlay files
+      ansible.builtin.stat:
+        path: "{{ dotfiles_private_path }}/{{ item }}"
+      loop: >-
+        {{
+          (['.config/mise/config.local.toml', 'ansible/packages/Brewfile'] if dotfiles_private_profile == 'work'
+           else [
+             '.identity.conf',
+             '.config/zsh/user-env.d/env.zsh',
+             'ansible/packages/Brewfile',
+             'ansible/packages/dnf-packages.txt',
+             'ansible/packages/flatpak-packages.txt',
+             'ansible/packages/ubuntu-packages.txt',
+             'ansible/packages/ubuntu-snap-packages.txt',
+           ])
+        }}
+      register: dotfiles_private_files
+      when: dotfiles_private_enabled | bool
+      tags: [always]
+
+    - name: Require an initialized private overlay
+      ansible.builtin.assert:
+        that:
+          - dotfiles_private_files.results | map(attribute='stat.exists') | list | min
+        fail_msg: >-
+          dotfiles_private_enabled is true but required files are missing under
+          {{ dotfiles_private_path }}. Run: git submodule update --init {{ dotfiles_private_profile }}
+        quiet: true
+      when: dotfiles_private_enabled | bool
+      tags: [always]
+
+    - name: Select private overlay package manifests for this platform
+      ansible.builtin.set_fact:
+        dotfiles_private_package_manifests: >-
+          {{
+            (['Brewfile']
+             if dotfiles_private_profile == 'work'
+             else (
+               ['Brewfile']
+               if ansible_facts['system'] == 'Darwin'
+               else (
+                 ['ubuntu-packages.txt']
+                 + (['ubuntu-snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
+                 if ansible_facts['distribution'] == 'Ubuntu'
+                 else (
+                   ['dnf-packages.txt']
+                   + (['flatpak-packages.txt'] if dotfiles_install_flatpak_apps | bool else [])
+                 )
+               )
+             ))
+          }}
+      when: dotfiles_private_enabled | bool
+      tags: [always]
+
+    - name: Check the private overlay package manifests
+      ansible.builtin.stat:
+        path: "{{ dotfiles_private_path }}/ansible/packages/{{ item }}"
+      loop: "{{ dotfiles_private_package_manifests | default([]) }}"
+      register: dotfiles_private_package_manifest_files
+      when: dotfiles_private_enabled | bool
+      tags: [always]
+
+    - name: Require the private overlay package manifests
+      ansible.builtin.assert:
+        that:
+          - dotfiles_private_package_manifest_files.results | map(attribute='stat.exists') | list | min
+        fail_msg: >-
+          One or more private overlay package manifests are missing under
+          {{ dotfiles_private_path }}/ansible/packages.
+          Run: git submodule update --init {{ dotfiles_private_profile }}
+        quiet: true
+      when: dotfiles_private_enabled | bool
+      tags: [always]
+
+    - name: Install Fedora packages
       ansible.builtin.include_tasks:
         file: tasks/fedora.yml
         apply:
           tags: [packages]
       when:
-        - dotfiles_profile == "workstation"
+        - dotfiles_profile in ["default", "personal", "work"]
         - ansible_facts['distribution'] == "Fedora"
       tags: [packages]
 
-    - name: Install Ubuntu workstation packages
+    - name: Install Ubuntu packages
       ansible.builtin.include_tasks:
         file: tasks/ubuntu.yml
         apply:
           tags: [packages]
       when:
-        - dotfiles_profile == "workstation"
+        - dotfiles_profile in ["default", "personal", "work"]
         - ansible_facts['distribution'] == "Ubuntu"
       tags: [packages]
 
-    - name: Install macOS workstation packages
+    - name: Install macOS packages
       ansible.builtin.include_tasks:
         file: tasks/macos.yml
         apply:
           tags: [packages]
       when:
-        - dotfiles_profile == "workstation"
+        - dotfiles_profile in ["default", "personal", "work"]
         - ansible_facts['system'] == "Darwin"
       tags: [packages]
 
     - name: Install server packages
       ansible.builtin.include_tasks:
-        file: "tasks/server.yml"
+        file: tasks/server.yml
         apply:
           tags: [packages]
       when: dotfiles_profile == "server"
@@ -172,10 +161,10 @@
 
     - name: Set up user tools
       ansible.builtin.import_tasks: tasks/user-tools.yml
-      when: dotfiles_profile == "workstation"
+      when: dotfiles_profile in ["default", "personal", "work"]
       tags: [tools]
 
     - name: Schedule optional package drift reports
       ansible.builtin.import_tasks: tasks/package-report.yml
-      when: dotfiles_profile == "workstation"
+      when: dotfiles_profile in ["default", "personal", "work"]
       tags: [package-report]

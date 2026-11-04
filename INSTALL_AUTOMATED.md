@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/boots
    - Set up shell plugins and development tools (`mise`, etc.).
    - (Optional) Install **Toshy** for macOS-like keyboard shortcuts on Linux.
 
-With no profile selected, bootstrap installs the shared workstation configuration only. It does not initialize or link the private personal or work settings.
+With the default profile selected, bootstrap installs the shared public workstation configuration only. It does not initialize or link the private personal or work settings.
 
 ---
 
@@ -55,7 +55,7 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml -e '{"dotfiles_skip_t
 ```
 
 ### Choosing Stow Packages
-Each profile declares its default packages in `ansible/profiles/<profile>.yml` (`dotfiles_profile_stow_packages`); new top-level directories are not linked until added there. Override or exclude packages per run:
+Each profile declares its default packages in `ansible/profiles/<profile>.yml` (`dotfiles_profile_stow_packages`); new top-level directories are not linked until added there. The `personal` and `work` overlays layer the default profile plus their private overlay. Override or exclude packages per run:
 ```sh
 ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow \
   -e '{"dotfiles_stow_packages":["zsh","tmux"],"dotfiles_stow_skip_packages":["tmux"]}'
@@ -73,7 +73,7 @@ Personal and work settings are optional workstation overlays. Select personal mo
 ./ansible/bootstrap.sh --profile personal
 ```
 
-For direct playbook runs, initialize the submodule first with `git submodule update --init personal`, then pass `-e dotfiles_personal_enabled=true`.
+For direct playbook runs, initialize the submodule first with `git submodule update --init personal`, then pass `-e dotfiles_private_enabled=true -e dotfiles_private_profile=personal`.
 
 Work and personal settings are mutually exclusive. Select work mode with:
 ```sh
@@ -81,7 +81,7 @@ Work and personal settings are mutually exclusive. Select work mode with:
 ```
 - If the `work` submodule is not already present, bootstrap prompts for its private repository URL and adds it locally as `work`. Leave the URL blank to continue with shared workstation configuration only; personal settings are not linked in work mode.
 - `git submodule add` stages the local `.gitmodules` entry and `work` gitlink. Bootstrap does not commit or push them; keep the private URL local and do not push it to the public dotfiles repository.
-- Work mode uses internal Homebrew taps (`ansible/packages/Brewfile`), a mise overlay (`.config/mise/config.local.toml`, layered over the shared `config.toml`), and other home-layout dotfiles. Required files are checked before provisioning.
+- Work mode uses internal Homebrew taps (`work/ansible/packages/Brewfile`), a mise overlay (`.config/mise/config.local.toml`, layered over the shared `config.toml`), and other home-layout dotfiles. Required files are checked before provisioning.
 - On macOS the work Brewfile runs before the shared one, and a warning is printed if an existing tap's remote differs. Brew Bundle does not change existing remotes; retap manually if needed.
 - Selecting a different mode later is not an undo: old links and taps remain. Remove work links with `stow --dir ~/.dotfiles --target ~ --delete work`; personal links with `stow --dir ~/.dotfiles --target ~ --delete personal`.
 

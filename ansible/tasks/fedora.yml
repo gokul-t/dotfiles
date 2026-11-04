@@ -78,25 +78,27 @@
         | list
       }}
 
-- name: Read personal Fedora package manifest
+- name: Read private overlay Fedora package manifest
   ansible.builtin.set_fact:
-    dotfiles_dnf_personal_packages: >-
+    dotfiles_dnf_overlay_packages: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/personal/ansible/packages/dnf-packages.txt')
+        lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/dnf-packages.txt')
         .splitlines()
         | map('trim')
         | reject('match', '^#')
         | reject('equalto', '')
         | list
       }}
-  when: dotfiles_personal_enabled | bool
+  when:
+    - dotfiles_private_enabled | bool
+    - "'dnf-packages.txt' in dotfiles_private_package_manifests"
 
-- name: Combine shared and personal Fedora package manifests
+- name: Combine shared and private overlay Fedora package manifests
   ansible.builtin.set_fact:
     dotfiles_dnf_packages_all: >-
       {{
         dotfiles_dnf_packages_all
-        | union(dotfiles_dnf_personal_packages | default([]))
+        | union(dotfiles_dnf_overlay_packages | default([]))
         | list
       }}
 
@@ -287,11 +289,11 @@
       }}
   when: dotfiles_install_flatpak_apps | bool
 
-- name: Read personal Flatpak application manifest
+- name: Read private overlay Flatpak application manifest
   ansible.builtin.set_fact:
-    dotfiles_flatpak_personal_apps: >-
+    dotfiles_flatpak_overlay_apps: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/personal/ansible/packages/flatpak-packages.txt')
+        lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/flatpak-packages.txt')
         .splitlines()
         | map('trim')
         | reject('match', '^#')
@@ -300,14 +302,15 @@
       }}
   when:
     - dotfiles_install_flatpak_apps | bool
-    - dotfiles_personal_enabled | bool
+    - dotfiles_private_enabled | bool
+    - "'flatpak-packages.txt' in dotfiles_private_package_manifests"
 
-- name: Combine shared and personal Flatpak manifests
+- name: Combine shared and private overlay Flatpak manifests
   ansible.builtin.set_fact:
     dotfiles_flatpak_apps: >-
       {{
         dotfiles_flatpak_apps
-        | union(dotfiles_flatpak_personal_apps | default([]))
+        | union(dotfiles_flatpak_overlay_apps | default([]))
         | list
       }}
   when: dotfiles_install_flatpak_apps | bool

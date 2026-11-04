@@ -21,22 +21,22 @@
   environment:
     MISE_CONFIG_FILE: "{{ dotfiles_stow_target }}/.config/mise/config.toml"
 
-- name: Check whether the work mise overlay is linked
+- name: Check whether the private overlay mise config is linked
   ansible.builtin.stat:
     path: "{{ dotfiles_stow_target }}/.config/mise/config.local.toml"
-  register: dotfiles_mise_work_config
-  when: dotfiles_work_enabled | bool
+  register: dotfiles_mise_overlay_config
+  when: dotfiles_private_enabled | bool
 
-- name: Require the linked work mise overlay
+- name: Require the linked private overlay mise config
   ansible.builtin.assert:
-    that: dotfiles_mise_work_config.stat.exists
+    that: dotfiles_mise_overlay_config.stat.exists
     fail_msg: >-
-      dotfiles_work_enabled is true but {{ dotfiles_stow_target }}/.config/mise/config.local.toml
+      dotfiles_private_enabled is true but {{ dotfiles_stow_target }}/.config/mise/config.local.toml
       is missing. Run the stow step (resolve any reported Stow conflicts) and retry.
     quiet: true
-  when: dotfiles_work_enabled | bool
+  when: dotfiles_private_enabled | bool
 
-- name: Trust the linked work mise overlay
+- name: Trust the linked private overlay mise config
   ansible.builtin.command:
     argv:
       - "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
@@ -44,7 +44,7 @@
       - "{{ dotfiles_stow_target }}/.config/mise/config.local.toml"
   args:
     chdir: "{{ dotfiles_stow_target }}"
-  when: dotfiles_work_enabled | bool
+  when: dotfiles_private_enabled | bool
   changed_when: false
   environment:
     MISE_CONFIG_DIR: "{{ dotfiles_stow_target }}/.config/mise"

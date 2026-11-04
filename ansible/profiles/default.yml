@@ -1,5 +1,5 @@
 ---
-# Workstation profile defaults
+# Default (public/shared) workstation profile defaults
 dotfiles_profile_stow_packages:
   - alacritty
   - bash

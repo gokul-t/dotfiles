@@ -11,11 +11,13 @@ fail() {
 }
 
 usage() {
-  printf "Usage: %s [--profile personal|work|server|workstation] [options]\n" "$0"
+  printf "Usage: %s [--profile default|personal|work|server] [options]\n" "$0"
   printf "Options:\n"
-  printf "  --profile PROFILE  Select setup mode: personal, work, or server\n"
-  printf "                     default: shared workstation setup without private settings\n"
-  printf "                     workstation is an alias for that shared setup\n"
+  printf "  --profile PROFILE  Select setup mode: default, personal, work, or server\n"
+  printf "                     default: shared public workstation setup (no private settings)\n"
+  printf "                     personal: shared workstation plus the private 'personal' overlay\n"
+  printf "                     work: shared workstation plus the private 'work' overlay\n"
+  printf "                     server: minimal server profile (no GUI apps, lean packages)\n"
   printf "  --help             Show this help message\n"
 }
 
@@ -27,8 +29,9 @@ if [[ "$(id -u)" -eq 0 ]]; then
   fail "Run this script as your regular user, not as root."
 fi
 
-dotfiles_profile="workstation"
-dotfiles_mode="none"
+dotfiles_profile="default"
+dotfiles_private_enabled=false
+dotfiles_private_profile=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -37,24 +40,24 @@ while [[ $# -gt 0 ]]; do
         fail "--profile requires an argument."
       fi
       case "$2" in
-        personal)
-          dotfiles_profile="workstation"
-          dotfiles_mode="personal"
+        default)
+          dotfiles_profile="default"
           ;;
-        workstation)
-          dotfiles_profile="workstation"
-          dotfiles_mode="none"
+        personal)
+          dotfiles_profile="personal"
+          dotfiles_private_enabled=true
+          dotfiles_private_profile="personal"
           ;;
         work)
-          dotfiles_profile="workstation"
-          dotfiles_mode="work"
+          dotfiles_profile="work"
+          dotfiles_private_enabled=true
+          dotfiles_private_profile="work"
           ;;
         server)
           dotfiles_profile="server"
-          dotfiles_mode="none"
           ;;
         *)
-          fail "Unsupported profile '$2'. Supported: personal, work, server, workstation."
+          fail "Unsupported profile '$2'. Supported: default, personal, work, server."
           ;;
       esac
       shift 2
@@ -152,49 +155,83 @@ else
   git clone "$REPOSITORY_URL" "$DOTFILES_DIR"
 fi
 
-work_enabled=false
-personal_enabled=false
-if [[ "$dotfiles_profile" == "workstation" ]]; then
-  if [[ "$dotfiles_mode" == "work" ]]; then
-    work_path="$DOTFILES_DIR/work"
-    work_configured=false
-    if git -C "$DOTFILES_DIR" config -f .gitmodules --get submodule.work.path >/dev/null 2>&1; then
-      work_configured=true
-    fi
+dotfiles_overlay_initialized=false
 
-    if [[ "$work_configured" == true ]]; then
-      git -C "$DOTFILES_DIR" submodule update --init work \
-        || fail "Could not initialize the configured work submodule."
-    elif [[ ! -f "$work_path/.config/mise/config.local.toml" || ! -f "$work_path/ansible/packages/Brewfile" ]]; then
-      work_url=""
-      if exec 3<>/dev/tty 2>/dev/null; then
-        printf 'Private work submodule URL (leave blank to skip work settings): ' >&3
-        IFS= read -r work_url <&3 || work_url=""
-        exec 3>&-
-      else
-        printf 'No terminal available to request a work submodule URL; skipping private work settings.\n' >&2
+dotfiles_overlay_required_files() {
+  case "$1" in
+    personal)
+      cat <<'EOF'
+.identity.conf
+.config/zsh/user-env.d/env.zsh
+ansible/packages/Brewfile
+ansible/packages/dnf-packages.txt
+ansible/packages/flatpak-packages.txt
+ansible/packages/ubuntu-packages.txt
+ansible/packages/ubuntu-snap-packages.txt
+EOF
+      ;;
+    work)
+      cat <<'EOF'
+.config/mise/config.local.toml
+ansible/packages/Brewfile
+EOF
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+}
+
+init_dotfiles_overlay() {
+  local overlay_name="$1"
+  local overlay_path="${DOTFILES_DIR}/${overlay_name}"
+  local overlay_key=""
+  local overlay_value=""
+
+  while read -r overlay_key overlay_value; do
+    if [[ "$overlay_value" == "$overlay_name" || "$overlay_value" == "./${overlay_name}" ]]; then
+      break
+    fi
+  done < <(git -C "$DOTFILES_DIR" config -f "${DOTFILES_DIR}/.gitmodules" --get-regexp '^submodule\.' 2>/dev/null || true)
+
+  if [[ -n "$overlay_key" ]]; then
+    git -C "$DOTFILES_DIR" submodule update --init "$overlay_name" \
+      || fail "Could not initialize the '${overlay_name}' submodule."
+    dotfiles_overlay_initialized=true
+    return 0
+  fi
+
+  local overlay_url=""
+  if exec 3<>/dev/tty 2>/dev/null; then
+    printf 'Private %s submodule URL (leave blank to skip private settings): ' "$overlay_name" >&3
+    IFS= read -r overlay_url <&3 || overlay_url=""
+    exec 3>&-
+  else
+    printf 'No terminal available to request a %s submodule URL; skipping private settings.\n' "$overlay_name" >&2
+  fi
+
+  if [[ -n "$overlay_url" ]]; then
+    [[ ! -e "$overlay_path" && ! -L "$overlay_path" ]] \
+      || fail "${overlay_path} already exists but is not a configured ${overlay_name} submodule. Move it aside and retry."
+    git -C "$DOTFILES_DIR" submodule add --name "$overlay_name" "$overlay_url" "./${overlay_name}" \
+      || fail "Could not add the ${overlay_name} submodule."
+    printf 'Added %s submodule locally. Bootstrap will not commit or push its URL.\n' "$overlay_name"
+  fi
+
+  if [[ -n "$overlay_url" ]]; then
+    dotfiles_overlay_initialized=true
+  fi
+}
+
+if [[ "$dotfiles_private_enabled" == true ]]; then
+  init_dotfiles_overlay "$dotfiles_private_profile"
+  if [[ "$dotfiles_overlay_initialized" == true ]]; then
+    while read -r overlay_required_file; do
+      [[ -n "$overlay_required_file" ]] || continue
+      if [[ ! -f "${DOTFILES_DIR}/${dotfiles_private_profile}/${overlay_required_file}" ]]; then
+        fail "The '${dotfiles_private_profile}' submodule is missing required file '${overlay_required_file}'."
       fi
-
-      if [[ -n "$work_url" ]]; then
-        [[ ! -e "$work_path" && ! -L "$work_path" ]] \
-          || fail "$work_path already exists but is not a configured work submodule. Move it aside and retry."
-        git -C "$DOTFILES_DIR" submodule add --name work "$work_url" ./work \
-          || fail "Could not add the work submodule."
-        printf 'Added work submodule locally. Bootstrap will not commit or push its URL.\n'
-      else
-        printf 'Continuing without personal or work-specific settings.\n'
-      fi
-    fi
-
-    if [[ -f "$work_path/.config/mise/config.local.toml" && -f "$work_path/ansible/packages/Brewfile" ]]; then
-      work_enabled=true
-    elif [[ "$work_configured" == true || -n "${work_url:-}" ]]; then
-      fail "The work submodule is missing required files (mise config overlay and Brewfile)."
-    fi
-  elif [[ "$dotfiles_mode" == "personal" ]]; then
-    git -C "$DOTFILES_DIR" submodule update --init personal \
-      || fail "Could not initialize the personal submodule."
-    personal_enabled=true
+    done < <(dotfiles_overlay_required_files "$dotfiles_private_profile")
   fi
 fi
 
@@ -207,14 +244,14 @@ if [[ "$is_wsl" == true ]]; then
   ansible_args+=(-e dotfiles_install_snap_apps=false)
 fi
 ansible_args+=(-e dotfiles_profile="$dotfiles_profile")
-if [[ "$dotfiles_profile" == "workstation" ]]; then
-  ansible_args+=(-e dotfiles_work_enabled="$work_enabled")
-  ansible_args+=(-e dotfiles_personal_enabled="$personal_enabled")
+if [[ "$dotfiles_private_enabled" == true ]]; then
+  ansible_args+=(-e dotfiles_private_enabled=true)
+  ansible_args+=(-e dotfiles_private_profile="$dotfiles_private_profile")
 fi
 
 ansible-playbook "${ansible_args[@]}"
 
-if [[ "$dotfiles_profile" == "workstation" ]] && { [[ "$platform" == "fedora" ]] || ( [[ "$platform" == "ubuntu" ]] && [[ "$is_wsl" == false ]] ); }; then
+if [[ "$dotfiles_profile" != "server" ]] && { [[ "$platform" == "fedora" ]] || ( [[ "$platform" == "ubuntu" ]] && [[ "$is_wsl" == false ]] ); }; then
   if [[ -d "$HOME/.config/toshy" ]]; then
     printf 'Toshy is already installed; skipping the optional Toshy setup.\n'
   else

@@ -11,25 +11,27 @@
         | list
       }}
 
-- name: Read personal Ubuntu package manifest
+- name: Read private overlay Ubuntu package manifest
   ansible.builtin.set_fact:
-    dotfiles_ubuntu_personal_packages: >-
+    dotfiles_ubuntu_overlay_packages: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/personal/ansible/packages/ubuntu-packages.txt')
+        lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/ubuntu-packages.txt')
         .splitlines()
         | map('trim')
         | reject('match', '^#')
         | reject('equalto', '')
         | list
       }}
-  when: dotfiles_personal_enabled | bool
+  when:
+    - dotfiles_private_enabled | bool
+    - "'ubuntu-packages.txt' in dotfiles_private_package_manifests"
 
 - name: Combine and filter Ubuntu APT packages
   ansible.builtin.set_fact:
     dotfiles_ubuntu_packages_all: >-
       {{
         dotfiles_ubuntu_packages_all
-        | union(dotfiles_ubuntu_personal_packages | default([]))
+        | union(dotfiles_ubuntu_overlay_packages | default([]))
         | reject('in', dotfiles_ubuntu_skip_packages)
         | list
       }}
@@ -235,11 +237,11 @@
       }}
   when: dotfiles_install_snap_apps | bool
 
-- name: Read personal Ubuntu Snap package manifest
+- name: Read private overlay Ubuntu Snap package manifest
   ansible.builtin.set_fact:
-    dotfiles_ubuntu_personal_snaps: >-
+    dotfiles_ubuntu_overlay_snaps: >-
       {{
-        lookup('ansible.builtin.file', dotfiles_repo_path ~ '/personal/ansible/packages/ubuntu-snap-packages.txt')
+        lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/ubuntu-snap-packages.txt')
         .splitlines()
         | map('trim')
         | reject('match', '^#')
@@ -248,14 +250,15 @@
       }}
   when:
     - dotfiles_install_snap_apps | bool
-    - dotfiles_personal_enabled | bool
+    - dotfiles_private_enabled | bool
+    - "'ubuntu-snap-packages.txt' in dotfiles_private_package_manifests"
 
-- name: Combine shared and personal Ubuntu Snap manifests
+- name: Combine shared and private overlay Ubuntu Snap manifests
   ansible.builtin.set_fact:
     dotfiles_ubuntu_snaps: >-
       {{
         dotfiles_ubuntu_snaps
-        | union(dotfiles_ubuntu_personal_snaps | default([]))
+        | union(dotfiles_ubuntu_overlay_snaps | default([]))
         | list
       }}
   when: dotfiles_install_snap_apps | bool
