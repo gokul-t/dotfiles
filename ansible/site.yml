@@ -53,8 +53,8 @@
                ['Brewfile']
                if ansible_facts['system'] == 'Darwin'
                else (
-                 ['ubuntu-packages.txt']
-                 + (['ubuntu-snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
+                 ['apt-packages.txt']
+                 + (['snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
                  if ansible_facts['distribution'] == 'Ubuntu'
                  else (
                    ['dnf-packages.txt']
@@ -76,8 +76,8 @@
                ['Brewfile']
                if dotfiles_private_profile in ['work', 'personal']
                else (
-                 ['ubuntu-packages.txt']
-                 + (['ubuntu-snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
+                 ['apt-packages.txt']
+                 + (['snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
                  if ansible_facts['distribution'] == 'Ubuntu'
                  else (
                    ['dnf-packages.txt']

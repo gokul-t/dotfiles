@@ -1,6 +1,6 @@
 # Ubuntu packages for the shared workstation setup.
 # Apps unavailable in Ubuntu's APT repositories are listed in
-# ubuntu-snap-packages.txt.
+# snap-packages.txt.
 
 # Development and shell
 ansible-core

@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/boots
 1. **Bootstraps**: Installs Ansible and Git using the native package manager (`dnf` for Fedora, `apt` for Ubuntu/WSL, `brew` for macOS).
 2. **Clones**: Pulls this repository into `~/.dotfiles`.
 3. **Provisions**: Runs the Ansible playbook to:
-   - Install all system packages listed in `ansible/packages/` (`dnf-packages.txt`, `ubuntu-packages.txt`, or `Brewfile`).
+   - Install all system packages listed in `ansible/packages/` (`dnf-packages.txt`, `apt-packages.txt`, or `Brewfile`).
    - Install Flatpak/Snap applications.
    - Configure repositories for RPM Fusion (free/nonfree), VS Code, Chrome, etc.
    - Use **GNU Stow** to symlink all configurations to your home directory.
@@ -94,10 +94,10 @@ Work and personal settings are mutually exclusive. Select work mode:
 Package manifests are curated by hand; a dump of everything installed would pull in dependencies, OS defaults, and machine-specific tools. Instead, a read-only report shows what differs:
 ```sh
 user-installed-packages report --manifest-dir ~/.dotfiles/ansible/packages \
-  --apt-manifest ubuntu-packages.txt \
-  --apt-manifest ~/.dotfiles/personal/ansible/packages/ubuntu-packages.txt \
-  --snap-manifest ubuntu-snap-packages.txt \
-  --snap-manifest ~/.dotfiles/personal/ansible/packages/ubuntu-snap-packages.txt
+  --apt-manifest apt-packages.txt \
+  --apt-manifest ~/.dotfiles/personal/ansible/packages/apt-packages.txt \
+  --snap-manifest snap-packages.txt \
+  --snap-manifest ~/.dotfiles/personal/ansible/packages/snap-packages.txt
 ```
 The [user-installed-packages](https://github.com/gokul-t/user-installed-packages) project provides the report command and the explicit APT/DNF package detection it uses. The playbook installs it via `pipx` into `~/.local/bin` on macOS, Fedora, and Ubuntu (`dotfiles_user_installed_packages_version` in `ansible/vars.yml` pins the release; bump it deliberately). To install by hand instead:
 ```sh

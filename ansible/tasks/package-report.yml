@@ -28,12 +28,12 @@
              if dotfiles_install_flatpak_apps | bool and dotfiles_private_enabled | bool else [])
           if ansible_facts['distribution'] == 'Fedora'
           else (
-            ['--apt-manifest', dotfiles_repo_path ~ '/ansible/packages/ubuntu-packages.txt']
-            + (['--apt-manifest', dotfiles_private_path ~ '/ansible/packages/ubuntu-packages.txt']
+            ['--apt-manifest', dotfiles_repo_path ~ '/ansible/packages/apt-packages.txt']
+            + (['--apt-manifest', dotfiles_private_path ~ '/ansible/packages/apt-packages.txt']
                if dotfiles_private_enabled | bool else [])
-            + (['--snap-manifest', dotfiles_repo_path ~ '/ansible/packages/ubuntu-snap-packages.txt']
+            + (['--snap-manifest', dotfiles_repo_path ~ '/ansible/packages/snap-packages.txt']
                if dotfiles_install_snap_apps | bool else [])
-            + (['--snap-manifest', dotfiles_private_path ~ '/ansible/packages/ubuntu-snap-packages.txt']
+            + (['--snap-manifest', dotfiles_private_path ~ '/ansible/packages/snap-packages.txt']
                if dotfiles_install_snap_apps | bool and dotfiles_private_enabled | bool else [])
           )
         )
