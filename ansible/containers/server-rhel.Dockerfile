@@ -3,7 +3,7 @@ FROM ${BASE_IMAGE}
 
 ENV ANSIBLE_LOCAL_TEMP=/tmp/ansible-local
 
-RUN dnf install -y \
+RUN dnf install -y --allowerasing \
       ansible-core \
       ca-certificates \
       curl \
