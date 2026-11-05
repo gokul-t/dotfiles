@@ -8,6 +8,11 @@ dotfiles_skip_tools: []
 dotfiles_bin_packages:
   - name: caligula
     source: https://github.com/ifd3f/caligula/releases/tag/v0.5.0
+  - name: uv
+    source: github.com/astral-sh/uv
+  - name: uvx
+    source: github.com/astral-sh/uv
+dotfiles_bin_packages_personal: []
 dotfiles_fedora_skip_packages: []
 dotfiles_fedora_copr_repos:
   - package: tmux-sesh

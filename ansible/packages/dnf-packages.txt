@@ -19,6 +19,7 @@ clang-devel
 systemd-devel
 libinput-devel
 numactl-devel
+imagemagick
 
 # Python and build tooling (explicitly installed)
 python3-devel
@@ -44,6 +45,8 @@ lazygit
 yazi
 starship
 htop
+jq
+tree
 
 # Terminal/UI
 ghostty
