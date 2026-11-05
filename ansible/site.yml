@@ -17,6 +17,11 @@
         dotfiles_base_profile: "{{ 'server' if dotfiles_profile == 'server' else 'default' }}"
       tags: [always]
 
+    - name: Set the GitHub API token
+      ansible.builtin.set_fact:
+        dotfiles_github_api_token: "{{ lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+      tags: [always]
+
     - name: Load profile defaults
       ansible.builtin.include_vars:
         file: "profiles/{{ dotfiles_base_profile }}.yml"

@@ -66,6 +66,8 @@ jobs:
         run: docker build --file ansible/containers/fedora.Dockerfile --tag dotfiles-fedora-test .
 
       - name: Provision Fedora container and verify idempotence
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: docker run --rm dotfiles-fedora-test
 
   ubuntu-container:
@@ -81,6 +83,8 @@ jobs:
         run: docker build --file ansible/containers/ubuntu.Dockerfile --tag dotfiles-ubuntu-test .
 
       - name: Provision Ubuntu container and verify idempotence
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: docker run --rm dotfiles-ubuntu-test
 
   debian-container:
@@ -99,6 +103,8 @@ jobs:
           --tag dotfiles-debian-test .
 
       - name: Provision Debian 13 container and verify idempotence
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: docker run --rm dotfiles-debian-test
 
   server-container:
@@ -124,4 +130,6 @@ jobs:
           --file ansible/containers/server.Dockerfile --tag dotfiles-server-test .
 
       - name: Provision server container, verify idempotence and results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: docker run --rm dotfiles-server-test

@@ -20,8 +20,11 @@
   ansible.builtin.uri:
     url: https://api.github.com/repos/marcosnils/bin/releases/latest
     return_content: true
-    headers:
-      Accept: application/vnd.github+json
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json',
+          'Authorization': 'Bearer ' ~ dotfiles_github_api_token}
+       if (dotfiles_github_api_token | default('')) | length > 0
+       else {'Accept': 'application/vnd.github+json'} }}
   register: dotfiles_bin_release
   changed_when: false
   when:
