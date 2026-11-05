@@ -89,5 +89,7 @@
       )
       }}
   register: dotfiles_scheduler_result
-  changed_when: true
-  failed_when: false
+  changed_when:
+    - dotfiles_scheduler_result.rc == 0
+    - "'already' not in dotfiles_scheduler_result.stderr"
+  failed_when: dotfiles_scheduler_result.rc == 2
