@@ -10,8 +10,10 @@ dotfiles_bin_packages:
     source: https://github.com/ifd3f/caligula/releases/tag/v0.5.0
   - name: uv
     source: github.com/astral-sh/uv
+    asset_pattern: uv-*-linux-gnu*/uv
   - name: uvx
     source: github.com/astral-sh/uv
+    asset_pattern: uv-*-linux-gnu*/uvx
 dotfiles_bin_packages_personal: []
 dotfiles_fedora_skip_packages: []
 dotfiles_fedora_copr_repos:

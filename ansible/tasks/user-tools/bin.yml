@@ -119,6 +119,8 @@
     argv:
       - "{{ ansible_facts['env']['HOME'] }}/.local/bin/bin"
       - install
+      - --name
+      - "{{ item.asset_pattern | default('*') }}"
       - "{{ item.source }}"
       - "{{ ansible_facts['env']['HOME'] }}/.local/bin/{{ item.name }}"
   args:

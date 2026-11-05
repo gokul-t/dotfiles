@@ -19,7 +19,7 @@ clang-devel
 systemd-devel
 libinput-devel
 numactl-devel
-imagemagick
+ImageMagick
 
 # Python and build tooling (explicitly installed)
 python3-devel
