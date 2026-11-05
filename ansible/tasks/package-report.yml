@@ -1,64 +1,45 @@
 ---
-- name: Compute package report skip arguments
-  ansible.builtin.set_fact:
-    dotfiles_package_report_skips: >-
-      {{
-        (dotfiles_fedora_skip_packages if ansible_facts['distribution'] == 'Fedora'
-         else dotfiles_ubuntu_skip_packages if ansible_facts['os_family'] == 'Debian'
-         else [])
-        | map('regex_replace', '^', '--skip=') | list
-      }}
+# Package drift report scheduling using user-installed-packages library.
+# The library's 'schedule' subcommand handles cross-platform scheduler
+# management (systemd on Linux, LaunchAgent on macOS, cron fallback).
 
 - name: Select the package report manifest directory
   ansible.builtin.set_fact:
     dotfiles_package_report_manifest_dir: "{{ dotfiles_repo_path }}/ansible/packages"
     dotfiles_package_report_args: >-
       {{
-        (['--brewfile', dotfiles_repo_path ~ '/ansible/packages/Brewfile']
-         + (['--brewfile', dotfiles_private_path ~ '/ansible/packages/Brewfile']
-            if dotfiles_private_enabled | bool else []))
-        if ansible_facts['system'] == 'Darwin'
+      (['--brewfile', dotfiles_repo_path ~ '/ansible/packages/Brewfile']
+       + (['--brewfile', dotfiles_private_path ~ '/ansible/packages/Brewfile']
+          if dotfiles_private_enabled | bool else []))
+      if ansible_facts['system'] == 'Darwin'
+      else (
+        ['--dnf-manifest', dotfiles_repo_path ~ '/ansible/packages/dnf-packages.txt']
+        + (['--dnf-manifest', dotfiles_private_path ~ '/ansible/packages/dnf-packages.txt']
+           if dotfiles_private_enabled | bool else [])
+        + (['--flatpak-manifest', dotfiles_repo_path ~ '/ansible/packages/flatpak-packages.txt']
+           if dotfiles_install_flatpak_apps | bool else [])
+        + (['--flatpak-manifest', dotfiles_private_path ~ '/ansible/packages/flatpak-packages.txt']
+           if dotfiles_install_flatpak_apps | bool and dotfiles_private_enabled | bool else [])
+        if ansible_facts['distribution'] == 'Fedora'
         else (
-          ['--dnf-manifest', dotfiles_repo_path ~ '/ansible/packages/dnf-packages.txt']
-          + (['--dnf-manifest', dotfiles_private_path ~ '/ansible/packages/dnf-packages.txt']
+          ['--apt-manifest', dotfiles_repo_path ~ '/ansible/packages/apt-packages.txt']
+          + (['--apt-manifest', dotfiles_private_path ~ '/ansible/packages/apt-packages.txt']
              if dotfiles_private_enabled | bool else [])
-          + (['--flatpak-manifest', dotfiles_repo_path ~ '/ansible/packages/flatpak-packages.txt']
-             if dotfiles_install_flatpak_apps | bool else [])
-          + (['--flatpak-manifest', dotfiles_private_path ~ '/ansible/packages/flatpak-packages.txt']
-             if dotfiles_install_flatpak_apps | bool and dotfiles_private_enabled | bool else [])
-          if ansible_facts['distribution'] == 'Fedora'
-          else (
-            ['--apt-manifest', dotfiles_repo_path ~ '/ansible/packages/apt-packages.txt']
-            + (['--apt-manifest', dotfiles_private_path ~ '/ansible/packages/apt-packages.txt']
-               if dotfiles_private_enabled | bool else [])
-            + (['--snap-manifest', dotfiles_repo_path ~ '/ansible/packages/snap-packages.txt']
-               if dotfiles_install_snap_apps | bool else [])
-            + (['--snap-manifest', dotfiles_private_path ~ '/ansible/packages/snap-packages.txt']
-               if dotfiles_install_snap_apps | bool and dotfiles_private_enabled | bool else [])
-          )
+          + (['--snap-manifest', dotfiles_repo_path ~ '/ansible/packages/snap-packages.txt']
+             if dotfiles_install_snap_apps | bool else [])
+          + (['--snap-manifest', dotfiles_private_path ~ '/ansible/packages/snap-packages.txt']
+             if dotfiles_install_snap_apps | bool and dotfiles_private_enabled | bool else [])
         )
+      )
       }}
 
-- name: Build package report command and PATH
+- name: Build package report skip arguments
   ansible.builtin.set_fact:
-    dotfiles_package_report_label: com.dotfiles.package-report
-    dotfiles_package_report_command: >-
+    dotfiles_package_report_skips: >-
       {{
-        ['user-installed-packages', 'report',
-         '--manifest-dir', dotfiles_package_report_manifest_dir,
-         '--output', dotfiles_package_report_dir ~ '/package-report.txt']
-        + dotfiles_package_report_args
-        + (['--no-flatpak'] if not dotfiles_install_flatpak_apps | bool else [])
-        + (['--no-snap'] if not dotfiles_install_snap_apps | bool else [])
-        + dotfiles_package_report_skips
-      }}
-    dotfiles_package_report_path: >-
-      {{
-        (['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin',
-          ansible_facts['env']['HOME'] ~ '/.local/bin']
-         + (['/Applications/Visual Studio Code.app/Contents/Resources/app/bin']
-            if ansible_facts['system'] == 'Darwin' else []))
-        | join(':')
+      (dotfiles_fedora_skip_packages if ansible_facts['distribution'] == 'Fedora'
+       else dotfiles_ubuntu_skip_packages if ansible_facts['os_family'] == 'Debian'
+       else [])
       }}
 
 - name: Create the package report directory
@@ -68,147 +49,45 @@
     mode: "0700"
   when: dotfiles_package_report_schedule | bool
 
-- name: Manage the macOS LaunchAgent
-  when: ansible_facts['system'] == "Darwin"
-  block:
-    - name: Define LaunchAgent paths
-      ansible.builtin.set_fact:
-        dotfiles_launch_agent: "{{ ansible_facts['env']['HOME'] }}/Library/LaunchAgents/{{ dotfiles_package_report_label }}.plist"
-        dotfiles_launch_domain: "gui/{{ ansible_facts['user_uid'] }}"
+- name: Build schedule command - enable case
+  ansible.builtin.set_fact:
+    dotfiles_schedule_arg_list: >-
+      {{
+        ['user-installed-packages', 'schedule', '--enable',
+         '--manifest-dir', dotfiles_package_report_manifest_dir,
+         '--output', dotfiles_package_report_dir ~ '/package-report.txt']
+      + dotfiles_package_report_args
+      + (dotfiles_package_report_skips | map('regex_replace', '^(.*)$', '--skip=\\1') | list)
+      + (['--no-flatpak'] if not dotfiles_install_flatpak_apps | bool else [])
+      + (['--no-snap'] if not dotfiles_install_snap_apps | bool else [])
+      }}
+  when: dotfiles_package_report_schedule | bool
 
-    - name: Install the package report LaunchAgent
-      ansible.builtin.template:
-        src: package-report.plist.j2
-        dest: "{{ dotfiles_launch_agent }}"
-        mode: "0644"
-      register: dotfiles_launch_agent_file
-      when: dotfiles_package_report_schedule | bool
+- name: Build schedule command - disable case
+  ansible.builtin.set_fact:
+    dotfiles_schedule_arg_list: >-
+      {{
+        ['user-installed-packages', 'schedule', '--disable',
+         '--manifest-dir', dotfiles_package_report_manifest_dir,
+         '--output', dotfiles_package_report_dir ~ '/package-report.txt']
+      + dotfiles_package_report_args
+      + (dotfiles_package_report_skips | map('regex_replace', '^(.*)$', '--skip=\\1') | list)
+      + (['--no-flatpak'] if not dotfiles_install_flatpak_apps | bool else [])
+      + (['--no-snap'] if not dotfiles_install_snap_apps | bool else [])
+      }}
+  when: not dotfiles_package_report_schedule | bool
 
-    - name: Reload the package report LaunchAgent
-      ansible.builtin.shell: |
-        launchctl bootout {{ dotfiles_launch_domain | quote }}/{{ dotfiles_package_report_label }} 2>/dev/null || true
-        launchctl bootstrap {{ dotfiles_launch_domain | quote }} {{ dotfiles_launch_agent | quote }}
-      when:
-        - dotfiles_package_report_schedule | bool
-        - dotfiles_launch_agent_file.changed
-
-    - name: Check for an existing package report LaunchAgent
-      ansible.builtin.stat:
-        path: "{{ dotfiles_launch_agent }}"
-      register: dotfiles_launch_agent_stat
-      when: not dotfiles_package_report_schedule | bool
-
-    - name: Unload the disabled package report LaunchAgent
-      ansible.builtin.shell: >-
-        launchctl bootout {{ dotfiles_launch_domain | quote }}/{{ dotfiles_package_report_label }} 2>/dev/null || true
-      when:
-        - not dotfiles_package_report_schedule | bool
-        - dotfiles_launch_agent_stat.stat.exists
-      changed_when: true
-
-    - name: Remove the disabled package report LaunchAgent
-      ansible.builtin.file:
-        path: "{{ dotfiles_launch_agent }}"
-        state: absent
-      when: not dotfiles_package_report_schedule | bool
-
-- name: Manage the Linux package report schedule
-  when: ansible_facts['system'] == "Linux"
-  block:
-    - name: Check for a systemd user manager
-      ansible.builtin.command: systemctl --user show-environment
-      register: dotfiles_systemd_user
-      changed_when: false
-      failed_when: false
-
-    - name: Check for crontab
-      ansible.builtin.shell: command -v crontab
-      register: dotfiles_crontab
-      changed_when: false
-      failed_when: false
-
-    - name: Select the Linux scheduler
-      ansible.builtin.set_fact:
-        dotfiles_package_report_systemd: "{{ dotfiles_systemd_user.rc == 0 }}"
-        dotfiles_package_report_cron: >-
-          {{ dotfiles_systemd_user.rc != 0
-             and dotfiles_package_report_cron_fallback | bool
-             and dotfiles_crontab.rc == 0 }}
-        dotfiles_systemd_unit_dir: "{{ ansible_facts['env']['HOME'] }}/.config/systemd/user"
-
-    - name: Explain when no scheduler is available
-      ansible.builtin.debug:
-        msg: >-
-          No systemd user manager (and no enabled cron fallback). Run
-          user-installed-packages report --manifest-dir
-          {{ dotfiles_package_report_manifest_dir }}
-          {{ dotfiles_package_report_args | join(' ') }} manually instead.
-      when:
-        - dotfiles_package_report_schedule | bool
-        - not dotfiles_package_report_systemd | bool
-        - not dotfiles_package_report_cron | bool
-
-    - name: Install package report systemd units
-      ansible.builtin.template:
-        src: "package-report.{{ item }}.j2"
-        dest: "{{ dotfiles_systemd_unit_dir }}/dotfiles-package-report.{{ item }}"
-        mode: "0644"
-      loop: [service, timer]
-      register: dotfiles_systemd_units
-      when:
-        - dotfiles_package_report_schedule | bool
-        - dotfiles_package_report_systemd | bool
-
-    - name: Enable the package report timer
-      ansible.builtin.systemd_service:
-        name: dotfiles-package-report.timer
-        scope: user
-        enabled: true
-        state: started
-        daemon_reload: "{{ dotfiles_systemd_units.changed }}"
-      when:
-        - dotfiles_package_report_schedule | bool
-        - dotfiles_package_report_systemd | bool
-
-    - name: Install the package report cron job
-      ansible.builtin.cron:
-        name: dotfiles package report
-        special_time: weekly
-        job: >-
-          PATH={{ dotfiles_package_report_path | quote }}
-          {{ dotfiles_package_report_command | map('quote') | join(' ') | replace('%', '\%') }}
-      when:
-        - dotfiles_package_report_schedule | bool
-        - dotfiles_package_report_cron | bool
-
-    - name: Check for installed package report systemd units
-      ansible.builtin.stat:
-        path: "{{ dotfiles_systemd_unit_dir }}/dotfiles-package-report.timer"
-      register: dotfiles_systemd_timer_stat
-      when: not dotfiles_package_report_schedule | bool
-
-    - name: Disable the package report timer
-      ansible.builtin.systemd_service:
-        name: dotfiles-package-report.timer
-        scope: user
-        enabled: false
-        state: stopped
-      when:
-        - not dotfiles_package_report_schedule | bool
-        - dotfiles_systemd_timer_stat.stat.exists
-        - dotfiles_package_report_systemd | bool
-
-    - name: Remove the package report systemd units
-      ansible.builtin.file:
-        path: "{{ dotfiles_systemd_unit_dir }}/dotfiles-package-report.{{ item }}"
-        state: absent
-      loop: [service, timer]
-      when: not dotfiles_package_report_schedule | bool
-
-    - name: Remove the package report cron job
-      ansible.builtin.cron:
-        name: dotfiles package report
-        state: absent
-      when:
-        - not dotfiles_package_report_schedule | bool
-        - dotfiles_crontab.rc == 0
+- name: Schedule or unschedule package drift report
+  ansible.builtin.command:
+    argv: "{{ dotfiles_schedule_arg_list }}"
+  environment:
+    PATH: >-
+      {{
+      (['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin',
+        ansible_facts['env']['HOME'] ~ '/.local/bin']
+        | join(':')
+      )
+      }}
+  register: dotfiles_scheduler_result
+  changed_when: true
+  failed_when: false
