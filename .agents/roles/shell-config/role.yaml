@@ -1,0 +1,31 @@
+# Role: shell-config
+# Shell Configuration
+
+id: shell-config
+name: Shell Configuration
+description: |
+  Zsh, Tmux, Starship, Sesh, Mise, and related shell tooling.
+
+tags:
+  - zsh
+  - tmux
+  - starship
+  - mise
+  - shell
+  - sesh
+
+packages:
+  - zsh
+  - tmux
+  - starship
+  - sesh
+  - mise
+  - lazygit
+  - yazi
+  - ghostty
+  - alacritty
+  - bin
+
+validation:
+  - zsh: zsh -c 'echo ok'
+  - tmux: tmux kill-server 2>/dev/null || true

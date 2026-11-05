@@ -1,0 +1,30 @@
+# Role: editor-config
+# Editor Configuration
+
+id: editor-config
+name: Editor Configuration
+description: |
+  Neovim (via LazyVim), IDE, and Vim configuration packages.
+
+tags:
+  - nvim
+  - vim
+  - ideavim
+  - editor
+
+packages:
+  - nvim
+  - vim
+  - ideavim
+  - code  # VS Code settings
+
+files:
+  - README.md
+  - nvim/
+  - vim/
+  - ideavim/
+  - code/
+
+validation:
+  - nvim: nvim --headless -c 'checkhealth' -c 'qa!'
+  - vim: vim -c 'qa!'

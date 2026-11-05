@@ -1,0 +1,21 @@
+# Agents Roles Catalog
+# Each subdirectory is a role package following Stow conventions
+
+roles:
+  - id: editor-config
+    name: Editor Configuration
+    description: Neovim, IDE setup and Vim configuration
+    location: editor-config
+    tags: [nvim, vim, ideavim, editor]
+
+  - id: shell-config
+    name: Shell Configuration
+    description: Zsh, tmux, starship, mise configuration
+    location: shell-config
+    tags: [zsh, tmux, starship, mise, shell]
+
+  - id: provisioning
+    name: Provisioning System
+    description: Ansible, stow, and package management
+    location: provisioning
+    tags: [ansible, stow, provisioning]

@@ -1,0 +1,45 @@
+# Skill: dev-workflow
+# Dotfiles Development Workflow
+
+id: dev-workflow
+name: Dotfiles Development Workflow
+description: |
+  Guidance for safely working with this Stow-based dotfiles repository. 
+  Provides context on architecture, validation commands, and safe change patterns.
+
+tags:
+  - dotfiles
+  - stow
+  - ansible
+  - workflow
+
+commands:
+  validate_yaml:
+    name: Validate All YAML Files
+    description: Check all YAML files in ansible/ for syntax errors
+    command: |
+      python3 - <<'PY'
+      from pathlib import Path
+      import yaml
+      for path in sorted(Path('ansible').rglob('*.yml')):
+          yaml.safe_load(open(path))
+          print(f'✓ Valid: {path}')
+      PY
+    critical: true
+
+  validate_playbook:
+    name: Validate Ansible Playbook
+    description: Check syntax of the main playbook
+    command: ansible-playbook -i ansible/inventory.ini ansible/site.yml --syntax-check
+    critical: true
+
+  link_package:
+    name: Link Package Manually
+    description: Link a single package with stow for testing
+    command: stow <package-name>
+    template: true
+
+  revalidate:
+    name: Re-run Stow
+    description: Re-link packages for the active profile
+    command: ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow

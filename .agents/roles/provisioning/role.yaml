@@ -1,0 +1,25 @@
+# Role: provisioning
+# System Provisioning and Orchestration
+
+id: provisioning
+name: Provisioning System
+description: |
+  Ansible automation, stow symlink management, and package manifests.
+
+tags:
+  - ansible
+  - stow
+  - provisioning
+  - system
+
+files:
+  - ansible/site.yml
+  - ansible/tasks/stow.yml
+  - ansible/tasks/user-tools.yml
+  - ansible/profiles/*.yml
+  - ansible/packages/*
+  - ansible/containers/*
+
+validation:
+  - ansible: ansible-playbook -i ansible/inventory.ini ansible/site.yml --syntax-check
+  - stow: stow ansible

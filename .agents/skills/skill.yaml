@@ -1,0 +1,15 @@
+# Agents Skills Catalog
+# Each subdirectory is a skill package following Stow conventions
+
+skills:
+  - id: dev-workflow
+    name: Dotfiles Development Workflow
+    description: Guidance for safely working with this Stow-based dotfiles repository
+    location: dev-workflow
+    tags: [dotfiles, stow, ansible, workflow]
+
+  - id: validate-changes
+    name: Change Validation Assistant
+    description: Validates changes by running appropriate Ansible or Stow commands
+    location: validate-changes
+    tags: [validation, ansible, stow, testing]

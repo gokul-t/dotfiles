@@ -1,0 +1,19 @@
+# Claude Code Rules for this dotfiles repository
+
+> **See [AGENTS.md](../AGENTS.md) for the complete and canonical agent instructions.**
+
+Repository is a GNU Stow-based dotfiles collection. NOT application code.
+
+## Critical Rules
+
+- ❌ Do not add application source code to config packages.
+- ❌ Do not invent new repo-wide test infrastructure.
+- ❌ Do not create ad hoc install scripts.
+- ❌ Do not bypass OS portability checks (use `ansible_facts['os_family']`).
+
+## Quick Commands
+
+- Validate: `ansible-playbook -i ansible/inventory.ini ansible/site.yml --syntax-check`
+- Test: `stow <package-name>`
+
+For full details, see [AGENTS.md](../AGENTS.md).

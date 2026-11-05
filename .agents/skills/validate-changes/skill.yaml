@@ -1,0 +1,44 @@
+# Skill: validate-changes
+# Change Validation Assistant for Dotfiles
+
+id: validate-changes
+name: Change Validation Assistant
+description: |
+  Helps validate changes to this dotfiles repository by running 
+  appropriate Ansible or Stow validation commands.
+
+tags:
+  - validation
+  - ansible
+  - stow
+  - testing
+
+commands:
+  validate_playbook:
+    name: Validate Ansible Playbook
+    description: Check syntax of the main playbook
+    command: ansible-playbook -i ansible/inventory.ini ansible/site.yml --syntax-check
+    critical: true
+
+  validate_all_yaml:
+    name: Validate All YAML Files
+    description: Check all YAML files in ansible/ directory
+    command: |
+      python3 - <<'PY'
+      from pathlib import Path
+      import yaml
+      for path in sorted(Path('ansible').rglob('*.yml')):
+          yaml.safe_load(open(path))
+          print(f'✓ Valid: {path}')
+      PY
+
+  test_stow_package:
+    name: Test Stow Package
+    description: Link a specific package to test directory layout
+    command: stow <package-name>
+    template: true
+
+  revalidate_stow:
+    name: Re-run Stow
+    description: Re-link packages for the active profile
+    command: ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow
