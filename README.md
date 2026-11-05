@@ -6,7 +6,7 @@ My .dotfiles repository - configuration files for a highly customized developmen
 
 Depending on your preference and system, choose one of the following paths:
 
-- **[Automated Setup](INSTALL_AUTOMATED.md)**: Recommended. A one-command bootstrap using Ansible to handle package installation and configuration. Supported platforms: Fedora, Ubuntu 24.04+ and Debian 13+ (and derivatives, incl. WSL), and macOS. (The default profile is the shared public workstation setup; optional personal/work overlays and a minimal server profile are also supported.)
+- **[Automated Setup](INSTALL_AUTOMATED.md)**: Recommended. A one-command bootstrap using Ansible to handle package installation and configuration. Supported platforms: Fedora, RedHat Enterprise Linux 9+ (and RHEL-family derivatives such as Rocky Linux and AlmaLinux), Ubuntu 24.04+ and Debian 13+ (and derivatives, incl. WSL), and macOS. (The default profile is the shared public workstation setup; optional personal/work overlays and a minimal server profile are also supported.)
 - **[Manual Setup](INSTALL_MANUAL.md)**: For power users who prefer granular control or are on unsupported platforms.
 
 ---

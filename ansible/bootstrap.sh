@@ -84,25 +84,29 @@ case "$(uname -s)" in
     fi
     # shellcheck disable=SC1091
     . /etc/os-release
-    # Classify into a package-manager family: Fedora (dnf) or the Debian
-    # family (apt). Fedora is matched strictly by ID: EL derivatives
-    # (Rocky, Alma, Oracle, ...) list "fedora" in ID_LIKE and must fail.
-    # The Debian family is matched by ID or ID_LIKE (derivatives such as
-    # Linux Mint report e.g. ID=linuxmint, ID_LIKE="ubuntu debian").
+    # Classify into a package-manager family: Fedora (dnf), RedHat Enterprise
+    # Linux derivatives (rhel), or the Debian family (apt). Fedora is matched
+    # strictly by ID; EL derivatives (Rocky, Alma, Oracle, CentOS Stream, ...)
+    # list "rhel" (and often "fedora") in ID_LIKE and are treated as the RedHat
+    # package-manager family. The Debian family is matched by ID or ID_LIKE
+    # (derivatives such as Linux Mint report e.g. ID=linuxmint, ID_LIKE="ubuntu debian").
     linux_release_tokens=" $(printf '%s %s' "${ID:-}" "${ID_LIKE:-}" | tr '[:upper:]' '[:lower:]') "
-    if [[ "$(printf '%s' "${ID:-}" | tr '[:upper:]' '[:lower:]')" == "fedora" ]]; then
+    linux_release_id="$(printf '%s' "${ID:-}" | tr '[:upper:]' '[:lower:]')"
+    if [[ "$linux_release_id" == "fedora" ]]; then
       platform="fedora"
+    elif [[ "$linux_release_tokens" == *" rhel "* || "$linux_release_tokens" == *" centos "* ]]; then
+      platform="rhel"
     elif [[ "$linux_release_tokens" == *" debian "* || "$linux_release_tokens" == *" ubuntu "* ]]; then
       platform="apt"
       if [[ "$linux_release_tokens" == *" ubuntu "* ]]; then
         is_ubuntu=true
       fi
     else
-      fail "Unsupported Linux distribution '${ID:-unknown}'. Supported: Fedora; Ubuntu 24.04+ and Debian 13+ and their derivatives (incl. WSL); macOS."
+      fail "Unsupported Linux distribution '${ID:-unknown}'. Supported: Fedora; RedHat 9+ and derivatives (RHEL, Rocky Linux, AlmaLinux, CentOS Stream); Ubuntu 24.04+ and Debian 13+ and their derivatives (incl. WSL); macOS."
     fi
     ;;
   *)
-    fail "Unsupported operating system. Supported: Fedora, Ubuntu 24.04+ and Debian 13+ (and their derivatives, incl. WSL), and macOS."
+    fail "Unsupported operating system. Supported: Fedora, RedHat 9+ and derivatives (RHEL, Rocky Linux, AlmaLinux, CentOS Stream); Ubuntu 24.04+ and Debian 13+ (and their derivatives, incl. WSL), and macOS."
     ;;
 esac
 
@@ -128,6 +132,10 @@ if ((${#packages[@]})); then
     macos)
       command -v brew >/dev/null 2>&1 || fail "Install Homebrew first: https://brew.sh/"
       brew install "${packages[@]/ansible-core/ansible}"
+      ;;
+    rhel)
+      command -v sudo >/dev/null 2>&1 || fail "Install sudo to bootstrap system packages."
+      sudo dnf install -y "${packages[@]}"
       ;;
   esac
 fi
@@ -238,7 +246,7 @@ fi
 
 ansible-playbook "${ansible_args[@]}"
 
-if [[ "$dotfiles_profile" != "server" ]] && { [[ "$platform" == "fedora" ]] || ( [[ "$is_ubuntu" == true ]] && [[ "$is_wsl" == false ]] ); }; then
+if [[ "$dotfiles_profile" != "server" ]] && { [[ "$platform" == "fedora" ]] || [[ "$platform" == "rhel" ]] || ( [[ "$is_ubuntu" == true ]] && [[ "$is_wsl" == false ]] ); }; then
   if [[ -d "$HOME/.config/toshy" ]]; then
     printf 'Toshy is already installed; skipping the optional Toshy setup.\n'
   else

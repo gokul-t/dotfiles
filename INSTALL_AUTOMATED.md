@@ -28,12 +28,13 @@ With the default profile selected, bootstrap installs the shared public workstat
 | Platform | Profiles |
 |---|---|
 | Fedora (current stable) | all |
+| RedHat Enterprise Linux 9+ and derivatives (Rocky Linux, AlmaLinux, CentOS Stream) | server |
 | macOS | all |
 | Ubuntu 24.04+ and derivatives based on it (Linux Mint 22, Pop!_OS 24.04, Zorin 18, Kali, ...), incl. WSL | all |
 | Debian 13+ and derivatives based on it (Raspberry Pi OS trixie, ...), incl. WSL | all |
 
 Notes:
-- Minimum versions are enforced: Ubuntu 24.04 and Debian 13 (trixie) are the floors; older releases fail fast with a clear error.
+- Minimum versions are enforced: Ubuntu 24.04 and Debian 13 (trixie) are the floors; older releases fail fast with a clear error. RedHat 9 is the floor for RedHat-family server installs.
 - Derivatives are supported when based on those floors.
 - Snap is off by default on non-Ubuntu Debian-family systems; opt in with `-e dotfiles_install_snap_apps=true`.
 - Anything outside this list fails fast with a message naming the supported platforms.
@@ -42,19 +43,20 @@ Notes:
 
 ## 🏠 Homelab Server Setup
 
-For minimal server installations (Ubuntu 24.04+ or Debian 13+), use the `server` profile. This installs only a lean set of essentials, skips GUI apps, and avoids changing your login shell.
+For minimal server installations (Ubuntu 24.04+, Debian 13+, or RedHat Enterprise Linux 9+ and derivatives), use the `server` profile. This installs only a lean set of essentials, skips GUI apps, and avoids changing your login shell.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/gokul-t/dotfiles/main/ansible/bootstrap.sh | bash -s -- --profile server
 ```
 
 ### Server Profile Details:
-- **Supported OS**: Ubuntu 24.04+, Debian 13+.
+- **Supported OS**: Ubuntu 24.04+, Debian 13+, or RedHat 9+ (RHEL, Rocky Linux, AlmaLinux, CentOS Stream).
 - **Installed**: Core utilities (`curl`, `git`, `vim`, `tmux`, `htop`, `ripgrep`, `jq`, etc.).
 - **Stowed**: Only the `vim` configuration.
 - **Preserved**: Existing login shell and Bash configuration. tmux uses its defaults (the workstation tmux config is not linked).
 - **Not touched**: GUI apps, language runtimes, Zsh/plugins, Docker, SSH daemon, firewall, users, and services.
-- **Prerequisites**: Run locally (e.g. over SSH) as a regular user with `sudo` and network access, not as root.
+- **Prerequisites**: Run locally (e.g. over SSH) as a regular user with `sudo` and network access, not as root, and on a supported RedHat-family release (9+) or Debian-family release (13+).
+- **RedHat-family package sources**: On RHEL/Fedora-based systems the playbook enables the EPEL repository before installing the server package set (Fedora already ships EPEL enabled by default).
 - **Existing files**: Stow never overwrites them; a conflicting `~/.vimrc` is left as is and reported. Pass `-e dotfiles_stow_strict=true` to fail instead.
 - **Additive only**: Switching profiles does not remove previously installed workstation software or links.
 
@@ -151,7 +153,7 @@ The automated setup is a wrapper around a set of manual steps. If you are curiou
 ### Manual Playbook Execution
 If you already have Ansible installed and want to run the playbook manually:
 ```sh
-# Fedora/Ubuntu/Debian
+# Fedora/Ubuntu/Debian/RedHat-family
 ansible-playbook -i ansible/inventory.ini ansible/site.yml --ask-become-pass
 
 # macOS

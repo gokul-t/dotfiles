@@ -7,6 +7,7 @@ Use this guide if you prefer to set up your environment step-by-step or if the a
 ### Package Managers
 Ensure you have the following installed based on your OS:
 - **Fedora**: `sudo dnf install stow git`
+- **RedHat family (RHEL, Rocky Linux, AlmaLinux, CentOS Stream)**: `sudo dnf install stow git`
 - **Ubuntu/Debian**: `sudo apt install stow git`
 - **macOS**: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` then `brew install stow git`
 

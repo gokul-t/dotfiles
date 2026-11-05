@@ -19,3 +19,19 @@ dotfiles_server_packages:
   - iproute2
   - iputils-ping
   - openssh-client
+dotfiles_server_packages_dnf:
+  - ca-certificates
+  - curl
+  - git
+  - stow
+  - vim-enhanced
+  - tmux
+  - rsync
+  - less
+  - htop
+  - ripgrep
+  - jq
+  - bind-utils
+  - iproute
+  - iputils
+  - openssh-clients

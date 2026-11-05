@@ -133,3 +133,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: docker run --rm dotfiles-server-test
+
+  server-rhel-container:
+    name: Rocky Linux 9 server provisioning
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build server provisioning image
+        run: docker build --file ansible/containers/server-rhel.Dockerfile --tag dotfiles-server-rhel-test .
+
+      - name: Provision server container, verify idempotence and results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: docker run --rm dotfiles-server-rhel-test

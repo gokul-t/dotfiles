@@ -45,11 +45,12 @@
               ansible_facts['distribution'] == "Fedora" or
               ansible_facts['os_family'] == "Debian")) or
             (dotfiles_profile == "server" and
-             ansible_facts['os_family'] == "Debian")
+             ansible_facts['os_family'] in ["Debian", "RedHat"])
         fail_msg: >-
           Unsupported OS/profile combination. Profiles default/personal/work support
           Fedora, macOS, and Debian-family distributions (Ubuntu 24.04+ or Debian 13+).
-          The server profile supports Debian-family distributions only (Ubuntu 24.04+ or Debian 13+).
+          The server profile supports Debian-family distributions (Ubuntu 24.04+ or Debian 13+)
+          and RedHat-family distributions (Fedora, RHEL/CentOS/Rocky/Alma derivatives, 9+).
       tags: [always]
 
     - name: Require Debian 13 or newer
@@ -66,6 +67,16 @@
           - (ansible_facts['distribution_major_version'] | int) >= 24
         fail_msg: "Ubuntu {{ ansible_facts['distribution_version'] }} is not supported. Ubuntu 24.04 or newer is required."
       when: ansible_facts['distribution'] == 'Ubuntu'
+      tags: [always]
+
+    - name: Require RedHat family version
+      ansible.builtin.assert:
+        that:
+          - (ansible_facts['distribution_major_version'] | int) >= 9
+        fail_msg: >-
+          RedHat-family distribution {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}
+          is not supported. RedHat 9 or newer is required.
+      when: ansible_facts['os_family'] == 'RedHat'
       tags: [always]
 
     - name: Require a supported private overlay profile

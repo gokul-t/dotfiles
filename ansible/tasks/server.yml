@@ -7,4 +7,24 @@
     install_recommends: false
     update_cache: true
     cache_valid_time: 3600
+  when: ansible_facts['os_family'] == 'Debian'
+  tags: [packages]
+
+- name: Install EPEL repository support (RedHat family)
+  become: true
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+  when:
+    - ansible_facts['os_family'] == 'RedHat'
+    - ansible_facts['distribution'] != 'Fedora'
+  tags: [packages]
+
+- name: Install minimal server packages (DNF)
+  become: true
+  ansible.builtin.dnf:
+    name: "{{ dotfiles_server_packages_dnf }}"
+    state: present
+    update_cache: true
+  when: ansible_facts['os_family'] == 'RedHat'
   tags: [packages]
