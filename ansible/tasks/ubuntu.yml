@@ -1,4 +1,10 @@
 ---
+- name: Install locales package
+  become: true
+  ansible.builtin.apt:
+    name: locales
+    state: present
+
 - name: Ensure UTF-8 locale is available
   become: true
   ansible.builtin.command:
