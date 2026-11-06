@@ -1,4 +1,26 @@
 ---
+- name: Ensure UTF-8 locale is available
+  become: true
+  ansible.builtin.command:
+    argv:
+      - locale-gen
+      - en_US.UTF-8
+  when:
+    - ansible_facts['os_family'] == 'Debian'
+    - ansible_facts['distribution'] != 'Fedora'
+  changed_when: false
+  tags: [packages]
+
+- name: Create locale configuration file
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/default/locale
+    regexp: '^LANG='
+    line: 'LANG=en_US.UTF-8'
+    backup: true
+  when: ansible_facts['os_family'] == 'Debian'
+  tags: [packages]
+
 - name: Read Ubuntu package manifest
   ansible.builtin.set_fact:
     dotfiles_ubuntu_packages_all: >-

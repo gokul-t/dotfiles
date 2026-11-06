@@ -143,6 +143,17 @@ fi
 command -v git >/dev/null 2>&1 || fail "Git is required but was not installed."
 command -v ansible-playbook >/dev/null 2>&1 || fail "Ansible is required but was not installed."
 
+# Ensure UTF-8 locale is configured for Ansible to work correctly
+if [[ "$platform" == "apt" ]]; then
+  if [[ ! -f /etc/locale.gen ]] || ! grep -q "en_US.UTF-8" /etc/locale.gen 2>/dev/null; then
+    sudo sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen 2>/dev/null || true
+  fi
+  sudo locale-gen en_US.UTF-8 2>/dev/null || true
+  sudo localectl set-locale LANG=en_US.UTF-8 2>/dev/null || sudo sh -c 'echo "LANG=en_US.UTF-8" > /etc/default/locale'
+elif [[ "$platform" == "fedora" || "$platform" == "rhel" ]]; then
+  sudo localectl set-locale LANG=en_US.UTF-8 2>/dev/null || true
+fi
+
 is_wsl=false
 if [[ "$(uname -s)" == "Linux" ]] \
   && { [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease 2>/dev/null; }; then
@@ -244,6 +255,7 @@ if [[ "$dotfiles_private_enabled" == true ]]; then
   ansible_args+=(-e dotfiles_private_profile="$dotfiles_private_profile")
 fi
 
+export LC_ALL=C.UTF-8
 ansible-playbook "${ansible_args[@]}"
 
 if [[ "$dotfiles_profile" != "server" ]] && { [[ "$platform" == "fedora" ]] || [[ "$platform" == "rhel" ]] || ( [[ "$is_ubuntu" == true ]] && [[ "$is_wsl" == false ]] ); }; then
