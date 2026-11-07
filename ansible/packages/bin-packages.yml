@@ -1,15 +1,9 @@
 # Shared bin packages (installed via the bin binary manager).
 - name: uv
   source: github.com/astral-sh/uv
-  asset_pattern: >-
-    uv-{%- if ansible_facts['system'] == 'Linux' %}-*-linux-gnu*/uv
-         {% elif ansible_facts['system'] == 'Darwin' %}-*-x86_64-apple-darwin.tar.gz
-         {% else %}*{% endif %}
+  asset_pattern: "uv-*-linux-gnu*/uv"
 - name: uvx
   source: github.com/astral-sh/uv
-  asset_pattern: >-
-    uvx-{%- if ansible_facts['system'] == 'Linux' %}-*-linux-gnu*/uvx
-         {% elif ansible_facts['system'] == 'Darwin' %}-*-x86_64-apple-darwin.tar.gz
-         {% else %}*{% endif %}
+  asset_pattern: "uv-*-linux-gnu*/uvx"
 - name: user-installed-packages
   source: github.com/gokul-t/user-installed-packages
