@@ -116,9 +116,9 @@ user-installed-packages report --manifest-dir ~/.dotfiles/ansible/packages \
   --snap-manifest snap-packages.txt \
   --snap-manifest ~/.dotfiles/personal/ansible/packages/snap-packages.txt
 ```
-The [user-installed-packages](https://github.com/gokul-t/user-installed-packages) project provides the report command and the explicit APT/DNF package detection it uses. The playbook installs it via `pipx` into `~/.local/bin` on macOS, Fedora, and Ubuntu/Debian (`dotfiles_user_installed_packages_version` in `ansible/vars.yml` pins the release; bump it deliberately). To install by hand instead:
+The [user-installed-packages](https://github.com/gokul-t/user-installed-packages) project provides the report command and the explicit APT/DNF package detection it uses. The playbook installs it through the [`bin`](https://github.com/marcosnils/bin) binary manager into the user-local bin directory (`~/.local/bin`) on macOS, Fedora, and Ubuntu/Debian. To install by hand instead:
 ```sh
-pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.5.0
+bin install github.com/gokul-t/user-installed-packages
 ```
 - `+` lines are installed (explicitly) but not in the manifest; `-` lines are in the manifest but not installed here (possibly intentional). Review and edit the corresponding file in `ansible/packages/` or, for personal entries, `personal/ansible/packages/`. Nothing is installed, removed, or committed by the report.
 - Covers Homebrew formulae/casks/taps and Brewfile VS Code extensions (macOS), DNF + Flatpak (Fedora), APT + Snap (Ubuntu/Debian). Options: `--skip NAME`, `--no-flatpak`, `--no-snap`. Mise runtimes, plugins, and manually downloaded binaries are not covered.

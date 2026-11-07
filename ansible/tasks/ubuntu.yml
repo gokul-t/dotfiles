@@ -116,16 +116,6 @@
     update_cache: true
     cache_valid_time: 3600
 
-- name: Install pipx
-  become: true
-  ansible.builtin.apt:
-    name: pipx
-    state: present
-    update_cache: true
-
-- name: Install package report tool
-  ansible.builtin.import_tasks: package-report-tool.yml
-
 - name: Install Google Chrome
   become: true
   ansible.builtin.apt:

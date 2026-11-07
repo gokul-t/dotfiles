@@ -74,6 +74,3 @@
       - --file
       - "{{ dotfiles_repo_path }}/ansible/packages/Brewfile"
   when: dotfiles_brew_bundle_check.rc != 0
-
-- name: Install package report tool
-  ansible.builtin.import_tasks: package-report-tool.yml

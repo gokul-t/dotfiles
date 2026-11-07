@@ -14,6 +14,8 @@ dotfiles_bin_packages:
   - name: uvx
     source: github.com/astral-sh/uv
     asset_pattern: uv-*-linux-gnu*/uvx
+  - name: user-installed-packages
+    source: github.com/gokul-t/user-installed-packages
 dotfiles_bin_packages_personal: []
 dotfiles_fedora_skip_packages: []
 dotfiles_fedora_copr_repos:
@@ -30,9 +32,6 @@ dotfiles_fedora_copr_repos:
   - package: fedy
     repo: kwizart/fedy
 dotfiles_ubuntu_skip_packages: []
-# Version of https://github.com/gokul-t/user-installed-packages installed by
-# the playbook for package detection and drift reporting.
-dotfiles_user_installed_packages_version: "v0.6.2"
 dotfiles_package_report_schedule: false
 dotfiles_package_report_cron_fallback: false
 dotfiles_package_report_dir: "{{ ansible_facts['env']['HOME'] }}/.local/state/dotfiles"
