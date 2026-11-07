@@ -2,7 +2,13 @@ name: Ansible
 
 on:
   push:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
