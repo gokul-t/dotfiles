@@ -43,8 +43,9 @@
   ansible.builtin.set_fact:
     dotfiles_ubuntu_overlay_packages: >-
       {{
-        (lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/apt-packages.txt', errors='ignore') | default('') | splitlines()
-         | map('trim') | reject('match', '^#') | reject('equalto', '') | list) if ('apt-packages.txt' in (dotfiles_private_package_manifests | default([]))) else []
+        ((lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/apt-packages.txt', errors='ignore') | default('', true))).splitlines()
+         | map('trim') | reject('match', '^#') | reject('equalto', '') | list
+         if ('apt-packages.txt' in (dotfiles_private_package_manifests | default([]))) else []
       }}
   when: dotfiles_private_enabled | bool
 
@@ -256,8 +257,9 @@
   ansible.builtin.set_fact:
     dotfiles_ubuntu_overlay_snaps: >-
       {{
-        (lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/snap-packages.txt', errors='ignore') | default('') | splitlines()
-         | map('trim') | reject('match', '^#') | reject('equalto', '') | list) if ('snap-packages.txt' in (dotfiles_private_package_manifests | default([]))) else []
+        ((lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/snap-packages.txt', errors='ignore') | default('', true))).splitlines()
+         | map('trim') | reject('match', '^#') | reject('equalto', '') | list
+         if ('snap-packages.txt' in (dotfiles_private_package_manifests | default([]))) else []
       }}
   when: dotfiles_install_snap_apps | bool and dotfiles_private_enabled | bool
 
