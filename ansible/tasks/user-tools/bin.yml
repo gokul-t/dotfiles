@@ -108,14 +108,21 @@
 
 - name: Read private overlay bin packages
   ansible.builtin.set_fact:
-    dotfiles_bin_packages_personal: >-
+    dotfiles_bin_packages_private: >-
       {{ lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/bin-packages.yml', errors='ignore') | default('[]') | from_yaml }}
   when:
     - dotfiles_private_enabled | bool
 
-- name: Combine shared and private overlay bin packages
+- name: Read shared bin packages
   ansible.builtin.set_fact:
-    dotfiles_bin_packages_all: "{{ dotfiles_bin_packages + (dotfiles_bin_packages_personal | default([])) }}"
+    dotfiles_bin_packages_shared: >-
+      {{ lookup('ansible.builtin.file', playbook_dir ~ '/ansible/packages/bin-packages.yml', errors='ignore') | default('[]') | from_yaml }}
+  when:
+    - '"bin" not in dotfiles_skip_tools'
+
+- name: Combine shared and personal overlay bin packages
+  ansible.builtin.set_fact:
+    dotfiles_bin_packages_all: "{{ dotfiles_bin_packages_shared + (dotfiles_bin_packages_private | default([])) }}"
 
 - name: Install configured binaries with bin
   ansible.builtin.command:

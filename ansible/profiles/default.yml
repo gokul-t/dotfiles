@@ -4,7 +4,6 @@ dotfiles_profile_stow_packages:
   - alacritty
   - bash
   - bin
-  - claude
   - code
   - ghostty
   - gh
