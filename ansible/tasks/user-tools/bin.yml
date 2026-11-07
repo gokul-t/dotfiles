@@ -106,19 +106,46 @@
     mode: "0755"
   when: "'bin' not in dotfiles_skip_tools"
 
-- name: Read private overlay bin packages
-  ansible.builtin.set_fact:
-    dotfiles_bin_packages_private: >-
-      {{ lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/bin-packages.yml', errors='ignore') | default('') | from_yaml | default([]) }}
-  when:
-    - dotfiles_private_enabled | bool
+- name: Check if shared bin packages file exists
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/ansible/packages/bin-packages.yml"
+  register: dotfiles_bin_shared_file
+  when: '"bin" not in dotfiles_skip_tools'
 
 - name: Read shared bin packages
   ansible.builtin.set_fact:
     dotfiles_bin_packages_shared: >-
-      {{ lookup('ansible.builtin.file', playbook_dir ~ '/ansible/packages/bin-packages.yml', errors='ignore') | default('') | from_yaml | default([]) }}
+      {{
+        (dotfiles_bin_shared_file.stat.exists
+         | ternary(
+             lookup('ansible.builtin.file', playbook_dir ~ '/ansible/packages/bin-packages.yml'),
+             '[]'
+           )
+         | from_yaml
+        )
+      }}
   when:
     - '"bin" not in dotfiles_skip_tools'
+
+- name: Check if private overlay bin packages file exists
+  ansible.builtin.stat:
+    path: "{{ dotfiles_private_path }}/ansible/packages/bin-packages.yml"
+  register: dotfiles_bin_private_file
+  when: dotfiles_private_enabled | bool
+
+- name: Read private overlay bin packages
+  ansible.builtin.set_fact:
+    dotfiles_bin_packages_private: >-
+      {{
+        (dotfiles_bin_private_file.stat.exists
+         | ternary(
+             lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/bin-packages.yml'),
+             '[]'
+           )
+         | from_yaml
+        )
+      }}
+  when: dotfiles_private_enabled | bool
 
 - name: Combine shared and personal overlay bin packages
   ansible.builtin.set_fact:
