@@ -114,6 +114,12 @@ mise trust ~/.config/mise/config.local.toml   # personal or work mode (linked fr
 mise install
 ```
 
+#### user-installed-packages (Package Drift Report)
+The [user-installed-packages](https://github.com/gokul-t/user-installed-packages) library is installed through the [`bin`](https://github.com/marcosnils/bin) binary manager:
+```sh
+bin install github.com/gokul-t/user-installed-packages
+```
+
 ### 5. Final Touches
 - **Fonts**: Install **MesloLGS Nerd Font**.
   ```sh
