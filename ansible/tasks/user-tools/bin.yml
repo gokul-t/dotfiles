@@ -108,7 +108,7 @@
 
 - name: Check if shared bin packages file exists
   ansible.builtin.stat:
-    path: "{{ playbook_dir }}/ansible/packages/bin-packages.yml"
+    path: "{{ dotfiles_repo_path }}/ansible/packages/bin-packages.yml"
   register: dotfiles_bin_shared_file
   when: '"bin" not in dotfiles_skip_tools'
 
@@ -118,7 +118,7 @@
       {{
         (dotfiles_bin_shared_file.stat.exists
          | ternary(
-             lookup('ansible.builtin.file', playbook_dir ~ '/ansible/packages/bin-packages.yml'),
+             lookup('ansible.builtin.file', dotfiles_repo_path ~ '/ansible/packages/bin-packages.yml'),
              '[]'
            )
          | from_yaml
