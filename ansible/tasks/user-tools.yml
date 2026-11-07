@@ -62,4 +62,4 @@
   ansible.builtin.user:
     name: "{{ ansible_facts['user_id'] }}"
     shell: "{{ dotfiles_zsh_path.stdout }}"
-  when: ansible_facts['env']['SHELL'] | default('') != dotfiles_zsh_path.stdout
+  when: (ansible_facts['user_shell'] | default('')) | basename != (dotfiles_zsh_path.stdout | basename)
