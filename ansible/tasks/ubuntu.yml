@@ -122,8 +122,6 @@
   ansible.builtin.apt:
     name: google-chrome-stable
     state: present
-    update_cache: true
-    cache_valid_time: 3600
   when:
     - "'google-chrome-stable' in dotfiles_ubuntu_packages_all"
     - ansible_facts['architecture'] == "x86_64"

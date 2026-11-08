@@ -1,9 +1,18 @@
 ---
 - name: Install mise
-  ansible.builtin.shell: set -o pipefail && curl -fsSL https://mise.run | sh
+  ansible.builtin.get_url:
+    url: https://mise.run
+    dest: /tmp/mise-install.sh
+    mode: "0755"
+  register: dotfiles_mise_installer
+
+- name: Run the mise installer
+  ansible.builtin.command:
+    argv:
+      - /bin/bash
+      - /tmp/mise-install.sh
   args:
     creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/mise"
-    executable: /bin/bash
 
 - name: Check whether the mise configuration is linked
   ansible.builtin.stat:

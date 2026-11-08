@@ -24,17 +24,42 @@
     - dotfiles_private_enabled | bool
     - dotfiles_overlay_brew_bundle_check.rc != 0
 
-- name: Read the configured overlay tap remotes
+- name: Read the overlay tap names and expected remotes from the private Brewfile
+  ansible.builtin.set_fact:
+    dotfiles_overlay_taps: >-
+      {{
+        (lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/Brewfile', errors='ignore') | default('', true))
+        | regex_findall('(?m)^tap "([^"]+)", "([^"]+)"')
+      }}
+  when:
+    - dotfiles_private_enabled | bool
+    - "'Brewfile' in (dotfiles_private_package_manifests | default([]))"
+
+- name: Resolve overlay tap repository paths
   ansible.builtin.command:
-    cmd: "git -C \"$(brew --repo {{ item[0] }})\" remote get-url origin"
-  loop: >-
-    {{
-      (lookup('ansible.builtin.file', dotfiles_private_path ~ '/ansible/packages/Brewfile', errors='ignore') | regex_findall('(?m)^tap "([^"]+)", "([^"]+)"')
-       if (dotfiles_private_package_manifests | default([]) | contains('Brewfile'))
-       else [])
-    }}
+    argv:
+      - brew
+      - --repository
+      - "{{ item[0] }}"
+  loop: "{{ dotfiles_overlay_taps | default([]) }}"
   loop_control:
     label: "{{ item[0] }}"
+  register: dotfiles_overlay_brew_repos
+  changed_when: false
+  failed_when: false
+  when: dotfiles_private_enabled | bool
+
+- name: Read the configured overlay tap remotes
+  ansible.builtin.command:
+    argv:
+      - git
+      - remote
+      - get-url
+      - origin
+    chdir: "{{ item.stdout }}"
+  loop: "{{ dotfiles_overlay_brew_repos.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item[0] }}"
   register: dotfiles_overlay_tap_remotes
   changed_when: false
   failed_when: false
@@ -43,15 +68,15 @@
 - name: Warn about overlay taps that do not use the expected remote
   ansible.builtin.debug:
     msg: >-
-      Tap {{ item.item[0] }} uses '{{ item.stdout | default('unknown') | trim }}' instead of
-      '{{ item.item[1] }}'. Brew Bundle leaves existing tap remotes untouched; retap manually
-      (brew untap, then brew tap {{ item.item[0] }} {{ item.item[1] }}) after reviewing the impact.
+      Tap {{ item.item.item[0] }} uses '{{ item.stdout | default('unknown') | trim }}' instead of
+      '{{ item.item.item[1] }}'. Brew Bundle leaves existing tap remotes untouched; retap manually
+      (brew untap, then brew tap {{ item.item.item[0] }} {{ item.item.item[1] }}) after reviewing the impact.
   loop: "{{ dotfiles_overlay_tap_remotes.results | default([]) }}"
   loop_control:
-    label: "{{ item.item[0] }}"
+    label: "{{ item.item.item[0] }}"
   when:
     - dotfiles_private_enabled | bool
-    - (item.stdout | default('') | trim) != item.item[1]
+    - (item.stdout | default('') | trim) != item.item.item[1]
 
 - name: Check whether the Brewfile is satisfied
   ansible.builtin.command:
