@@ -14,6 +14,12 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Load user config modules eagerly so that autocmds registered in
+-- `lua/config/autocmds.lua` are created before the first VimEnter fires.
+-- LazyVim defers loading `config.*` modules until the VeryLazy event when no
+-- file is opened, which can be too late for events like VimEnter.
+require("config.autocmds")
+
 require("lazy").setup({
   spec = {
     -- add LazyVim and import its plugins

@@ -1,3 +1,5 @@
+export AI_CODING_TOOL=claude
+
 for env_file in ~/.config/zsh/env.d/*.zsh(N) ~/.config/zsh/user-env.d/*.zsh(N); do
  source "$env_file"
 done
