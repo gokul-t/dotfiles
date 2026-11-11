@@ -6,7 +6,7 @@ path = "~/.dotfiles"
 icon = "🏠"
 startup_command = "nvim"
 preview_command = "bat --color=always ~/.dotfiles/README.md"
-windows = [ "git", "copilot"]
+windows = [ "dotfiles-window2" ]
 
 [[session]]
 name = "Notes 📓"
@@ -47,3 +47,18 @@ startup_script = "lazygit"
 [[window]]
 name = "yazi"
 startup_script = "y"
+
+[[window]]
+name = "dotfiles-window2"
+startup_script = "git status"
+panes = [ "dotfiles-parent-pane", "dotfiles-private-pane" ]
+layout = "main-vertical"
+
+[[pane]]
+name = "dotfiles-parent-pane"
+startup_command = "git status"
+focus = true
+
+[[pane]]
+name = "dotfiles-private-pane"
+startup_command = "cd ./$DOTFILES_PROFILE && git status"
