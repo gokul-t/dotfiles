@@ -26,7 +26,7 @@ windows = [ "yazi"]
 pattern = "~/Developer/repos/*/*"
 icon = ""
 startup_command = "nvim"
-windows = [ "git", "copilot"]
+windows = [ "git", "ai_coding_tool"]
 
 [[window]]
 name = "nvim"
@@ -46,7 +46,7 @@ startup_script = "lazygit"
 
 [[window]]
 name = "yazi"
-startup_script = "y"
+startup_script = "yazi"
 
 [[window]]
 name = "dotfiles-window2"
