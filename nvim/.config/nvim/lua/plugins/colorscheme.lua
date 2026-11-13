@@ -5,7 +5,7 @@ return {
     name = "catppuccin",
     priority = 1000,
     opts = {
-      flavour = "macchiato", -- Match this to your Ghostty & Tmux style
+      flavour = "mocha", -- Match this to your Ghostty & Tmux style
       transparent_background = false, -- Set to true if you like transparent terminals
     },
   },
@@ -14,7 +14,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "catppuccin-macchiato",
+      colorscheme = "catppuccin-mocha", -- Match this to your Ghostty & Tmux style:
     },
   },
 }

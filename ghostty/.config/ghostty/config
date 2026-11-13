@@ -1,13 +1,15 @@
 # Core Theme
-theme = Catppuccin Macchiato
+theme = Catppuccin Mocha
 
 # Font (Requires a Nerd Font for Oh My Zsh/Tmux icons)
-# font-family = "JetBrainsMono Nerd Font"
-# font-size = 12 
-
 font-family = "MesloLGS NF"
 font-size = 14
 
-command = /bin/sh -c 'if [ "$(uname)" = Darwin ]; then PATH="/opt/homebrew/bin:$PATH"; fi; exec tmux new-session -A -s default'
+background-blur-radius = 20
+
+mouse-hide-while-typing = true
+macos-option-as-alt = true
+
+command = /bin/sh -l -c 'if [ "$(uname)" = Darwin ]; then PATH="/opt/homebrew/bin:$PATH"; fi; exec tmux new -A'
 
 
