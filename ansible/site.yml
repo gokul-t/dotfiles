@@ -5,8 +5,14 @@
   vars_files:
     - vars.yml
   tasks:
-    - name: Validate dotfiles prerequisites (profile, OS, private overlay)
+    - name: Validate dotfiles prerequisites (profile, OS)
       ansible.builtin.import_tasks: tasks/validate.yml
+      tags: [always]
+
+    - name: Resolve private overlay for this platform
+      ansible.builtin.include_role:
+        name: private
+      when: dotfiles_private_enabled | bool
       tags: [always]
 
     - name: Install packages
