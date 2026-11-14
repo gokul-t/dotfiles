@@ -143,6 +143,8 @@
   ansible.builtin.command:
     argv:
       - gpg
+      - --batch
+      - --yes
       - --dearmor
       - -o
       - /etc/apt/keyrings/gierens.gpg
