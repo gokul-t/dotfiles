@@ -1,0 +1,44 @@
+---
+- name: Require a supported private overlay profile
+  ansible.builtin.assert:
+    that:
+      - dotfiles_profile in ["personal", "work"]
+    fail_msg: >-
+      dotfiles_private_enabled is true but the selected profile '{{ dotfiles_profile }}'
+      is not an overlay-capable profile. Private overlays are only available with the
+      'personal' or 'work' profiles.
+  when: dotfiles_private_enabled | bool
+  tags: [always]
+
+- name: Select private overlay package manifests for this platform
+  ansible.builtin.set_fact:
+    dotfiles_private_package_manifests: >-
+      {{
+        (['Brewfile']
+         if dotfiles_private_profile in ['work', 'personal'] and ansible_facts['system'] == 'Darwin'
+         else (
+           ['Brewfile']
+           if dotfiles_private_profile in ['work', 'personal']
+           else (
+             ['apt-packages.txt']
+             + (['snap-packages.txt'] if dotfiles_install_snap_apps | bool else [])
+             if ansible_facts['os_family'] == 'Debian'
+             else (
+               ['dnf-packages.txt']
+               + (['flatpak-packages.txt'] if dotfiles_install_flatpak_apps | bool else [])
+             )
+           )
+         ))
+      }}
+  when: dotfiles_private_enabled | bool
+  tags: [always]
+
+- name: Check the private overlay package manifests
+  ansible.builtin.stat:
+    path: "{{ dotfiles_private_path }}/ansible/packages/{{ item }}"
+  loop: "{{ dotfiles_private_package_manifests | default([]) }}"
+  register: dotfiles_private_package_manifest_files
+  when:
+    - dotfiles_private_enabled | bool
+    - dotfiles_private_package_manifests | length > 0
+  tags: [always]
