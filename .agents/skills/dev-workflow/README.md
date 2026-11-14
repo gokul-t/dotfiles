@@ -24,7 +24,7 @@ Use this skill when:
 ## Architecture Overview
 
 1. **Entry Point**: `ansible/site.yml` - orchestrates everything
-2. **Stow Task**: `ansible/tasks/stow.yml` - handles linking
+2. **Stow Task**: `ansible/roles/stow/tasks/main.yml` - handles linking
 3. **Profiles**: `ansible/profiles/*.yml` - define which packages to link
 4. **Packages**: Top-level directories are Stow packages (not app code)
 
