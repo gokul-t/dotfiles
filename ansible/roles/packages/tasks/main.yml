@@ -1,0 +1,38 @@
+---
+- name: Install Fedora packages
+  ansible.builtin.include_tasks:
+    file: fedora.yml
+    apply:
+      tags: [packages]
+  when:
+    - dotfiles_profile in ["default", "personal", "work"]
+    - ansible_facts['distribution'] == "Fedora"
+  tags: [packages]
+
+- name: Install apt-family packages
+  ansible.builtin.include_tasks:
+    file: ubuntu.yml
+    apply:
+      tags: [packages]
+  when:
+    - dotfiles_profile in ["default", "personal", "work"]
+    - ansible_facts['os_family'] == "Debian"
+  tags: [packages]
+
+- name: Install macOS packages
+  ansible.builtin.include_tasks:
+    file: macos.yml
+    apply:
+      tags: [packages]
+  when:
+    - dotfiles_profile in ["default", "personal", "work"]
+    - ansible_facts['system'] == "Darwin"
+  tags: [packages]
+
+- name: Install server packages
+  ansible.builtin.include_tasks:
+    file: server.yml
+    apply:
+      tags: [packages]
+  when: dotfiles_profile == "server"
+  tags: [packages]
