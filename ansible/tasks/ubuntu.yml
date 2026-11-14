@@ -139,6 +139,7 @@
 
 - name: Dearmor eza APT signing key
   become: true
+  changed_when: false
   ansible.builtin.command:
     argv:
       - gpg
@@ -146,7 +147,6 @@
       - -o
       - /etc/apt/keyrings/gierens.gpg
       - /tmp/eza-deb.asc
-    changed_when: false
   when:
     - "'eza' in dotfiles_ubuntu_packages_all"
 
