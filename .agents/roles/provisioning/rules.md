@@ -5,8 +5,8 @@
 | File | Purpose |
 |------|---------|
 | `ansible/site.yml` | Main orchestration entry point |
-| `ansible/tasks/stow.yml` | Links packages with stow |
-| `ansible/tasks/user-tools.yml` | Installs Oh My Zsh, TPM, LazyVim, mise |
+| `ansible/roles/stow/tasks/main.yml` | Links packages with stow |
+| `ansible/roles/user-tools/tasks/main.yml` | Installs Oh My Zsh, TPM, LazyVim, mise |
 | `ansible/profiles/*.yml` | Package lists per profile |
 | `ansible/packages/` | OS-specific package manifests |
 | `ansible/containers/*` | Test scripts |

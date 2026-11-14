@@ -26,7 +26,7 @@ ansible-playbook -i ansible/inventory.ini ansible/site.yml --tags stow
 
 ## Key Files
 - `ansible/site.yml` - main entry point
-- `ansible/tasks/stow.yml` - linking logic
+- `ansible/roles/stow/tasks/main.yml` - linking logic
 - `ansible/profiles/*.yml` - active packages
 - Packaged directories (`nvim/`, `tmux/`, `zsh/`, `git/`, etc.)
 

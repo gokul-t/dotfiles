@@ -14,8 +14,10 @@ tags:
 
 files:
   - ansible/site.yml
-  - ansible/tasks/stow.yml
-  - ansible/tasks/user-tools.yml
+  - ansible/roles/stow/tasks/main.yml
+  - ansible/roles/user-tools/tasks/main.yml
+  - ansible/roles/private/tasks/main.yml
+  - ansible/roles/packages/tasks/main.yml
   - ansible/profiles/*.yml
   - ansible/packages/*
   - ansible/containers/*
