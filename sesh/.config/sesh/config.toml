@@ -1,12 +1,12 @@
 #:schema https://github.com/joshmedeski/sesh/raw/main/sesh.schema.json
 
 [[session]]
-name = "Dotfiles 🏠"
+name = "Dotfiles 📁"
 path = "~/.dotfiles"
 icon = "🏠"
 startup_command = "nvim"
 preview_command = "bat --color=always ~/.dotfiles/README.md"
-windows = [ "dotfiles-window2", "ai_coding_tool" ]
+windows = [ "dotfiles-shell", "ai" ]
 
 [[session]]
 name = "Notes 📓"
@@ -26,18 +26,18 @@ windows = [ "yazi"]
 pattern = "~/Developer/repos/*/*"
 icon = ""
 startup_command = "nvim"
-windows = [ "git", "ai_coding_tool"]
+windows = [ "shell", "ai"]
 
 [[window]]
 name = "nvim"
 startup_script = "nvim"
 
 [[window]]
-name = "git"
+name = "shell"
 startup_script = "git status"
 
 [[window]]
-name = "ai_coding_tool"
+name = "ai"
 startup_script = "$AI_CODING_TOOL"
 
 [[window]]
@@ -49,7 +49,7 @@ name = "yazi"
 startup_script = "yazi"
 
 [[window]]
-name = "dotfiles-window2"
+name = "dotfiles-shell"
 startup_script = "git status"
 # panes = [ "dotfiles-parent-pane", "dotfiles-private-pane" ]
 # layout = "main-vertical"
