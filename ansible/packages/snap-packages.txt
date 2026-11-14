@@ -5,5 +5,4 @@ ghostty --classic
 helm
 postman --classic
 starship
-terraform
 yazi --classic

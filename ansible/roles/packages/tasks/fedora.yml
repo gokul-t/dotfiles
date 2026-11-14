@@ -56,16 +56,6 @@
     gpgcheck: true
     enabled: true
 
-- name: Configure the HashiCorp repository
-  become: true
-  ansible.builtin.yum_repository:
-    name: hashicorp
-    description: HashiCorp Stable - $basearch
-    baseurl: https://rpm.releases.hashicorp.com/fedora/$releasever/$basearch/stable
-    gpgkey: https://rpm.releases.hashicorp.com/gpg
-    gpgcheck: true
-    enabled: true
-
 - name: Read Fedora package manifest
   ansible.builtin.set_fact:
     dotfiles_dnf_packages_all: >-

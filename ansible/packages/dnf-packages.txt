@@ -6,7 +6,6 @@
 # Development
 neovim
 zsh
-terraform
 helm
 code
 podman-compose

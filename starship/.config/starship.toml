@@ -6,7 +6,7 @@ palette = "catppuccin_mocha"
 command_timeout = 1000
 
 [aws]
-disabled = true
+# disabled = true
 
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"
