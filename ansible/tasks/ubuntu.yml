@@ -75,7 +75,7 @@
     dotfiles_ubuntu_packages: >-
       {{
         dotfiles_ubuntu_packages_all
-        | reject('in', ['tmux-sesh', 'google-chrome-stable'])
+        | reject('in', ['tmux-sesh'])
         | list
       }}
 
@@ -109,6 +109,65 @@
     - "'google-chrome-stable' in dotfiles_ubuntu_packages_all"
     - ansible_facts['architecture'] == "x86_64"
 
+- name: Create APT keyring directory for eza
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  when:
+    - "'eza' in dotfiles_ubuntu_packages_all"
+
+- name: Install GPG package for eza APT repository
+  become: true
+  ansible.builtin.apt:
+    name: gnupg
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when:
+    - "'eza' in dotfiles_ubuntu_packages_all"
+
+- name: Download eza APT signing key
+  become: true
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/eza-community/eza/main/deb.asc
+    dest: /tmp/eza-deb.asc
+    mode: "0644"
+  when:
+    - "'eza' in dotfiles_ubuntu_packages_all"
+
+- name: Dearmor eza APT signing key
+  become: true
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --dearmor
+      - -o
+      - /etc/apt/keyrings/gierens.gpg
+      - /tmp/eza-deb.asc
+    changed_when: false
+  when:
+    - "'eza' in dotfiles_ubuntu_packages_all"
+
+- name: Set permissions for eza APT keyring
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/gierens.gpg
+    state: file
+    mode: "0644"
+  when:
+    - "'eza' in dotfiles_ubuntu_packages_all"
+
+- name: Configure the eza APT repository
+  become: true
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main"
+    filename: gierens
+    state: present
+  when:
+    - "'eza' in dotfiles_ubuntu_packages_all"
+
 - name: Install Ubuntu packages
   become: true
   ansible.builtin.apt:
@@ -116,15 +175,6 @@
     state: present
     update_cache: true
     cache_valid_time: 3600
-
-- name: Install Google Chrome
-  become: true
-  ansible.builtin.apt:
-    name: google-chrome-stable
-    state: present
-  when:
-    - "'google-chrome-stable' in dotfiles_ubuntu_packages_all"
-    - ansible_facts['architecture'] == "x86_64"
 
 - name: Map supported Ubuntu release architectures
   ansible.builtin.set_fact:

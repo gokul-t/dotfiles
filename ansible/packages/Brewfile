@@ -1,6 +1,7 @@
 brew "tree"
 brew "ansible"
 brew "bat"
+brew "eza"
 brew "fd"
 brew "libtiff"
 brew "ffmpeg-full", link: true

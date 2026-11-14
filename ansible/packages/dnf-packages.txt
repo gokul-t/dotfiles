@@ -37,6 +37,7 @@ libappindicator-gtk3
 libinput-utils
 
 # CLI Tools
+eza
 fzf
 fd-find
 bat
