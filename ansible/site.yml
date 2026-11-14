@@ -162,15 +162,18 @@
       tags: [packages]
 
     - name: Link dotfile configurations
-      ansible.builtin.import_tasks: tasks/stow.yml
+      ansible.builtin.import_role:
+        name: stow
       tags: [stow]
 
     - name: Set up user tools
-      ansible.builtin.import_tasks: tasks/user-tools.yml
+      ansible.builtin.import_role:
+        name: user-tools
       when: dotfiles_profile in ["default", "personal", "work"]
       tags: [tools]
 
     - name: Schedule optional package drift reports
-      ansible.builtin.import_tasks: tasks/package-report.yml
+      ansible.builtin.import_role:
+        name: reports
       when: dotfiles_profile in ["default", "personal", "work"]
       tags: [package-report]

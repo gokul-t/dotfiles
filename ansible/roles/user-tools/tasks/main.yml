@@ -47,10 +47,10 @@
     mode: "0755"
 
 - name: Install bin and configured binaries
-  ansible.builtin.import_tasks: user-tools/bin.yml
+  ansible.builtin.import_tasks: bin.yml
 
 - name: Install mise and configured runtimes
-  ansible.builtin.import_tasks: user-tools/mise.yml
+  ansible.builtin.import_tasks: mise.yml
 
 - name: Find the installed Zsh executable
   ansible.builtin.shell: command -v zsh
