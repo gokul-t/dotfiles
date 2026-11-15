@@ -6,7 +6,7 @@ path = "~/.dotfiles"
 icon = "🏠"
 startup_command = "nvim"
 preview_command = "bat --color=always ~/.dotfiles/README.md"
-windows = [ "dotfiles-shell", "ai" ]
+windows = [ "parent-and-child", "ai" ]
 
 [[session]]
 name = "Notes 📓"
@@ -69,7 +69,7 @@ name = "yazi"
 startup_script = "yazi"
 
 [[window]]
-name = "dotfiles-parent-private"
+name = "parent-and-child"
 startup_script = "git status"
 # panes = [ "dotfiles-parent-pane", "dotfiles-private-pane" ]
 # layout = "main-vertical"
