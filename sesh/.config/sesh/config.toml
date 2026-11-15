@@ -23,7 +23,19 @@ startup_command = "curl wttr.in"
 windows = [ "yazi"]
 
 [[wildcard]]
-pattern = "~/Developer/repos/*/*"
+pattern = "~/Developer/*/*"
+icon = ""
+startup_command = "nvim"
+windows = [ "git", "ai"]
+
+[[wildcard]]
+pattern = "~/ops/compose/*"
+icon = ""
+startup_command = "nvim"
+windows = [ "docker", "ai"]
+
+[[wildcard]]
+pattern = "~/ops/scripts/*"
 icon = ""
 startup_command = "nvim"
 windows = [ "shell", "ai"]
@@ -33,7 +45,15 @@ name = "nvim"
 startup_script = "nvim"
 
 [[window]]
+name = "docker"
+startup_script = "docker ps"
+
+[[window]]
 name = "shell"
+startup_script = "pwd"
+
+[[window]]
+name = "git"
 startup_script = "git status"
 
 [[window]]
@@ -49,7 +69,7 @@ name = "yazi"
 startup_script = "yazi"
 
 [[window]]
-name = "dotfiles-shell"
+name = "dotfiles-parent-private"
 startup_script = "git status"
 # panes = [ "dotfiles-parent-pane", "dotfiles-private-pane" ]
 # layout = "main-vertical"

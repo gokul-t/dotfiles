@@ -8,3 +8,5 @@
   defaultBranch = main
 [include]
   path = .identity.conf
+[ghq]
+  root = ~/Developer
