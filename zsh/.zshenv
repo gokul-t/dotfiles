@@ -1,5 +1,8 @@
 export AI_CODING_TOOL=claude
 
+# worktrunk: default LLM commit message generation via Claude Code
+export WORKTRUNK_COMMIT__GENERATION__COMMAND="MAX_THINKING_TOKENS=0 claude -p --no-session-persistence --model=haiku --tools='' --safe-mode --setting-sources='user' --system-prompt=''"
+
 for env_file in ~/.config/zsh/env.d/*.zsh(N) ~/.config/zsh/user-env.d/*.zsh(N); do
  source "$env_file"
 done

@@ -23,7 +23,7 @@ startup_command = "curl wttr.in"
 windows = [ "yazi"]
 
 [[wildcard]]
-pattern = "~/Developer/*/*"
+pattern = "~/Developer/*/*/*"
 icon = ""
 startup_command = "nvim"
 windows = [ "git", "ai"]
