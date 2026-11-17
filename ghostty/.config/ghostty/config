@@ -5,7 +5,13 @@ theme = Catppuccin Mocha
 font-family = "MesloLGS NF"
 font-size = 14
 
+background-opacity = 0.75
 background-blur-radius = 20
+# Apply background-opacity to cells that paint their own (explicit) background color.
+# Without this, apps like tmux panes and OpenCode TUI that fill the screen with an
+# explicit background color ignore the window-level opacity and stay opaque.
+background-opacity-cells = true
+gtk-titlebar-hide-when-maximized = true
 
 mouse-hide-while-typing = true
 macos-option-as-alt = true

@@ -6,7 +6,12 @@ return {
     priority = 1000,
     opts = {
       flavour = "mocha", -- Match this to your Ghostty & Tmux style
-      transparent_background = false, -- Set to true if you like transparent terminals
+      transparent_background = true, -- Set to true if you like transparent terminals
+      float = {
+        transparent = true, -- Makes floating windows and Snacks pickers/explorer transparent
+        solid = false,
+      },
+      auto_integrations = true, -- Automatically applies Catppuccin styling to snacks.nvim
     },
   },
 
