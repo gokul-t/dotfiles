@@ -1,7 +1,7 @@
 # PATH is managed in ~/.zshenv
 
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="agnoster"  # replaced by starship below when available
+ZSH_THEME="agnoster"  # Oh My Zsh theme; starship replaces the prompt when available
 
 # Force 256color and True Color support across Tmux/Vim
 export COLORTERM="truecolor"
@@ -40,11 +40,6 @@ else
   export EDITOR="nvim"
   export VISUAL="nvim"
 fi
-
-# Bind 'V' in normal mode to open the command line in nvim
-autoload -z edit-command-line
-zle -N edit-command-line
-bindkey -M vicmd 'V' edit-command-line
 
 # Compilation flags
 # export ARCHFLAGS="-arch $(uname -m)"
@@ -119,7 +114,6 @@ if command -v mise >/dev/null 2>&1; then
 fi
 
 if command -v starship >/dev/null 2>&1; then
-  ZSH_THEME=""
   eval "$(starship init zsh)"
 fi
 
@@ -133,4 +127,3 @@ function y() {
 
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
 eval "$(uv generate-shell-completion zsh)"
-eval "$(uvx --generate-shell-completion zsh)"

@@ -16,6 +16,7 @@ maximize = true
 
 mouse-hide-while-typing = true
 macos-option-as-alt = true
+shell-integration = zsh
 
 command = /bin/sh -l -c 'if [ "$(uname)" = Darwin ]; then PATH="/opt/homebrew/bin:$PATH"; fi; exec tmux new -A'
 
