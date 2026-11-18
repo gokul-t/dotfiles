@@ -9,8 +9,8 @@
   source: github.com/gokul-t/user-installed-packages
 - name: ghq
   source: github.com/x-motemen/ghq
-  asset_pattern: "ghq_linux_*.zip"
+  asset_pattern: "ghq_linux_*/ghq"
 - name: worktrunk
   source: github.com/max-sixty/worktrunk
-  asset_pattern: "worktrunk-*-unknown-linux-musl.tar.xz"
+  asset_pattern: "worktrunk-*-unknown-linux-musl.tar.xz/wt"
 

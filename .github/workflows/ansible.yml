@@ -74,7 +74,7 @@ jobs:
       - name: Provision Fedora container and verify idempotence
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: docker run --rm dotfiles-fedora-test
+        run: docker run --rm -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" dotfiles-fedora-test
 
   ubuntu-container:
     name: Ubuntu 24.04 provisioning
@@ -91,7 +91,7 @@ jobs:
       - name: Provision Ubuntu container and verify idempotence
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: docker run --rm dotfiles-ubuntu-test
+        run: docker run --rm -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" dotfiles-ubuntu-test
 
   debian-container:
     name: Debian 13 provisioning
@@ -111,7 +111,7 @@ jobs:
       - name: Provision Debian 13 container and verify idempotence
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: docker run --rm dotfiles-debian-test
+        run: docker run --rm -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" dotfiles-debian-test
 
   server-container:
     name: ${{ matrix.name }} server provisioning
@@ -138,7 +138,7 @@ jobs:
       - name: Provision server container, verify idempotence and results
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: docker run --rm dotfiles-server-test
+        run: docker run --rm -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" dotfiles-server-test
 
   server-rhel-container:
     name: Rocky Linux 9 server provisioning
@@ -155,4 +155,4 @@ jobs:
       - name: Provision server container, verify idempotence and results
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: docker run --rm dotfiles-server-rhel-test
+        run: docker run --rm -e GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}" dotfiles-server-rhel-test
