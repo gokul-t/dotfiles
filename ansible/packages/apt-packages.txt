@@ -22,6 +22,8 @@ gh
 btop
 zoxide
 ripgrep
+jq
+tree
 
 # Build dependencies for mise-managed tools
 fontconfig

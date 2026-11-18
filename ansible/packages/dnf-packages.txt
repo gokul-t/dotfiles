@@ -31,6 +31,7 @@ gobject-introspection-devel
 libjpeg-turbo-devel
 libxkbcommon-devel
 wayland-devel
+wayland-protocols-devel
 evtest
 libappindicator-gtk3
 libinput-utils
@@ -50,6 +51,13 @@ tree
 
 # Terminal/UI
 ghostty
+
+# Browser ad blocking
+mozilla-ublock-origin
+
+# RPM Fusion repository releases
+rpmfusion-free-release
+rpmfusion-nonfree-release
 
 # Ansible bootstrap and Python build dependencies
 ansible-core
