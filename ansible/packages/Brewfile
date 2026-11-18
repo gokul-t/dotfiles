@@ -1,6 +1,7 @@
 brew "tree"
 brew "ansible"
 brew "bat"
+brew "btop"
 brew "eza"
 brew "fd"
 brew "libtiff"

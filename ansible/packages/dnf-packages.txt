@@ -44,7 +44,7 @@ gh
 lazygit
 yazi
 starship
-htop
+btop
 jq
 tree
 

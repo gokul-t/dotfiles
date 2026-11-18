@@ -19,7 +19,7 @@ fzf
 fd-find
 bat
 gh
-htop
+btop
 zoxide
 ripgrep
 
