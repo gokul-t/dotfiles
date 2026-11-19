@@ -37,3 +37,18 @@ dotfiles_stow_strict: false
 dotfiles_private_enabled: false
 dotfiles_private_profile: ""
 dotfiles_private_path: "{{ dotfiles_repo_path }}/{{ dotfiles_private_profile }}"
+dotfiles_gnome_switch_to_application_shortcuts:
+  - key: switch-to-application-1
+    value: "['<Super><Control>m']"
+  - key: switch-to-application-2
+    value: "['<Super><Control>t']"
+  - key: switch-to-application-3
+    value: "['<Super><Control>b']"
+  - key: switch-to-application-4
+    value: "['<Super><Control>e']"
+  - key: switch-to-application-5
+    value: "['<Super><Control>comma']"
+dotfiles_gnome_favorite_applications:
+  - org.mozilla.firefox.desktop
+  - com.mitchellh.ghostty.desktop
+  - org.mozilla.thunderbird.desktop

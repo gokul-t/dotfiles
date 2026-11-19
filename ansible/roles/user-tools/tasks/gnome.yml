@@ -1,0 +1,61 @@
+---
+- name: Read the current GNOME Shell application switch shortcuts
+  ansible.builtin.command:
+    argv:
+      - gsettings
+      - get
+      - org.gnome.shell.keybindings
+      - "{{ item.key }}"
+  loop: "{{ dotfiles_gnome_switch_to_application_shortcuts }}"
+  register: dotfiles_gnome_switch_to_application_current
+  changed_when: false
+  when: ansible_facts['env']['DESKTOP_SESSION'] | default('') | lower == 'gnome'
+
+- name: Set GNOME Shell application switch shortcuts
+  ansible.builtin.command:
+    argv:
+      - gsettings
+      - set
+      - org.gnome.shell.keybindings
+      - "{{ item.key }}"
+      - "{{ item.value }}"
+  loop: "{{ dotfiles_gnome_switch_to_application_shortcuts }}"
+  changed_when: >-
+    (dotfiles_gnome_switch_to_application_current.results
+      | selectattr('item.key', 'equalto', item.key)
+      | map(attribute='stdout') | list | first) | default('') != item.value
+  when: ansible_facts['env']['DESKTOP_SESSION'] | default('') | lower == 'gnome'
+
+- name: Read the current GNOME Shell favorite applications
+  ansible.builtin.command:
+    argv:
+      - gsettings
+      - get
+      - org.gnome.shell
+      - favorite-apps
+  register: dotfiles_gnome_favorite_applications_current
+  changed_when: false
+  when: ansible_facts['env']['DESKTOP_SESSION'] | default('') | lower == 'gnome'
+
+- name: Add the configured applications to the GNOME Shell favorites
+  ansible.builtin.set_fact:
+    dotfiles_gnome_favorite_applications_merged: >-
+      {{
+        ((dotfiles_gnome_favorite_applications_current.stdout | default('[]') | trim | from_yaml) | default([])) +
+        ((dotfiles_gnome_favorite_applications | default([])) | difference((dotfiles_gnome_favorite_applications_current.stdout | default('[]') | trim | from_yaml)))
+      }}
+  when: ansible_facts['env']['DESKTOP_SESSION'] | default('') | lower == 'gnome'
+
+- name: Set the GNOME Shell favorite applications
+  ansible.builtin.command:
+    argv:
+      - gsettings
+      - set
+      - org.gnome.shell
+      - favorite-apps
+      - >-
+        {{ dotfiles_gnome_favorite_applications_merged }}
+  changed_when: >-
+    (dotfiles_gnome_favorite_applications_current.stdout | default('[]') | trim) !=
+    (dotfiles_gnome_favorite_applications_merged | string)
+  when: ansible_facts['env']['DESKTOP_SESSION'] | default('') | lower == 'gnome'

@@ -52,6 +52,9 @@
 - name: Install mise and configured runtimes
   ansible.builtin.import_tasks: mise.yml
 
+- name: Configure GNOME Shell user settings
+  ansible.builtin.include_tasks: gnome.yml
+
 - name: Find the installed Zsh executable
   ansible.builtin.shell: command -v zsh
   register: dotfiles_zsh_path
