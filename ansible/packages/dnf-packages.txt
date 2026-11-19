@@ -43,6 +43,7 @@ fd-find
 bat
 gh
 lazygit
+git-delta
 yazi
 starship
 btop

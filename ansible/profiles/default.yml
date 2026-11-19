@@ -5,6 +5,7 @@ dotfiles_profile_stow_packages:
   - bash
   - bin
   - code
+  - delta
   - ghostty
   - gh
   - git

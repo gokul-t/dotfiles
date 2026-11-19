@@ -9,6 +9,7 @@ brew "ffmpeg-full", link: true
 brew "fzf"
 brew "gh"
 brew "ghq"
+brew "git-delta"
 brew "gnupg"
 brew "imagemagick"
 brew "jq"
