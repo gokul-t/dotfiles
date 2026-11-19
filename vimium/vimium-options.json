@@ -15,10 +15,14 @@
     {
       "passKeys": "",
       "pattern": "https?://kbflow-dev.pages.dev/*"
+    },
+    {
+      "passKeys": "",
+      "pattern": "https?://labex.io/*"
     }
   ],
   "ignoreKeyboardLayout": true,
-  "keyMappings": "map <c-]> passNextKey\nmap H previousTab\nmap L nextTab\nmap U goBack\nmap R goForward",
+  "keyMappings": "map <c-]> passNextKey\nmap H previousTab\nmap L nextTab\nmap U goBack\nmap R goForward\nmapkey <m-[> <c-[>",
   "newTabDestination": "browserNewTabPage",
   "settingsVersion": "2.4.2"
 }
