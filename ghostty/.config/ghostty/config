@@ -5,7 +5,7 @@ theme = Catppuccin Mocha
 font-family = "MesloLGS NF"
 font-size = 15
 
-background-opacity = 0.75
+background-opacity = 0.80
 background-blur-radius = 20
 # Apply background-opacity to cells that paint their own (explicit) background color.
 # Without this, apps like tmux panes and OpenCode TUI that fill the screen with an
