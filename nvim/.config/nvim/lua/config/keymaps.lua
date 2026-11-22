@@ -41,3 +41,25 @@ vim.keymap.set(
   [["_dP]],
   { noremap = true, desc = "delete and paste without overwriting the default register" }
 )
+-- snacks.scroll animates scrolls and jumps. With a plain string mapping like
+-- `<C-d>zz` the animation can run between the motion and `zz`, then overwrite
+-- the centering, so the first press only scrolls. Running the motion and the
+-- centering in a single `:normal!` call lets the final centered view be the
+-- animation target.
+local function move_and_center(motion, center)
+  local count = vim.v.count > 0 and vim.v.count or ""
+  vim.cmd("normal! " .. count .. motion .. center)
+end
+
+vim.keymap.set("n", "<C-d>", function()
+  move_and_center(vim.api.nvim_replace_termcodes("<C-d>", true, false, true), "zz")
+end, { desc = "move down 1/2 screen and center" })
+vim.keymap.set("n", "<C-u>", function()
+  move_and_center(vim.api.nvim_replace_termcodes("<C-u>", true, false, true), "zz")
+end, { desc = "move up 1/2 screen and center" })
+vim.keymap.set("n", "n", function()
+  move_and_center("n", "zzzv")
+end, { desc = "next and center" })
+vim.keymap.set("n", "N", function()
+  move_and_center("N", "zzzv")
+end, { desc = "previous and center" })
