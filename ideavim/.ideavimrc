@@ -1,1 +1,22 @@
+" IdeaVim configuration
+" Stowed from ~/.dotfiles/ideavim/.ideavimrc (linked as ~/.ideavimrc)
 source ~/.lazy-idea/lazy-idea.vim
+
+" Keep NERDTree working in the Project tool window when no editor is open.
+"
+" With no editor open, IdeaVim's OutsideEditorKeyDispatcher registers every
+" normal-mode mapping that runs a bare <Action>(...) on the focused component.
+" In the Project View that component is the tree itself. IntelliJ only consults
+" the nearest component that has custom actions, so that registration shadows
+" the NERDTree dispatcher, which is registered on the Project View's parent
+" component. h/j/k/l then fall through to the tree and start Speed Search
+" instead of navigating.
+"
+" OutsideEditorKeyDispatcher only exists to make <Action>(...) mappings usable
+" with no editor open. Turning it off restores NERDTree; those mappings keep
+" working normally from an editor buffer.
+set noideaoutsideeditor
+
+" Re-arm NERDTree if its keys ever stop working, e.g. after the Project View
+" component is rebuilt. Run it from an editor buffer.
+nnoremap <silent> <leader>nR :set noNERDTree<CR>:set NERDTree<CR>
